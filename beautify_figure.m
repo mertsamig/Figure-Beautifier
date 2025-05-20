@@ -23,8 +23,14 @@ function beautify_figure(user_params_or_axes_handle, user_params_for_specific_ax
 %   customizable parameters.
 %
 % PARAMETERS (params_struct fields - see default_params inside for all options):
-%   - theme: 'light' (default), 'dark'. Sets a base theme for colors.
-%   - font_name: Font family (e.g., 'Arial', 'Helvetica').
+%   - style_preset: ('default') Predefined style set. Options:
+%     - 'default': Standard beautify_figure settings.
+%     - 'publication': Optimized for print publications (e.g., Arial font, black/white/gray, smaller markers).
+%     - 'presentation_dark': For dark background presentations (e.g., Calibri, larger fonts, vivid colors).
+%     - 'presentation_light': For light background presentations (e.g., Calibri, larger fonts, bright colors).
+%     - 'minimalist': Clean, minimal style with few distractions.
+%   - theme: 'light' (default), 'dark'. Sets a base theme for colors. Overridden by preset if preset defines it.
+%   - font_name: Font family (e.g., 'Arial', 'Helvetica'). Overridden by preset if preset defines it.
 %   - base_font_size: Base font size for scaling.
 %   - global_font_scale_factor: Multiplier for all font sizes.
 %   - plot_line_width: Base line width for plotted data.
@@ -41,6 +47,14 @@ function beautify_figure(user_params_or_axes_handle, user_params_for_specific_ax
 %   - smart_legend_display: true (default). Avoids unnecessary legends.
 %   - interactive_legend: true (default). Enables clickable legend items.
 %   - log_level: 0 (silent), 1 (normal), 2 (detailed).
+%   - export_settings: Structure for controlling figure export:
+%     - enabled: (false) Set to true to export the figure.
+%     - filename: ('beautified_figure') Base name for the exported file.
+%     - format: ('png') Export format (e.g., 'png', 'jpeg', 'pdf', 'eps', 'svg', 'tiff').
+%     - resolution: (300) Resolution in DPI for raster formats, also influences vector quality.
+%     - open_exported_file: (false) If true, attempts to open the file after export.
+%     - renderer: ('painters') Renderer to use. For `print`: 'painters', 'opengl', 'vector'. `exportgraphics` usually manages this automatically or via content type.
+%     - ui: (false) If true and `exportgraphics` is available (R2020a+), it's preferred. Otherwise, `print` is used. Set to false to force `print -noui`.
 %   ... and many more. Explore the default_params structure within the code.
 %
 % EXAMPLE:
@@ -128,8 +142,20 @@ default_params.min_scale_factor = 0.65;
 default_params.max_scale_factor = 1.7;
 default_params.log_level = 2; % 0:silent, 1:normal (warnings, info), 2:detailed (verbose)
 
+% Export settings
+default_params.export_settings.enabled = false;
+default_params.export_settings.filename = 'beautified_figure';
+default_params.export_settings.format = 'png'; % Suggested: 'png', 'jpeg', 'pdf', 'eps', 'tiff', 'svg'
+default_params.export_settings.resolution = 300; % DPI
+default_params.export_settings.open_exported_file = false;
+default_params.export_settings.renderer = 'painters'; % Suggested: 'painters', 'opengl', 'vector' (for print), 'auto' for exportgraphics
+default_params.export_settings.ui = false; % If true, tries to use exportgraphics, else print -noui
+
+default_params.style_preset = 'default'; % Added new preset parameter
+
 % --- Parameter Parsing and Initialization ---
-params = default_params;
+base_defaults = default_params; % Store original defaults
+params = base_defaults; % Initialize params
 target_axes = [];
 user_provided_params_struct = struct();
 fig_handle_internal = []; % Internal variable for figure handle
@@ -182,11 +208,102 @@ end
 
 % Validate fig_handle_internal and assign to 'fig'
 if isempty(fig_handle_internal) || ~isvalid(fig_handle_internal)
-log_message(params, 'No valid figure found or specified to beautify.', 0, 'Error'); return;
+log_message(params, 'No valid figure found or specified to beautify.', 0, 'Error'); return; % Still use initial params for this early error
 end
 fig = fig_handle_internal; % Use 'fig' consistently hereafter
 
-% Merge user parameters with defaults
+% Determine active style preset
+active_preset_name = base_defaults.style_preset; % Default
+if isfield(user_provided_params_struct, 'style_preset') && ~isempty(user_provided_params_struct.style_preset)
+    if ischar(user_provided_params_struct.style_preset) || isstring(user_provided_params_struct.style_preset)
+        active_preset_name = lower(char(user_provided_params_struct.style_preset));
+    else
+        log_message(base_defaults, 'Invalid data type for style_preset. Using default preset.', 1, 'Warning');
+    end
+end
+
+% Apply style preset (modifies 'params' struct, which was initialized from base_defaults)
+known_presets = {'default', 'publication', 'presentation_dark', 'presentation_light', 'minimalist'};
+if ~any(strcmp(active_preset_name, known_presets))
+    log_message(base_defaults, sprintf('Unknown style preset: "%s". Applying default style parameters before user overrides.', active_preset_name), 1, 'Warning');
+    active_preset_name = 'default'; % Fallback to default if unknown
+end
+
+log_message(base_defaults, sprintf('Applying style preset: "%s".', active_preset_name), 2, 'Info');
+switch active_preset_name
+    case 'publication'
+        params.font_name = 'Arial';
+        params.base_font_size = 10;
+        params.global_font_scale_factor = 1.0;
+        params.plot_line_width = 1.0;
+        params.axis_to_plot_linewidth_ratio = 0.75;
+        params.marker_size = 5;
+        params.color_palette = 'lines';
+        params.grid_density = 'major_only';
+        params.theme = 'light';
+        params.axis_color = [0 0 0]; % Black
+        params.figure_background_color = [1 1 1]; % White
+        params.text_color = [0 0 0]; % Black
+        params.grid_color = [0.5 0.5 0.5]; % Gray
+        params.auto_latex_interpreter_for_labels = true;
+        params.axes_layer = 'bottom';
+        params.legend_location = 'best';
+
+    case 'presentation_dark'
+        params.theme = 'dark';
+        params.font_name = 'Calibri';
+        params.base_font_size = 12;
+        params.global_font_scale_factor = 1.1;
+        params.plot_line_width = 2.0;
+        params.marker_size = 7;
+        params.color_palette = 'viridis';
+        params.grid_density = 'normal';
+        params.figure_background_color = [0.10 0.10 0.12];
+        params.axis_color = [0.9 0.9 0.9];
+        params.text_color = [0.95 0.95 0.95];
+        params.grid_color = [0.6 0.6 0.6];
+        params.grid_alpha = 0.25;
+        params.minor_grid_alpha = 0.15;
+
+    case 'presentation_light'
+        params.theme = 'light';
+        params.font_name = 'Calibri';
+        params.base_font_size = 12;
+        params.global_font_scale_factor = 1.1;
+        params.plot_line_width = 1.8;
+        params.marker_size = 6;
+        params.color_palette = 'cbrewer_qual_Set1';
+        params.grid_density = 'normal';
+        params.figure_background_color = [0.96 0.96 0.98];
+        params.axis_color = [0.15 0.15 0.15];
+        params.text_color = [0.1 0.1 0.1];
+        params.grid_color = [0.25 0.25 0.25];
+        params.grid_alpha = 0.15;
+        params.minor_grid_alpha = 0.07;
+
+    case 'minimalist'
+        params.theme = 'light';
+        params.font_name = 'Helvetica Neue';
+        params.base_font_size = 10;
+        params.plot_line_width = 1.2;
+        params.marker_size = 5;
+        params.color_palette = [[0.2 0.2 0.2]; [0.5 0.5 0.5]; [0.7 0.7 0.7]]; % Grayscale
+        params.grid_density = 'none';
+        params.axis_box_style = 'left-bottom';
+        params.smart_legend_display = true;
+        params.legend_location = 'northeastoutside';
+        params.figure_background_color = [1 1 1];
+        params.axis_color = [0.1 0.1 0.1];
+        params.text_color = [0.1 0.1 0.1];
+        params.title_scale = 1.0; 
+        params.label_scale = 1.0;
+
+    case 'default'
+        % No changes needed, params is already from base_defaults.
+    % No 'otherwise' needed here due to pre-check and fallback.
+end
+
+% Merge user parameters with defaults (now 'params' includes preset values)
 param_names = fieldnames(user_provided_params_struct);
 for i = 1:length(param_names)
 if isfield(params, param_names{i})
@@ -196,19 +313,52 @@ log_message(params, sprintf('Unknown parameter: "%s". This parameter will be ign
 end
 end
 
-% Apply theme defaults if not overridden by user
+% Apply theme defaults intelligently after presets and user params have been merged.
+% The goal is to apply generic theme colors ONLY if they haven't been specifically
+% set by a preset (for that theme) or by the user.
+
+original_light_theme_colors.axis_color = base_defaults.axis_color;
+original_light_theme_colors.text_color = base_defaults.text_color;
+original_light_theme_colors.grid_color = base_defaults.grid_color;
+original_light_theme_colors.figure_background_color = base_defaults.figure_background_color; % This is MATLAB's default figure color
+
+dark_theme_generic_colors.axis_color = [0.85 0.85 0.85];
+dark_theme_generic_colors.text_color = [0.9 0.9 0.9];
+dark_theme_generic_colors.grid_color = [0.7 0.7 0.7];
+dark_theme_generic_colors.figure_background_color = [0.12 0.12 0.15];
+
+theme_changed_log = false;
 if strcmpi(params.theme, 'dark')
-% Only apply dark theme defaults if the user hasn't specified these exact colors
-if ~isfield(user_provided_params_struct, 'axis_color'); params.axis_color = [0.85 0.85 0.85]; end
-if ~isfield(user_provided_params_struct, 'text_color'); params.text_color = [0.9 0.9 0.9]; end
-if ~isfield(user_provided_params_struct, 'grid_color'); params.grid_color = [0.7 0.7 0.7]; end
-if ~isfield(user_provided_params_struct, 'figure_background_color'); params.figure_background_color = [0.12 0.12 0.15]; end % Slightly different dark
-log_message(params, 'Dark theme defaults applied.', 2, 'Info');
-else % Light theme (ensure defaults are light if user somehow changed them before theme logic)
-if ~isfield(user_provided_params_struct, 'axis_color'); params.axis_color = default_params.axis_color; end
-if ~isfield(user_provided_params_struct, 'text_color'); params.text_color = default_params.text_color; end
-if ~isfield(user_provided_params_struct, 'grid_color'); params.grid_color = default_params.grid_color; end
-if ~isfield(user_provided_params_struct, 'figure_background_color'); params.figure_background_color = default_params.figure_background_color; end
+    if ~isfield(user_provided_params_struct, 'axis_color') && isequal(params.axis_color, original_light_theme_colors.axis_color)
+        params.axis_color = dark_theme_generic_colors.axis_color; theme_changed_log = true;
+    end
+    if ~isfield(user_provided_params_struct, 'text_color') && isequal(params.text_color, original_light_theme_colors.text_color)
+        params.text_color = dark_theme_generic_colors.text_color; theme_changed_log = true;
+    end
+    if ~isfield(user_provided_params_struct, 'grid_color') && isequal(params.grid_color, original_light_theme_colors.grid_color)
+        params.grid_color = dark_theme_generic_colors.grid_color; theme_changed_log = true;
+    end
+    if ~isfield(user_provided_params_struct, 'figure_background_color') && isequal(params.figure_background_color, original_light_theme_colors.figure_background_color)
+        params.figure_background_color = dark_theme_generic_colors.figure_background_color; theme_changed_log = true;
+    end
+    if theme_changed_log; log_message(params, 'Generic dark theme color defaults applied where not specified by preset or user.', 2, 'Info'); end
+else % Light theme is active
+    % If the current params.theme is 'light', but some colors might have been set to dark theme
+    % values by a preset (that was then overridden by user setting params.theme='light'),
+    % ensure they revert to original light defaults if not specified by user.
+    if ~isfield(user_provided_params_struct, 'axis_color') && isequal(params.axis_color, dark_theme_generic_colors.axis_color)
+        params.axis_color = original_light_theme_colors.axis_color; theme_changed_log = true;
+    end
+    if ~isfield(user_provided_params_struct, 'text_color') && isequal(params.text_color, dark_theme_generic_colors.text_color)
+        params.text_color = original_light_theme_colors.text_color; theme_changed_log = true;
+    end
+    if ~isfield(user_provided_params_struct, 'grid_color') && isequal(params.grid_color, dark_theme_generic_colors.grid_color)
+        params.grid_color = original_light_theme_colors.grid_color; theme_changed_log = true;
+    end
+    if ~isfield(user_provided_params_struct, 'figure_background_color') && isequal(params.figure_background_color, dark_theme_generic_colors.figure_background_color)
+        params.figure_background_color = original_light_theme_colors.figure_background_color; theme_changed_log = true;
+    end
+    if theme_changed_log; log_message(params, 'Generic light theme color defaults applied where not specified by preset or user.', 2, 'Info'); end
 end
 
 % Calculate derived parameters
@@ -275,30 +425,144 @@ end
 end
 end
 
+% --- Export Figure (if enabled) ---
+if params.export_settings.enabled
+    % Ensure the filename is valid and includes the correct extension
+    [~, name_part, ~] = fileparts(params.export_settings.filename);
+    if isempty(name_part); name_part = 'beautified_figure'; end % Default if empty
+    current_format = lower(params.export_settings.format);
+    if any(strcmp(current_format, {'jpeg', 'jpg'}))
+        current_format = 'jpg'; % Normalize to jpg for extension
+    elseif any(strcmp(current_format, {'tiff', 'tif'}))
+        current_format = 'tif'; % Normalize to tif for extension
+    end
+    full_filename_with_ext = [name_part, '.', current_format];
+    
+    log_message(params, sprintf('Exporting figure to "%s"...', full_filename_with_ext), 1, 'Info');
+    try
+        export_done_successfully = false;
+        % Preferred method: exportgraphics (if UI allowed or not specified AND function exists)
+        % exportgraphics is generally preferred if available (R2020a+)
+        if exist('exportgraphics','file') == 2 && params.export_settings.ui 
+            log_message(params, sprintf('Attempting exportgraphics (resolution %d DPI).', params.export_settings.resolution), 2, 'Info');
+            exportgraphics(fig, full_filename_with_ext, 'Resolution', params.export_settings.resolution);
+            log_message(params, 'Export successful using exportgraphics.', 1, 'Info');
+            export_done_successfully = true;
+        else
+            % Fallback or explicit non-UI method: print command
+            if ~params.export_settings.ui && exist('exportgraphics','file') == 2
+                 log_message(params, 'UI set to false, but exportgraphics is available. Consider using exportgraphics directly if -noui behavior is not strictly needed for `print`.', 2, 'Info');
+            end
+
+            format_flag = '';
+            print_format = lower(params.export_settings.format);
+            switch print_format
+                case {'png', 'jpeg', 'jpg', 'pdf', 'eps', 'tiff', 'tif', 'svg'}
+                    format_flag = ['-d' print_format];
+                    if strcmp(print_format, 'jpg'); format_flag = '-djpeg'; end % print uses -djpeg
+                    if strcmp(print_format, 'tif'); format_flag = '-dtiff'; end % print uses -dtiff
+                    if strcmp(print_format, 'eps'); format_flag = '-depsc'; end % ensure color eps
+                otherwise
+                    log_message(params, sprintf('Unsupported export format for print command: "%s". Skipping export.', print_format), 1, 'Warning');
+                    format_flag = ''; % Will skip print
+            end
+
+            if ~isempty(format_flag)
+                resolution_flag = sprintf('-r%d', params.export_settings.resolution);
+                cmd_parts = {fig, full_filename_with_ext, format_flag, resolution_flag};
+
+                renderer_to_use = params.export_settings.renderer;
+                % For vector formats, painters is often best. For others, opengl might be needed for complex scenes.
+                if any(strcmpi(print_format, {'pdf', 'eps', 'svg'}))
+                    if ~any(strcmpi(renderer_to_use, {'painters', 'vector'})) % 'vector' is an alias for painters for some contexts
+                        log_message(params, sprintf('Renderer "%s" not ideal for vector format "%s". Suggesting "painters".', renderer_to_use, print_format), 1, 'Warning');
+                        % It's a suggestion, user's choice is still respected unless it's 'auto'
+                        if strcmpi(renderer_to_use, 'auto'); renderer_to_use = 'painters'; end
+                    end
+                end
+                
+                if ~isempty(renderer_to_use) && ~strcmpi(renderer_to_use, 'auto')
+                    renderer_flag = sprintf('-%s', renderer_to_use);
+                    cmd_parts{end+1} = renderer_flag;
+                end
+                
+                if ~params.export_settings.ui % Add -noui if not using UI (relevant for print)
+                    cmd_parts{end+1} = '-noui';
+                end
+                
+                log_message(params, sprintf('Using print command with options: %s', strjoin(cmd_parts(3:end),' ')), 2, 'Info');
+                print(cmd_parts{:});
+                log_message(params, 'Export successful using print command.', 1, 'Info');
+                export_done_successfully = true;
+            else
+                 log_message(params, 'Export skipped due to empty format_flag (unsupported format for print).', 1, 'Warning');
+            end
+        end
+
+        if export_done_successfully && params.export_settings.open_exported_file
+            log_message(params, sprintf('Attempting to open exported file: %s', full_filename_with_ext), 2, 'Info');
+            try
+                open(full_filename_with_ext); % MATLAB's open function
+            catch ME_open_matlab
+                log_message(params, sprintf('MATLAB open() failed: "%s". Trying system open.', ME_open_matlab.message), 1, 'Warning');
+                try
+                    current_file_path = fullfile(pwd, full_filename_with_ext);
+                    if ispc
+                        system(['start "" "', current_file_path, '"']);
+                    elseif ismac
+                        system(['open "', current_file_path, '"']);
+                    else % Linux or other Unix
+                        system(['xdg-open "', current_file_path, '"']);
+                    end
+                catch ME_sys_open
+                    log_message(params, sprintf('System open command failed: %s', ME_sys_open.message), 1, 'Warning');
+                end
+            end
+        elseif ~export_done_successfully
+            log_message(params, 'Export was not successful, skipping file open.', 1, 'Warning');
+        end
+
+    catch ME_export
+        log_message(params, sprintf('Figure export process failed: %s (Line: %d)', ME_export.message, ME_export.stack(1).line), 0, 'Error');
+    end
+end
+
 log_message(params, 'Figure beautification complete.', 1, 'Info');
 drawnow; % Ensure all changes are rendered
 end
 
 % --- Helper Function: Validate Axes Handle Array ---
 function tf = is_valid_axes_handle_array(h_array)
-tf = false; % Default to false
-% Check if it's empty OR if any element is not a handle
-% BUGFIX: Use any() because ishandle can return a logical array
-if isempty(h_array) || any(~ishandle(h_array))
-tf = false; % Not a valid array of handles
-return;
+% IS_VALID_AXES_HANDLE_ARRAY Checks if h_array is an array of valid axes or polaraxes handles.
+% Returns true if h_array is empty or contains only valid axes/polaraxes handles.
+% Returns false otherwise.
+
+if isempty(h_array)
+    tf = true; % An empty array is considered valid as it contains no invalid handles.
+    return;
 end
 
-% Now we know all elements are handles. Check if all are valid axes or polaraxes.
-is_all_axes_type = true;
-for k = 1:numel(h_array)
-% Check if the current handle is VALID AND is either Axes OR PolarAxes
-if ~(isvalid(h_array(k)) && (isa(h_array(k), 'matlab.graphics.axis.Axes') || isa(h_array(k), 'matlab.graphics.axis.PolarAxes')))
-is_all_axes_type = false; % Found an element that is not a valid axes/polaraxes
-break; % No need to check further
+% Check if all elements are graphics handles
+if ~all(ishandle(h_array))
+    tf = false;
+    return;
 end
+
+% Check if all handles are valid (not deleted)
+if ~all(isvalid(h_array))
+    tf = false;
+    return;
 end
-tf = is_all_axes_type; % Return the result of the check
+
+% Check if all valid handles are of the correct type (Axes or PolarAxes)
+% Using arrayfun for element-wise check and then 'all' to ensure every element satisfies the condition.
+is_correct_type = arrayfun(@(h) isa(h, 'matlab.graphics.axis.Axes') || isa(h, 'matlab.graphics.axis.PolarAxes'), h_array);
+if ~all(is_correct_type)
+    tf = false;
+    return;
+end
+
+tf = true; % If all checks passed
 end
 
 % --- Helper Function: Get Scale Basis for an Axes ---
