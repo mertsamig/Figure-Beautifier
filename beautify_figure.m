@@ -46,7 +46,7 @@ function beautify_figure(user_params_or_axes_handle, user_params_for_specific_ax
 %   - legend_location: 'best' (default), 'northeastoutside', 'none', etc.
 %   - smart_legend_display: true (default). Avoids unnecessary legends.
 %   - interactive_legend: true (default). Enables clickable legend items.
-%   - log_level: 0 (silent), 1 (normal), 2 (detailed).
+%   - log_level: 0 (silent), 1 (normal), 2 (detailed - default).
 %   - export_settings: Structure for controlling figure export:
 %     - enabled: (false) Set to true to export the figure.
 %     - filename: ('beautified_figure') Base name for the exported file.
@@ -92,9 +92,9 @@ function beautify_figure(user_params_or_axes_handle, user_params_for_specific_ax
 %
 % See also: gcf, legend, tiledlayout, axes, plot, set, get
 %
-% Author: [Your Name/Organization]
+% Author: BeautifyFigure Contributors
 % Version: 2.1 (Production Ready) % Updated Version
-% Date: [Current Date] % Updated Date
+% Date: 2024-07-24 (Last Major Update)
 
 % --- Default Beautification Parameters ---
 % These are the master defaults. They can be overridden by user_params.
@@ -126,11 +126,11 @@ default_params.axes_layer = 'top'; % NEW: 'top' or 'bottom'
 
 default_params.color_palette = 'default_matlab';
 default_params.custom_color_palette = [];
-default_params.cycle_marker_styles = 'false';
+default_params.cycle_marker_styles = 'auto';
 default_params.marker_cycle_threshold = 3; % Cycle if num candidates > this value
 default_params.marker_styles = {'o', 's', 'd', '^', 'v', '>', '<', 'p', 'h', '.', 'x', '+', '*'};
 default_params.line_style_order = {'-', '--', ':', '-.'}; % NEW
-default_params.cycle_line_styles = 'false'; % NEW: true, false, 'auto'
+default_params.cycle_line_styles = 'auto'; % NEW: true, false, 'auto'
 default_params.line_style_cycle_threshold = 2; % NEW: cycle if num candidates > this value when 'auto'
 
 default_params.axis_limit_mode = 'padded';
@@ -357,28 +357,332 @@ log_message(params, sprintf('Unknown parameter: "%s". This parameter will be ign
 end
 end
 
-   % Merge panel_labeling sub-struct
-   if isfield(user_provided_params_struct, 'panel_labeling') && isstruct(user_provided_params_struct.panel_labeling)
-       user_pl_fields = fieldnames(user_provided_params_struct.panel_labeling);
-       for k_pl = 1:length(user_pl_fields)
-           if isfield(params.panel_labeling, user_pl_fields{k_pl})
-               params.panel_labeling.(user_pl_fields{k_pl}) = user_provided_params_struct.panel_labeling.(user_pl_fields{k_pl});
-           else
-               log_message(params, sprintf('Unknown panel_labeling parameter: "%s". This parameter will be ignored.', user_pl_fields{k_pl}), 1, 'Warning');
+% --- START Critical Parameter Validation ---
+log_message(params, 'Performing critical parameter validation...', 2, 'Info');
+
+% Helper function to format value for logging
+function val_str = format_param_value_for_log(val)
+    if isnumeric(val)
+        val_str = mat2str(val);
+    elseif ischar(val)
+        val_str = ['''' val ''''];
+    elseif islogical(val)
+        if val; val_str = 'true'; else; val_str = 'false'; end
+    elseif iscell(val)
+        val_str = '{cell}'; % Simplified representation for cells
+    elseif isstruct(val)
+        val_str = '[struct]'; % Simplified representation for structs
+    else
+        try
+            val_str = ['[' class(val) ']'];
+        catch
+            val_str = '[unknown type]';
+        end
+    end
+end
+
+% Numeric scalar parameters to validate
+numeric_scalar_params_to_validate = {
+    'base_font_size', 'global_font_scale_factor', 'plot_line_width', ...
+    'marker_size', 'log_level'
+};
+for k_nsp = 1:length(numeric_scalar_params_to_validate)
+    param_name = numeric_scalar_params_to_validate{k_nsp};
+    current_val = params.(param_name);
+    if ~isnumeric(current_val) || ~isscalar(current_val) || ~isreal(current_val) || isnan(current_val)
+        val_str = format_param_value_for_log(current_val);
+        log_message(params, sprintf('Invalid value for %s: %s. Must be a real numeric scalar. Resetting to default.', param_name, val_str), 1, 'Warning');
+        params.(param_name) = base_defaults.(param_name);
+    end
+end
+
+% String enumerated parameters to validate
+% theme
+current_theme_val = params.theme;
+valid_themes = {'light', 'dark'};
+if ~ischar(current_theme_val) || ~isvector(current_theme_val) || isempty(current_theme_val) % Ensure it's a char row vector
+    val_str = format_param_value_for_log(current_theme_val);
+    log_message(params, sprintf('Invalid type for theme: %s. Must be a character string. Resetting to default.', val_str), 1, 'Warning');
+    params.theme = base_defaults.theme;
+else
+    match_idx_theme = find(strcmpi(current_theme_val, valid_themes), 1);
+    if isempty(match_idx_theme)
+        val_str = format_param_value_for_log(current_theme_val);
+        log_message(params, sprintf('Invalid value for theme: %s. Allowed: %s. Resetting to default.', val_str, strjoin(valid_themes, ', ')), 1, 'Warning');
+        params.theme = base_defaults.theme;
+    else
+        params.theme = valid_themes{match_idx_theme}; % Ensure canonical (lowercase) form
+    end
+end
+
+% grid_density
+current_grid_density_val = params.grid_density;
+valid_grid_densities = {'normal', 'major_only', 'none'};
+if ~ischar(current_grid_density_val) || ~isvector(current_grid_density_val) || isempty(current_grid_density_val)
+    val_str = format_param_value_for_log(current_grid_density_val);
+    log_message(params, sprintf('Invalid type for grid_density: %s. Must be a character string. Resetting to default.', val_str), 1, 'Warning');
+    params.grid_density = base_defaults.grid_density;
+else
+    match_idx_grid = find(strcmpi(current_grid_density_val, valid_grid_densities), 1);
+    if isempty(match_idx_grid)
+        val_str = format_param_value_for_log(current_grid_density_val);
+        log_message(params, sprintf('Invalid value for grid_density: %s. Allowed: %s. Resetting to default.', val_str, strjoin(valid_grid_densities, ', ')), 1, 'Warning');
+        params.grid_density = base_defaults.grid_density;
+    else
+        params.grid_density = valid_grid_densities{match_idx_grid}; % Ensure canonical form
+    end
+end
+
+% axis_box_style
+current_axis_box_style_val = params.axis_box_style;
+valid_axis_box_styles = {'on', 'off', 'left-bottom'};
+if ~ischar(current_axis_box_style_val) || ~isvector(current_axis_box_style_val) || isempty(current_axis_box_style_val)
+    val_str = format_param_value_for_log(current_axis_box_style_val);
+    log_message(params, sprintf('Invalid type for axis_box_style: %s. Must be a character string. Resetting to default.', val_str), 1, 'Warning');
+    params.axis_box_style = base_defaults.axis_box_style;
+else
+    match_idx_box = find(strcmpi(current_axis_box_style_val, valid_axis_box_styles), 1);
+    if isempty(match_idx_box)
+        val_str = format_param_value_for_log(current_axis_box_style_val);
+        log_message(params, sprintf('Invalid value for axis_box_style: %s. Allowed: %s. Resetting to default.', val_str, strjoin(valid_axis_box_styles, ', ')), 1, 'Warning');
+        params.axis_box_style = base_defaults.axis_box_style;
+    else
+        params.axis_box_style = valid_axis_box_styles{match_idx_box}; % Ensure canonical form
+    end
+end
+log_message(params, 'Critical parameter validation complete.', 2, 'Info');
+% --- END Critical Parameter Validation ---
+
+% --- START Sub-Struct Type and Field Validation ---
+log_message(params, 'Performing sub-struct type and field validation...', 2, 'Info');
+
+% Helper function to validate a numeric scalar field within a sub-struct
+function params = validate_numeric_scalar_field(params, base_defaults, struct_name, field_name, allow_non_negative, allow_positive, require_integer)
+    default_value = base_defaults.(struct_name).(field_name);
+    current_value = params.(struct_name).(field_name);
+    valid = true;
+    if ~isnumeric(current_value) || ~isscalar(current_value) || ~isreal(current_value) || isnan(current_value)
+        valid = false;
+    elseif allow_non_negative && current_value < 0
+        valid = false;
+    elseif allow_positive && current_value <= 0
+        valid = false;
+    elseif require_integer && (floor(current_value) ~= current_value)
+        valid = false;
+    end
+
+    if ~valid
+        val_str = format_param_value_for_log(current_value);
+        criteria_str = 'real numeric scalar';
+        if require_integer; criteria_str = [criteria_str ', integer']; end
+        if allow_non_negative; criteria_str = [criteria_str ', non-negative']; end
+        if allow_positive; criteria_str = [criteria_str ', positive']; end
+        log_message(params, sprintf('Invalid value for %s.%s: %s. Must be a %s. Resetting to default (%s).', ...
+            struct_name, field_name, val_str, criteria_str, format_param_value_for_log(default_value)), 1, 'Warning');
+        params.(struct_name).(field_name) = default_value;
+    end
+end
+
+% Helper function to validate a logical/boolean field within a sub-struct
+function params = validate_logical_field(params, base_defaults, struct_name, field_name)
+    default_value = base_defaults.(struct_name).(field_name);
+    current_value = params.(struct_name).(field_name);
+    
+    if islogical(current_value) && isscalar(current_value)
+        % Value is already a scalar logical, no change needed.
+    elseif isnumeric(current_value) && isscalar(current_value) && (current_value == 0 || current_value == 1)
+        params.(struct_name).(field_name) = logical(current_value); % Cast to logical
+    else
+        val_str = format_param_value_for_log(current_value);
+        log_message(params, sprintf('Invalid value for %s.%s: %s. Must be logical (true/false) or numeric (0/1). Resetting to default (%s).', ...
+            struct_name, field_name, val_str, format_param_value_for_log(default_value)), 1, 'Warning');
+        params.(struct_name).(field_name) = default_value;
+    end
+end
+
+% Helper function to validate a cell array of char row vectors
+function params = validate_cell_array_of_strings_field(params, base_defaults, struct_name, field_name)
+    default_value = base_defaults.(struct_name).(field_name);
+    current_value = params.(struct_name).(field_name);
+    valid = true;
+    if ~iscell(current_value)
+        valid = false;
+    else
+        for i = 1:length(current_value)
+            if ~ischar(current_value{i}) || ~isvector(current_value{i}) || (size(current_value{i},1) ~= 1 && ~isempty(current_value{i})) % char row vector
+                valid = false;
+                break;
+            end
+        end
+    end
+
+    if ~valid
+        val_str = format_param_value_for_log(current_value);
+        log_message(params, sprintf('Invalid value for %s.%s: %s. Must be a cell array of character row vectors. Resetting to default.', ...
+            struct_name, field_name, val_str), 1, 'Warning');
+        params.(struct_name).(field_name) = default_value;
+    end
+end
+
+
+% Validate top-level structure types first
+sub_struct_names = {'export_settings', 'panel_labeling', 'stats_overlay'};
+for i = 1:length(sub_struct_names)
+    ss_name = sub_struct_names{i};
+    % Check if user intended to provide this struct (i.e., it was in user_provided_params_struct)
+    % The actual merge of user_provided_params_struct into params has already happened.
+    % So, if params.(ss_name) is not a struct now, it means either the user provided a non-struct
+    % or the preset provided a non-struct (less likely for these but possible).
+    % The key is that `base_defaults.(ss_name)` IS a struct.
+    if isfield(user_provided_params_struct, ss_name) && ~isstruct(params.(ss_name))
+        val_str = format_param_value_for_log(params.(ss_name));
+        log_message(params, sprintf('User-provided ''%s'' is not a struct (type: %s). Reverting to default %s settings.', ...
+            ss_name, val_str, ss_name), 1, 'Warning');
+        params.(ss_name) = base_defaults.(ss_name);
+    end
+end
+
+% export_settings validation
+if isstruct(params.export_settings) % Proceed only if it's a struct
+    params = validate_numeric_scalar_field(params, base_defaults, 'export_settings', 'resolution', true, true, false); % non-negative, positive
+    params = validate_logical_field(params, base_defaults, 'export_settings', 'enabled');
+    params = validate_logical_field(params, base_defaults, 'export_settings', 'open_exported_file');
+    params = validate_logical_field(params, base_defaults, 'export_settings', 'ui');
+else % This case should ideally be caught by the top-level check if user provided it.
+     % If it wasn't user-provided but somehow became non-struct (e.g. bad preset), reset.
+    if ~isstruct(params.export_settings) && any(strcmp(fieldnames(base_defaults), 'export_settings'))
+        log_message(params, sprintf('''params.export_settings'' is not a struct. Resetting to default. This might indicate an issue with presets if not directly set by user.', class(params.export_settings)), 1, 'Warning');
+        params.export_settings = base_defaults.export_settings;
+    end
+end
+
+% panel_labeling validation
+if isstruct(params.panel_labeling)
+    params = validate_numeric_scalar_field(params, base_defaults, 'panel_labeling', 'font_scale_factor', true, false, false); % non-negative
+    params = validate_numeric_scalar_field(params, base_defaults, 'panel_labeling', 'x_offset', false, false, false); % any real
+    params = validate_numeric_scalar_field(params, base_defaults, 'panel_labeling', 'y_offset', false, false, false); % any real
+    params = validate_logical_field(params, base_defaults, 'panel_labeling', 'enabled');
+else
+    if ~isstruct(params.panel_labeling) && any(strcmp(fieldnames(base_defaults), 'panel_labeling'))
+         log_message(params, sprintf('''params.panel_labeling'' is not a struct. Resetting to default.', class(params.panel_labeling)), 1, 'Warning');
+        params.panel_labeling = base_defaults.panel_labeling;
+    end
+end
+
+% stats_overlay validation
+if isstruct(params.stats_overlay)
+    params = validate_numeric_scalar_field(params, base_defaults, 'stats_overlay', 'font_scale_factor', true, false, false); % non-negative
+    params = validate_numeric_scalar_field(params, base_defaults, 'stats_overlay', 'precision', true, false, true); % non-negative, integer
+    params = validate_logical_field(params, base_defaults, 'stats_overlay', 'enabled');
+    
+    % Validate 'statistics' field: only if it was provided by the user and is now in params
+    % The field might not exist in params if user_provided_params_struct.stats_overlay did not have it
+    if isfield(user_provided_params_struct, 'stats_overlay') && isstruct(user_provided_params_struct.stats_overlay) && isfield(user_provided_params_struct.stats_overlay, 'statistics')
+        % This condition means the user *intended* to set 'statistics'. Now check if params.stats_overlay.statistics is valid.
+         params = validate_cell_array_of_strings_field(params, base_defaults, 'stats_overlay', 'statistics');
+    elseif isfield(params.stats_overlay, 'statistics') && ~iscellstr(params.stats_overlay.statistics) %#ok<ISCLSTR>
+        % If it exists in params (e.g. from a preset) but is not a cellstr, also validate/reset
+        % Note: iscellstr is a bit too strict (requires non-empty strings), using the helper.
+        params = validate_cell_array_of_strings_field(params, base_defaults, 'stats_overlay', 'statistics');
+    end
+else
+     if ~isstruct(params.stats_overlay) && any(strcmp(fieldnames(base_defaults), 'stats_overlay'))
+        log_message(params, sprintf('''params.stats_overlay'' is not a struct. Resetting to default.', class(params.stats_overlay)), 1, 'Warning');
+        params.stats_overlay = base_defaults.stats_overlay;
+    end
+end
+
+% Step f: Merge the user-provided sub-struct fields for panel_labeling and stats_overlay
+% This ensures that user's specific field values are in `params` before detailed field validation.
+% Note: `params.export_settings` is typically handled as a whole struct assignment, not field-by-field merge here.
+log_message(params, 'Merging user-provided sub-struct fields (panel_labeling, stats_overlay)...', 2, 'Info');
+   if isfield(user_provided_params_struct, 'panel_labeling')
+       if isstruct(user_provided_params_struct.panel_labeling)
+           if ~isstruct(params.panel_labeling) % Safeguard: Ensure params.panel_labeling is a struct (should be due to prior type validation)
+               log_message(params, 'params.panel_labeling was not a struct before merging user fields. Resetting to default struct first.', 1, 'Warning');
+               params.panel_labeling = base_defaults.panel_labeling;
            end
+           user_pl_fields = fieldnames(user_provided_params_struct.panel_labeling);
+           for k_pl = 1:length(user_pl_fields)
+               if isfield(params.panel_labeling, user_pl_fields{k_pl}) % Only merge known fields
+                   params.panel_labeling.(user_pl_fields{k_pl}) = user_provided_params_struct.panel_labeling.(user_pl_fields{k_pl});
+               else
+                   log_message(params, sprintf('Unknown panel_labeling parameter during merge: "%s". This parameter will be ignored.', user_pl_fields{k_pl}), 1, 'Warning');
+               end
+           end
+       else
+            % This case (user_provided_params_struct.panel_labeling is not a struct)
+            % should have been handled by the top-level type validation which would reset params.panel_labeling.
+            log_message(params, sprintf('User-provided ''panel_labeling'' was not a struct. Fields not merged. Default panel_labeling params will be used/validated.'), 2, 'Info');
        end
    end
-   % Merge stats_overlay sub-struct
-   if isfield(user_provided_params_struct, 'stats_overlay') && isstruct(user_provided_params_struct.stats_overlay)
-       user_so_fields = fieldnames(user_provided_params_struct.stats_overlay);
-       for k_so = 1:length(user_so_fields)
-           if isfield(params.stats_overlay, user_so_fields{k_so})
-               params.stats_overlay.(user_so_fields{k_so}) = user_provided_params_struct.stats_overlay.(user_so_fields{k_so});
-           else
-               log_message(params, sprintf('Unknown stats_overlay parameter: "%s". This parameter will be ignored.', user_so_fields{k_so}), 1, 'Warning');
+   if isfield(user_provided_params_struct, 'stats_overlay')
+       if isstruct(user_provided_params_struct.stats_overlay)
+            if ~isstruct(params.stats_overlay) % Safeguard
+               log_message(params, 'params.stats_overlay was not a struct before merging user fields. Resetting to default struct first.', 1, 'Warning');
+               params.stats_overlay = base_defaults.stats_overlay;
+            end
+           user_so_fields = fieldnames(user_provided_params_struct.stats_overlay);
+           for k_so = 1:length(user_so_fields)
+               if isfield(params.stats_overlay, user_so_fields{k_so}) % Only merge known fields
+                   params.stats_overlay.(user_so_fields{k_so}) = user_provided_params_struct.stats_overlay.(user_so_fields{k_so});
+               else
+                   log_message(params, sprintf('Unknown stats_overlay parameter during merge: "%s". This parameter will be ignored.', user_so_fields{k_so}), 1, 'Warning');
+               end
            end
+       else
+            log_message(params, sprintf('User-provided ''stats_overlay'' was not a struct. Fields not merged. Default stats_overlay params will be used/validated.'), 2, 'Info');
        end
    end
+log_message(params, 'User-provided sub-struct field merging complete.', 2, 'Info');
+
+% Step g: Perform detailed field-by-field validation on the (potentially merged) sub-structs
+log_message(params, 'Performing detailed sub-struct FIELD validation...', 2, 'Info');
+% export_settings validation
+if isstruct(params.export_settings) % Proceed only if it's a struct (should be, due to prior type validation)
+    params = validate_numeric_scalar_field(params, base_defaults, 'export_settings', 'resolution', true, true, false); % non-negative, positive
+    params = validate_logical_field(params, base_defaults, 'export_settings', 'enabled');
+    params = validate_logical_field(params, base_defaults, 'export_settings', 'open_exported_file');
+    params = validate_logical_field(params, base_defaults, 'export_settings', 'ui');
+else 
+    % This path should ideally not be reached if top-level type validation worked.
+    log_message(params, '''params.export_settings'' is unexpectedly not a struct before field validation. This may indicate a problem.', 0, 'Error');
+    if isfield(base_defaults, 'export_settings'); params.export_settings = base_defaults.export_settings; end % Attempt recovery
+end
+
+% panel_labeling validation
+if isstruct(params.panel_labeling)
+    params = validate_numeric_scalar_field(params, base_defaults, 'panel_labeling', 'font_scale_factor', true, false, false); % non-negative
+    params = validate_numeric_scalar_field(params, base_defaults, 'panel_labeling', 'x_offset', false, false, false); % any real
+    params = validate_numeric_scalar_field(params, base_defaults, 'panel_labeling', 'y_offset', false, false, false); % any real
+    params = validate_logical_field(params, base_defaults, 'panel_labeling', 'enabled');
+else
+    log_message(params, '''params.panel_labeling'' is unexpectedly not a struct before field validation.', 0, 'Error');
+    if isfield(base_defaults, 'panel_labeling'); params.panel_labeling = base_defaults.panel_labeling; end
+end
+
+% stats_overlay validation
+if isstruct(params.stats_overlay)
+    params = validate_numeric_scalar_field(params, base_defaults, 'stats_overlay', 'font_scale_factor', true, false, false); % non-negative
+    params = validate_numeric_scalar_field(params, base_defaults, 'stats_overlay', 'precision', true, false, true); % non-negative, integer
+    params = validate_logical_field(params, base_defaults, 'stats_overlay', 'enabled');
+    
+    % Validate 'statistics' field. It might not exist if not provided by user or preset.
+    % If it exists and is not the default, or if user specifically provided it, validate.
+    user_provided_stats = false;
+    if isfield(user_provided_params_struct, 'stats_overlay') && isstruct(user_provided_params_struct.stats_overlay) && isfield(user_provided_params_struct.stats_overlay, 'statistics')
+        user_provided_stats = true;
+    end
+    % Validate if user provided it, OR if it's present in params.stats_overlay and different from default (e.g. set by a preset)
+    if user_provided_stats || (isfield(params.stats_overlay, 'statistics') && ~isequal(params.stats_overlay.statistics, base_defaults.stats_overlay.statistics))
+         params = validate_cell_array_of_strings_field(params, base_defaults, 'stats_overlay', 'statistics');
+    end
+else
+    log_message(params, '''params.stats_overlay'' is unexpectedly not a struct before field validation.', 0, 'Error');
+    if isfield(base_defaults, 'stats_overlay'); params.stats_overlay = base_defaults.stats_overlay; end
+end
+log_message(params, 'Detailed sub-struct FIELD validation complete.', 2, 'Info');
+% --- END Sub-Struct Type and Field Validation ---
 
 % Apply theme defaults intelligently after presets and user params have been merged.
 % The goal is to apply generic theme colors ONLY if they haven't been specifically
@@ -851,14 +1155,14 @@ process_text_prop(ax.YLabel, ax.YLabel.String, lfs, 'normal', params.text_color,
 process_text_prop(ax.ZLabel, ax.ZLabel.String, lfs, 'normal', params.text_color, params.font_name, params);
 
 if ~isgeoaxes(ax) && strcmpi(params.axis_limit_mode, 'padded') && params.expand_axis_limits_factor > 0
-        expand_axis_lims(ax, 'XLim', params.expand_axis_limits_factor);
-        expand_axis_lims(ax, 'YLim', params.expand_axis_limits_factor);
+        expand_axis_lims(ax, 'XLim', params.expand_axis_limits_factor, params);
+        expand_axis_lims(ax, 'YLim', params.expand_axis_limits_factor, params);
         % BUGFIX: Removed redundant log scale check, expand_axis_lims handles it.
-        if isprop(ax,'ZAxis') && ~isempty(ax.ZAxis) && diff(ax.ZLim) > 1e-9; expand_axis_lims(ax, 'ZLim', params.expand_axis_limits_factor); end
+        if isprop(ax,'ZAxis') && ~isempty(ax.ZAxis) && diff(ax.ZLim) > 1e-9; expand_axis_lims(ax, 'ZLim', params.expand_axis_limits_factor, params); end
     elseif strcmpi(params.axis_limit_mode, 'tight');
         try; axis(ax, 'tight');
             if params.expand_axis_limits_factor > 0 && params.expand_axis_limits_factor < 0.015 % very slight pad after tight
-                expand_axis_lims(ax, 'XLim', params.expand_axis_limits_factor*0.5); expand_axis_lims(ax, 'YLim', params.expand_axis_limits_factor*0.5);
+                expand_axis_lims(ax, 'XLim', params.expand_axis_limits_factor*0.5, params); expand_axis_lims(ax, 'YLim', params.expand_axis_limits_factor*0.5, params);
             end
         catch ME_tight; log_message(params, sprintf('Warning: "axis tight" failed for axes (Tag: %s): %s', ax.Tag, ME_tight.message),1,'Warning'); end
     end
@@ -954,7 +1258,7 @@ current_color = []; current_marker_style_name = [];
         end
     elseif isa(child, 'matlab.graphics.chart.primitive.Scatter')
         % BUGFIX: Corrected SizeData scaling. ms is already scaled points value. SizeData is points^2.
-        safe_set(child, 'SizeData', ms^2, 'LineWidth', actual_plot_lw*0.5);
+        safe_set(child, 'SizeData', ms^2, 'LineWidth', actual_plot_lw*0.5); % Scatter markers often look better with thinner lines than primary plot lines
         if ~isempty(current_color)
             if ~(ischar(child.MarkerFaceColor)&&any(strcmpi(child.MarkerFaceColor,{'none','flat'}))); safe_set(child,'MarkerFaceColor',current_color); end
             if ~(ischar(child.MarkerEdgeColor)&&strcmpi(child.MarkerEdgeColor,'none')); safe_set(child,'MarkerEdgeColor',current_color*0.75); end
@@ -967,7 +1271,7 @@ current_color = []; current_marker_style_name = [];
         safe_set(child, 'LineWidth', alw*0.8, 'EdgeColor', params.axis_color*0.5, 'FaceAlpha', 0.7);
         if ~isempty(current_color); safe_set(child, 'FaceColor', current_color); end
     elseif isa(child, 'matlab.graphics.chart.primitive.ErrorBar')
-        safe_set(child, 'LineWidth', actual_plot_lw*0.8, 'MarkerSize', ms*0.8, 'CapSize', actual_plot_lw*params.errorbar_cap_size_scale*6);
+        safe_set(child, 'LineWidth', actual_plot_lw*0.8, 'MarkerSize', ms*0.8, 'CapSize', actual_plot_lw*params.errorbar_cap_size_scale*6); % Capsize scaled with line width, factor 6 is empirical
         if ~isempty(current_color); safe_set(child,'Color',current_color); end
         if ~isempty(current_marker_style_name); safe_set(child, 'Marker', current_marker_style_name); end
     elseif isa(child,'matlab.graphics.primitive.Surface')||isa(child,'matlab.graphics.chart.primitive.Surface')||isa(child,'matlab.graphics.primitive.Patch')
@@ -1087,6 +1391,14 @@ end
 num_actual_legend_entries = length(plottable_children_for_legend);
 should_show_legend = false;
 
+% Determine if a legend should be displayed or created based on:
+% 1. If legend_location is 'none'.
+% 2. params.smart_legend_display:
+%    - If true: shows existing legend for >1 item, creates for 1 item if force_single_entry is true.
+%    - Hides legend otherwise.
+% 3. If not smart_legend_display:
+%    - Shows/creates legend if >0 items (or 1 item if force_single_entry is true).
+%    - Hides legend otherwise.
 if strcmpi(params.legend_location,'none')
     if ~isempty(existing_legend)&&isvalid(existing_legend); safe_set(existing_legend,'Visible','off');end
 else
@@ -1273,7 +1585,7 @@ else;fixed_str=original_str;end
 end
 
 % --- Helper Function: Expand Axis Limits ---
-function expand_axis_lims(ax,limit_prop_name,factor)
+function expand_axis_lims(ax,limit_prop_name,factor, params) % Added params argument
 try
 current_lim=get(ax,limit_prop_name);
 if diff(current_lim) < 1e-9 || ~all(isfinite(current_lim));return;end % Avoid division by zero or NaN issues
@@ -1298,14 +1610,15 @@ else
     if abs(current_lim(2))<1e-9 && new_lim(2)>0;new_lim(2)=0;end;
 end
 if all(isfinite(new_lim))&&new_lim(2)>new_lim(1);safe_set(ax,limit_prop_name,new_lim);end
-IGNORE_WHEN_COPYING_START
-content_copy
-download
-Use code with caution.
-IGNORE_WHEN_COPYING_END
 
 catch ME_expand
-% log_message called from beautify_single_axes if needed
+    % Check if params is available and correctly structured before logging
+    if exist('params', 'var') && isstruct(params) && isfield(params, 'log_level')
+        log_message(params, sprintf('Failed to expand axis limits for %s: %s. Limits remain unchanged.', limit_prop_name, ME_expand.message), 2, 'Warning');
+    else
+        % Fallback if params is not available (should not happen if called correctly)
+        fprintf(2, '[BeautifyFig - Warning L2] Failed to expand axis limits for %s: %s. (Params not available for full log)\n', limit_prop_name, ME_expand.message);
+    end
 end
 end
 
@@ -1452,7 +1765,24 @@ catch ME_set
 % Suppress errors during set if handle is invalid or prop is bad,
 % as the main function's try-catch will handle major issues.
 % Or, log it at a very verbose level if needed.
-% log_message(params_struct_if_available, sprintf('safe_set failed for %s: %s', prop_name, ME_set.message), 3, 'Debug');
+    try
+        % Attempt to get params from the caller's workspace
+        params_caller = evalin('caller', 'params');
+        if isstruct(params_caller) && isfield(params_caller, 'log_level')
+            % Check if varargin{i} (prop_name) exists; it might not if error is very early
+            prop_name_for_log = 'unknown_property';
+            if i <= numel(varargin) && ischar(varargin{i})
+                prop_name_for_log = varargin{i};
+            end
+            log_message(params_caller, sprintf('safe_set failed for property "%s" on handle of type "%s": %s', prop_name_for_log, class(handle), ME_set.message), 2, 'Debug');
+        else
+            % Fallback if params not available or not structured as expected in caller
+            fprintf(2, '[BeautifyFig - Debug L2] safe_set failed: %s (Params not available in caller for full log)\n', ME_set.message);
+        end
+    catch E_evalin
+        % Fallback if evalin fails or any other issue in logging attempt
+        fprintf(2, '[BeautifyFig - Debug L2] safe_set failed: %s (Error during log attempt: %s)\n', ME_set.message, E_evalin.message);
+    end
 end
 end
 
@@ -1468,7 +1798,19 @@ set(ax_handle, 'NextPlot', 'replace');
 end
 end
 catch ME_hold
-% log_message(params_struct_if_available, sprintf('safe_hold failed: %s', ME_hold.message), 1, 'Warning');
+    try
+        % Attempt to get params from the caller's workspace
+        params_caller = evalin('caller', 'params');
+        if isstruct(params_caller) && isfield(params_caller, 'log_level')
+            log_message(params_caller, sprintf('safe_hold failed for state "%s" on handle of type "%s": %s', state, class(ax_handle), ME_hold.message), 2, 'Debug');
+        else
+            % Fallback if params not available or not structured as expected in caller
+            fprintf(2, '[BeautifyFig - Debug L2] safe_hold failed for state "%s" on handle of type "%s": %s (Params not available in caller for full log)\n', state, class(ax_handle), ME_hold.message);
+        end
+    catch E_evalin
+        % Fallback if evalin fails or any other issue in logging attempt
+         fprintf(2, '[BeautifyFig - Debug L2] safe_hold failed for state "%s" on handle of type "%s": %s (Error during log attempt: %s)\n', state, class(ax_handle), ME_hold.message, E_evalin.message);
+    end
 end
 end
 
