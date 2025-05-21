@@ -48,13 +48,9 @@ Key parameters include:
 *   `base_font_size`: Base font size for scaling elements.
 *   `plot_line_width`: Base line width for plotted data.
 *   `color_palette`: Predefined palettes or custom RGB matrix.
-*   `export_settings`: Structure for controlling automatic figure export. Key sub-fields:
-    *   `enabled`: (boolean) `true` to enable export.
-    *   `filename`: (string) Name of the output file (without extension).
-    *   `format`: (string) e.g., 'png', 'pdf', 'eps', 'svg', 'jpeg', 'tiff'.
-    *   `resolution`: (numeric) DPI for raster formats, e.g., 300.
-    *   `open_exported_file`: (boolean) `true` to attempt opening the file after export.
-    *   (Other fields like `renderer` and `ui` exist, see script help text for full details).
+*   `export_settings`: Structure for controlling automatic figure export (see details below).
+*   `panel_labeling`: Structure for automated panel labeling (see details below).
+*   `stats_overlay`: Structure for basic statistical overlay (see details below).
 
 ## Features
 
@@ -67,6 +63,9 @@ Key parameters include:
 *   Interactive legends (clickable items to toggle plot visibility, R2019b+).
 *   Axes styling (box, grid, tick direction, layer).
 *   Optional automatic export of figures to various formats (PNG, PDF, EPS, etc.).
+*   Automated Panel Labeling: Automatically add panel labels like 'A', 'B', 'C' or 'a)', 'b)' to subplots/tiles.
+*   Basic Statistical Overlay: Display basic statistics (mean, std, min, max, N, etc.) for plotted data directly on the figure.
+
 
 ## Examples
 
@@ -122,6 +121,65 @@ export_options.export_settings.format = 'pdf';
 export_options.export_settings.resolution = 300; % Good for vector PDF too
 beautify_figure(export_options); 
 % This will create 'squares_plot.pdf'
+```
+
+### Automated Panel Labeling
+
+This feature helps in automatically adding panel labels (e.g., 'A', 'B', 'a)', 'I') to subplots or tiles within a figure, which is useful for referencing specific panels in publications or reports. The settings are controlled via the `panel_labeling` structure.
+
+Key `panel_labeling` parameters:
+*   `enabled` (boolean): Set to `true` to enable panel labeling. Default: `false`.
+*   `style` (string): Defines the labeling style. Options include: `'A'` (A, B, C...), `'a'` (a, b, c...), `'a)'` (a), b), c)...), `'I'` (I, II, III...), `'i'` (i, ii, iii...), `'1'` (1, 2, 3...). Default: `'A'`.
+*   `position` (string): Specifies where the label is placed on the axes. Common options: `'northwest_inset'`, `'northeast_inset'`, `'southwest_inset'`, `'southeast_inset'`. Default: `'northwest_inset'`.
+*   `font_scale_factor` (numeric): Multiplier for the font size, relative to the axes title's font size. Default: `1.0`.
+*   `font_weight` (string): Font weight for the panel labels, e.g., `'bold'`, `'normal'`. Default: `'bold'`.
+*   `x_offset` (numeric): Normalized horizontal offset from the edge defined by `position`. Default: `0.02`.
+*   `y_offset` (numeric): Normalized vertical offset from the edge defined by `position`. Default: `0.02`.
+*   `text_color` (color spec): Color of the panel label text. If empty (`[]`), it inherits from the global `params.text_color`.
+*   `font_name` (string): Font name for the panel labels. If empty (`[]`), it inherits from the global `params.font_name`.
+
+Example:
+```matlab
+% For a figure with subplots
+figure; subplot(1,2,1); plot(rand(5)); subplot(1,2,2); plot(rand(5));
+my_settings.panel_labeling.enabled = true;
+my_settings.panel_labeling.style = 'a)';
+my_settings.panel_labeling.position = 'northeast_inset'; % Custom position
+beautify_figure(my_settings);
+% Expected: labels 'a)' and 'b)' in the top-right corner of each subplot.
+```
+
+### Basic Statistical Overlay
+
+This feature allows for the display of basic statistical information (like mean, standard deviation, N, etc.) for a chosen plot directly on the figure. This is useful for quickly conveying key data characteristics. Settings are managed via the `stats_overlay` structure.
+
+Key `stats_overlay` parameters:
+*   `enabled` (boolean): Set to `true` to enable the statistical overlay. Default: `false`.
+*   `statistics` (cell array of strings): Specifies which statistics to display. Options: `'mean'`, `'std'`, `'min'`, `'max'`, `'N'`, `'median'`, `'sum'`. Default: `{'mean', 'std'}`.
+*   `position` (string): Position of the stats text box on the axes (e.g., `'northeast_inset'`, `'southwest_inset'`). Default: `'northeast_inset'`.
+*   `precision` (integer): Number of decimal places for the displayed statistical values. Default: `2`.
+*   `target_plot_handle_tag` (string): The `Tag` property of a specific plot object (e.g., a line or scatter plot) from which to calculate statistics. If empty, the function attempts to use the first valid plot object found in the axes. Default: `''`.
+*   `font_scale_factor` (numeric): Multiplier for the font size, relative to the axes labels' font size. Default: `0.9`.
+*   `text_color` (color spec): Color of the statistics text. If empty (`[]`), inherits from `params.text_color`.
+*   `font_name` (string): Font name for the statistics text. If empty (`[]`), inherits from `params.font_name`.
+*   `background_color` (color spec or string): Background color of the stats text box. Can be an RGB triplet, a standard MATLAB color string (e.g., `'yellow'`), or `'figure'` to match the figure background. If empty (`[]`), no background is drawn.
+*   `edge_color` (color spec or string): Edge color of the stats text box. Can be an RGB triplet, a color string, or `'axes'` to match the axes color. If empty (`[]`), no edge is drawn.
+
+Example:
+```matlab
+figure; 
+plot(1:20, randn(1,20) + 10, 'Tag', 'TemperatureData', 'LineWidth', 1.5);
+title('Experimental Data');
+
+my_settings.stats_overlay.enabled = true;
+my_settings.stats_overlay.statistics = {'mean', 'std', 'N', 'max'};
+my_settings.stats_overlay.target_plot_handle_tag = 'TemperatureData'; % Target this specific plot
+my_settings.stats_overlay.position = 'southeast_inset';
+my_settings.stats_overlay.background_color = [0.95 0.95 0.85]; % Light yellow background
+my_settings.stats_overlay.edge_color = [0.5 0.5 0.5];      % Gray border
+beautify_figure(my_settings);
+% Expected: A text box in the bottom-right of the plot showing mean, std, N, and max
+% for the 'TemperatureData' line, with a light yellow background and gray border.
 ```
 
 ## Dependencies
