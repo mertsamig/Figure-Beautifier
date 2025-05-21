@@ -27,7 +27,7 @@
         </property>
         <object class="matlab.ui.container.GridLayout" name="GeneralSettingsGridLayout">
           <property name="Parent" type="matlab.ui.container.Panel" value="GeneralSettingsPanel"/>
-          <property name="RowHeight" type="matlab.internal.datatype.matlab.graphics.datatype.auto" value="{'fit','fit','fit','fit','fit'}"/>
+          <property name="RowHeight" type="matlab.internal.datatype.matlab.graphics.datatype.auto" value="{'fit','fit','fit','fit','fit','fit'}"/>
           <property name="ColumnWidth" type="matlab.internal.datatype.matlab.graphics.datatype.auto" value="{'fit','1x'}"/>
         </object>
         <object class="matlab.ui.control.Label" name="StylePresetLabel">
@@ -115,6 +115,23 @@
             <property name="Column" type="matlab.internal.datatype.matlab.graphics.datatype.numeric" value="2"/>
           </property>
         </object>
+        <object class="matlab.ui.control.Label" name="LogLevelLabel">
+          <property name="Parent" type="matlab.ui.container.GridLayout" value="GeneralSettingsGridLayout"/>
+          <property name="Text" type="matlab.internal.datatype.matlab.graphics.datatype.char" value="Log Level"/>
+          <property name="Layout" type="matlab.ui.layout.GridLayoutOptions">
+            <property name="Row" type="matlab.internal.datatype.matlab.graphics.datatype.numeric" value="6"/>
+            <property name="Column" type="matlab.internal.datatype.matlab.graphics.datatype.numeric" value="1"/>
+          </property>
+        </object>
+        <object class="matlab.ui.control.DropDown" name="LogLevelDropDown">
+          <property name="Parent" type="matlab.ui.container.GridLayout" value="GeneralSettingsGridLayout"/>
+          <property name="Items" type="matlab.internal.datatype.matlab.graphics.datatype.cell" value="{'0 (Silent)', '1 (Normal)', '2 (Detailed)'}"/>
+          <property name="Value" type="matlab.internal.datatype.matlab.graphics.datatype.char" value="2 (Detailed)"/>
+          <property name="Layout" type="matlab.ui.layout.GridLayoutOptions">
+            <property name="Row" type="matlab.internal.datatype.matlab.graphics.datatype.numeric" value="6"/>
+            <property name="Column" type="matlab.internal.datatype.matlab.graphics.datatype.numeric" value="2"/>
+          </property>
+        </object>
       </object>
       <object class="matlab.ui.container.GridLayout" name="ButtonGridLayout">
         <property name="Parent" type="matlab.ui.container.GridLayout" value="MainGridLayout"/>
@@ -167,7 +184,7 @@
         </property>
         <object class="matlab.ui.container.GridLayout" name="ExportSettingsGridLayout">
           <property name="Parent" type="matlab.ui.container.Panel" value="ExportSettingsPanel"/>
-          <property name="RowHeight" type="matlab.internal.datatype.matlab.graphics.datatype.auto" value="{'fit','fit','fit','fit'}"/>
+          <property name="RowHeight" type="matlab.internal.datatype.matlab.graphics.datatype.auto" value="{'fit','fit','fit','fit','fit'}"/>
           <property name="ColumnWidth" type="matlab.internal.datatype.matlab.graphics.datatype.auto" value="{'fit','1x'}"/>
         </object>
         <object class="matlab.ui.control.CheckBox" name="EnableExportCheckBox" valueChangedFcn="app.updateExportSettingsControlsEnable">
@@ -213,7 +230,7 @@
             <property name="Column" type="matlab.internal.datatype.matlab.graphics.datatype.numeric" value="2"/>
           </property>
         </object>
-        <object class="matlab.ui.control.Label" name="ResolutionDPILabel">
+        <object class="matlab.ui.control.Label" name="ResolutionLabel">
           <property name="Parent" type="matlab.ui.container.GridLayout" value="ExportSettingsGridLayout"/>
           <property name="Text" type="matlab.internal.datatype.matlab.graphics.datatype.char" value="Resolution (DPI)"/>
           <property name="Layout" type="matlab.ui.layout.GridLayoutOptions">
@@ -221,12 +238,22 @@
             <property name="Column" type="matlab.internal.datatype.matlab.graphics.datatype.numeric" value="1"/>
           </property>
         </object>
-        <object class="matlab.ui.control.Spinner" name="ResolutionDPISpinner">
+        <object class="matlab.ui.control.Spinner" name="ResolutionSpinner">
           <property name="Parent" type="matlab.ui.container.GridLayout" value="ExportSettingsGridLayout"/>
           <property name="Value" type="matlab.internal.datatype.matlab.graphics.datatype.numeric" value="300"/>
           <property name="Layout" type="matlab.ui.layout.GridLayoutOptions">
             <property name="Row" type="matlab.internal.datatype.matlab.graphics.datatype.numeric" value="4"/>
             <property name="Column" type="matlab.internal.datatype.matlab.graphics.datatype.numeric" value="2"/>
+          </property>
+        </object>
+        <object class="matlab.ui.control.CheckBox" name="OpenExportedFileCheckBox">
+          <property name="Parent" type="matlab.ui.container.GridLayout" value="ExportSettingsGridLayout"/>
+          <property name="Text" type="matlab.internal.datatype.matlab.graphics.datatype.char" value="Open Exported File"/>
+          <property name="Value" type="matlab.internal.datatype.codegen.োডেকেরমান" value="false"/>
+          <property name="Layout" type="matlab.ui.layout.GridLayoutOptions">
+            <property name="Row" type="matlab.internal.datatype.matlab.graphics.datatype.numeric" value="5"/>
+            <property name="Column" type="matlab.internal.datatype.matlab.graphics.datatype.numeric" value="1"/>
+            <property name="ColumnSpan" type="matlab.internal.datatype.matlab.graphics.datatype.numeric" value="2"/>
           </property>
         </object>
       </object>
@@ -448,7 +475,7 @@
         </property>
         <object class="matlab.ui.container.GridLayout" name="AxesConfigurationGridLayout">
           <property name="Parent" type="matlab.ui.container.Panel" value="AxesConfigurationPanel"/>
-          <property name="RowHeight" type="matlab.internal.datatype.matlab.graphics.datatype.auto" value="{'fit','fit','fit'}"/>
+          <property name="RowHeight" type="matlab.internal.datatype.matlab.graphics.datatype.auto" value="{'fit','fit','fit','fit','fit'}"/>
           <property name="ColumnWidth" type="matlab.internal.datatype.matlab.graphics.datatype.auto" value="{'fit','1x'}"/>
         </object>
         <object class="matlab.ui.control.Label" name="GridDensityLabel">
@@ -499,6 +526,41 @@
           <property name="Value" type="matlab.internal.datatype.matlab.graphics.datatype.char" value="top"/>
           <property name="Layout" type="matlab.ui.layout.GridLayoutOptions">
             <property name="Row" type="matlab.internal.datatype.matlab.graphics.datatype.numeric" value="3"/>
+            <property name="Column" type="matlab.internal.datatype.matlab.graphics.datatype.numeric" value="2"/>
+          </property>
+        </object>
+        <object class="matlab.ui.control.Label" name="AxisLimitModeLabel">
+          <property name="Parent" type="matlab.ui.container.GridLayout" value="AxesConfigurationGridLayout"/>
+          <property name="Text" type="matlab.internal.datatype.matlab.graphics.datatype.char" value="Axis Limit Mode"/>
+          <property name="Layout" type="matlab.ui.layout.GridLayoutOptions">
+            <property name="Row" type="matlab.internal.datatype.matlab.graphics.datatype.numeric" value="4"/>
+            <property name="Column" type="matlab.internal.datatype.matlab.graphics.datatype.numeric" value="1"/>
+          </property>
+        </object>
+        <object class="matlab.ui.control.DropDown" name="AxisLimitModeDropDown" valueChangedFcn="app.updateExpandLimitsFactorEnable">
+          <property name="Parent" type="matlab.ui.container.GridLayout" value="AxesConfigurationGridLayout"/>
+          <property name="Items" type="matlab.internal.datatype.matlab.graphics.datatype.cell" value="{'padded', 'tight'}"/>
+          <property name="Value" type="matlab.internal.datatype.matlab.graphics.datatype.char" value="padded"/>
+          <property name="Layout" type="matlab.ui.layout.GridLayoutOptions">
+            <property name="Row" type="matlab.internal.datatype.matlab.graphics.datatype.numeric" value="4"/>
+            <property name="Column" type="matlab.internal.datatype.matlab.graphics.datatype.numeric" value="2"/>
+          </property>
+        </object>
+        <object class="matlab.ui.control.Label" name="ExpandLimitsFactorLabel">
+          <property name="Parent" type="matlab.ui.container.GridLayout" value="AxesConfigurationGridLayout"/>
+          <property name="Text" type="matlab.internal.datatype.matlab.graphics.datatype.char" value="Expand Limits Factor"/>
+          <property name="Layout" type="matlab.ui.layout.GridLayoutOptions">
+            <property name="Row" type="matlab.internal.datatype.matlab.graphics.datatype.numeric" value="5"/>
+            <property name="Column" type="matlab.internal.datatype.matlab.graphics.datatype.numeric" value="1"/>
+          </property>
+        </object>
+        <object class="matlab.ui.control.Spinner" name="ExpandLimitsFactorSpinner">
+          <property name="Parent" type="matlab.ui.container.GridLayout" value="AxesConfigurationGridLayout"/>
+          <property name="Limits" type="matlab.internal.datatype.matlab.graphics.datatype.numeric" value="[0 0.5]"/>
+          <property name="Value" type="matlab.internal.datatype.matlab.graphics.datatype.numeric" value="0.03"/>
+          <property name="Step" type="matlab.internal.datatype.matlab.graphics.datatype.numeric" value="0.01"/>
+          <property name="Layout" type="matlab.ui.layout.GridLayoutOptions">
+            <property name="Row" type="matlab.internal.datatype.matlab.graphics.datatype.numeric" value="5"/>
             <property name="Column" type="matlab.internal.datatype.matlab.graphics.datatype.numeric" value="2"/>
           </property>
         </object>
@@ -602,6 +664,7 @@
             app.updatePanelLabelingControlsEnable();
             app.updateStatsOverlayControlsEnable();
             app.updateExportSettingsControlsEnable();
+            app.updateExpandLimitsFactorEnable(); % Add this call
           ]]>
         </body>
       </method>
@@ -718,15 +781,12 @@
           <![CDATA[
             % updateExportSettingsControlsEnable: Enables or disables controls in the
             % Export Settings section based on the EnableExportCheckBox state.
-            if app.EnableExportCheckBox.Value
-                app.FilenameEditField.Enable = 'on';
-                app.FormatDropDown.Enable = 'on';
-                app.ResolutionDPISpinner.Enable = 'on';
-            else
-                app.FilenameEditField.Enable = 'off';
-                app.FormatDropDown.Enable = 'off';
-                app.ResolutionDPISpinner.Enable = 'off';
-            end
+            exportEnabled = app.EnableExportCheckBox.Value;
+            app.FilenameEditField.Enable = exportEnabled;
+            app.FormatDropDown.Enable = exportEnabled;
+            app.ResolutionLabel.Enable = exportEnabled; % Also enable/disable the label
+            app.ResolutionSpinner.Enable = exportEnabled;
+            app.OpenExportedFileCheckBox.Enable = exportEnabled;
           ]]>
         </body>
       </method>
@@ -891,6 +951,15 @@
                 app.FontNameDropDown.Value = settings.font_name;
                 app.BaseFontSizeSpinner.Value = settings.base_font_size;
                 app.GlobalFontScaleFactorSpinner.Value = settings.global_font_scale_factor;
+                if isfield(settings, 'log_level') && isnumeric(settings.log_level)
+                    log_level_str_to_set = sprintf('%d (', settings.log_level);
+                    for item_idx = 1:length(app.LogLevelDropDown.Items)
+                        if startsWith(app.LogLevelDropDown.Items{item_idx}, log_level_str_to_set)
+                            app.LogLevelDropDown.Value = app.LogLevelDropDown.Items{item_idx};
+                            break;
+                        end
+                    end
+                end
 
                 % Plot Appearance
                 app.PlotLineWidthSpinner.Value = settings.plot_line_width;
@@ -925,6 +994,13 @@
                 app.GridDensityDropDown.Value = settings.grid_density;
                 app.AxisBoxStyleDropDown.Value = settings.axis_box_style;
                 app.AxesLayerDropDown.Value = settings.axes_layer;
+                if isfield(settings, 'axis_limit_mode')
+                    app.AxisLimitModeDropDown.Value = settings.axis_limit_mode;
+                end
+                if isfield(settings, 'expand_axis_limits_factor')
+                    app.ExpandLimitsFactorSpinner.Value = settings.expand_axis_limits_factor;
+                end
+                app.updateExpandLimitsFactorEnable(); % Call after setting mode
 
                 % Legend Settings
                 app.LegendLocationDropDown.Value = settings.legend_location;
@@ -962,7 +1038,16 @@
                     app.EnableExportCheckBox.Value = settings.export_settings.enabled;
                     app.FilenameEditField.Value = settings.export_settings.filename;
                     app.FormatDropDown.Value = settings.export_settings.format;
-                    app.ResolutionDPISpinner.Value = settings.export_settings.resolution_dpi;
+                    if isfield(settings.export_settings, 'resolution') % Check for new field name
+                        app.ResolutionSpinner.Value = settings.export_settings.resolution;
+                    elseif isfield(settings.export_settings, 'resolution_dpi') % Fallback for old field name
+                        app.ResolutionSpinner.Value = settings.export_settings.resolution_dpi;
+                    end
+                    if isfield(settings.export_settings, 'open_exported_file')
+                        app.OpenExportedFileCheckBox.Value = settings.export_settings.open_exported_file;
+                    else
+                        app.OpenExportedFileCheckBox.Value = false; % Default if not in preset
+                    end
                 end
                 app.updateExportSettingsControlsEnable(); % Update enable state for export settings section
                 
@@ -996,15 +1081,17 @@
                 'How to Use:\n' ...
                 '1. Open or generate a MATLAB figure you wish to modify.\n' ...
                 '2. Adjust parameters in the various sections of this app:\n' ...
-                '   - General Settings: Control overall style, theme, font name, and base font sizes.\n' ...
+                '   - General Settings: Control overall style (Style Preset), theme (Theme), font name (Font Name), base font size (Base Font Size), global font scaling (Global Font Scale Factor), and logging verbosity (Log Level).\n' ...
                 '     The ''Font Name'' dropdown attempts to list system fonts and is also editable for custom font names.\n' ...
+                '     ''Log Level'' options are ''0 (Silent)'', ''1 (Normal)'', or ''2 (Detailed)''.\n' ...
                 '   - Plot Appearance: Modify line widths, marker sizes, and color palettes.\n' ...
                 '     The ''Custom Color Palette'' field becomes active only when ''custom'' is selected in the ''ColorPalette'' dropdown. Input format is a MATLAB matrix string, e.g., [[1 0 0]; [0 1 0]; [0 0 1]] for red, green, blue.\n' ...
-                '   - Axes Configuration: Adjust grid density, axis box style, and layer position.\n' ...
+                '   - Axes Configuration: Adjust grid density (Grid Density), axis box style (Axis Box Style), axes layer position (Axes Layer), axis limit mode (Axis Limit Mode), and the padding factor for limits (Expand Limits Factor).\n' ...
+                '     ''Expand Limits Factor'' is active when ''Axis Limit Mode'' is ''padded''.\n' ...
                 '   - Legend Settings: Control legend location and behavior.\n' ...
                 '   - Panel Labeling: Enable and configure automated subplot labels (e.g., A, B, C). Requires ''Enable Panel Labeling'' to be checked.\n' ...
                 '   - Stats Overlay: Enable and configure statistical overlays on plots. Requires ''Enable Stats Overlay'' to be checked. Input format for statistics is a cell array string, e.g., {''mean'', ''std''}.\n' ...
-                '   - Export Settings: Enable and configure figure export options. Requires ''Enable Export'' to be checked.\n' ...
+                '   - Export Settings: Enable and configure figure export options such as filename, format, resolution (DPI), and whether to automatically open the exported file (Open Exported File). Requires ''Enable Export'' to be checked.\n' ...
                 '3. Click the ''Apply Beautification'' button. \n' ...
                 '   - If multiple figures are open, ensure the desired figure is the current active figure (click on it) before applying.\n' ...
                 '   - If no figure is open (or only the app itself), an alert will prompt you to open one.\n\n' ...
@@ -1041,33 +1128,32 @@
             settings.font_name = app.FontNameDropDown.Value;
             settings.base_font_size = app.BaseFontSizeSpinner.Value;
             settings.global_font_scale_factor = app.GlobalFontScaleFactorSpinner.Value;
+            log_level_str_val = app.LogLevelDropDown.Value;
+            settings.log_level = str2double(strtok(log_level_str_val)); % Extracts the number, e.g., from "2 (Detailed)"
 
             % Plot Appearance
             settings.plot_line_width = app.PlotLineWidthSpinner.Value;
             settings.marker_size = app.MarkerSizeSpinner.Value;
             settings.color_palette = app.ColorPaletteDropDown.Value;
             if strcmp(settings.color_palette, 'custom')
-                try
-                    custom_palette_str = app.CustomColorPaletteEditField.Value;
-                    % Attempt to evaluate string input as MATLAB code (e.g., matrix or cell array)
-                    evaluated_palette = evalin('base', custom_palette_str);
-                    if isnumeric(evaluated_palette) || iscell(evaluated_palette)
-                        settings.custom_color_palette = evaluated_palette;
-                    else
-                        settings.custom_color_palette = custom_palette_str; % Store as string if not numeric/cell
-                    end
-                catch ME
-                    disp(['Error evaluating custom color palette: ', ME.message]);
-                    settings.custom_color_palette = app.CustomColorPaletteEditField.Value; % Store original string on error
+                custom_palette_str = app.CustomColorPaletteEditField.Value;
+                parsed_palette = str2num(custom_palette_str); %#ok<ST2NM> Keep for potential string output if str2num fails
+                if isnumeric(parsed_palette) && size(parsed_palette, 2) == 3 && size(parsed_palette, 1) > 0
+                    settings.custom_color_palette = parsed_palette;
+                else
+                    settings.custom_color_palette = custom_palette_str; % Store original string
+                    disp('Warning: Custom color palette input could not be parsed as a valid Nx3 numeric matrix. Storing as string.');
                 end
             else
-                settings.custom_color_palette = []; % Use empty or a specific non-custom marker
+                settings.custom_color_palette = []; 
             end
 
             % Axes Configuration
             settings.grid_density = app.GridDensityDropDown.Value;
             settings.axis_box_style = app.AxisBoxStyleDropDown.Value;
             settings.axes_layer = app.AxesLayerDropDown.Value;
+            settings.axis_limit_mode = app.AxisLimitModeDropDown.Value;
+            settings.expand_axis_limits_factor = app.ExpandLimitsFactorSpinner.Value;
 
             % Legend Settings
             settings.legend_location = app.LegendLocationDropDown.Value;
@@ -1084,25 +1170,27 @@
             % Stats Overlay (nested struct)
             settings.stats_overlay.enabled = app.EnableStatsOverlayCheckBox.Value;
             stats_str = strtrim(app.StatisticsEditField.Value);
-            if startsWith(stats_str, '{') && endsWith(stats_str, '}') % Check if it looks like a cell array string
-                try
-                    % Attempt to evaluate as a cell array of strings
-                    evaluated_stats = evalin('base', stats_str);
-                    if iscellstr(evaluated_stats) %#ok<ISCLSTR> Validated cell array of strings
-                        settings.stats_overlay.statistics = evaluated_stats;
-                    else
-                        % If not a cell array of strings, try to split string by common delimiters
-                        settings.stats_overlay.statistics = strsplit(regexprep(stats_str, '[{}]', ''), {',', ';', ' '}, 'CollapseDelimiters', true);
-                    end
-                catch ME_stats
-                    disp(['Error evaluating statistics string: ', ME_stats.message]);
-                    % Fallback: store as a single-element cell array or split by comma
-                    settings.stats_overlay.statistics = strsplit(regexprep(stats_str, '[{}]', ''), ',');
-                end
-            else
-                 % Handle plain string by splitting (e.g. "mean std" or "mean,std")
-                settings.stats_overlay.statistics = strsplit(stats_str, {',', ';', ' '}, 'CollapseDelimiters', true);
+            if startsWith(stats_str, '{') && endsWith(stats_str, '}')
+                stats_str = stats_str(2:end-1); % Remove curly braces
             end
+            split_stats = strsplit(stats_str, {',', ';', ' '}, 'CollapseDelimiters', true);
+            cleaned_stats = {};
+            for k_stat = 1:length(split_stats)
+                item = strtrim(split_stats{k_stat});
+                % Remove leading/trailing single or double quotes
+                if (startsWith(item, '''') && endsWith(item, '''')) || ...
+                   (startsWith(item, '"') && endsWith(item, '"'))
+                    if length(item) > 1
+                        item = item(2:end-1);
+                    else
+                        item = ''; % Quote only, becomes empty
+                    end
+                end
+                if ~isempty(item)
+                    cleaned_stats{end+1} = item; %#ok<AGROW>
+                end
+            end
+            settings.stats_overlay.statistics = cleaned_stats;
             settings.stats_overlay.position = app.StatsOverlayPositionDropDown.Value;
             settings.stats_overlay.precision = app.StatsOverlayPrecisionSpinner.Value;
 
@@ -1110,7 +1198,29 @@
             settings.export_settings.enabled = app.EnableExportCheckBox.Value;
             settings.export_settings.filename = app.FilenameEditField.Value;
             settings.export_settings.format = app.FormatDropDown.Value;
-            settings.export_settings.resolution_dpi = app.ResolutionDPISpinner.Value;
+            settings.export_settings.resolution = app.ResolutionSpinner.Value;
+            settings.export_settings.open_exported_file = app.OpenExportedFileCheckBox.Value;
+          ]]>
+        </body>
+      </method>
+      <method name="updateExpandLimitsFactorEnable" access="private">
+        <input>
+          <arg name="app" type="app.BeautifyFigureApp"/>
+          <arg name="event" type="matlab.ui.eventdata.ValueChangedData"/>
+        </input>
+        <output/>
+        <body>
+          <![CDATA[
+            % updateExpandLimitsFactorEnable: Enables or disables the
+            % ExpandLimitsFactorSpinner and its label based on the
+            % AxisLimitModeDropDown value.
+            if strcmp(app.AxisLimitModeDropDown.Value, 'padded')
+                app.ExpandLimitsFactorSpinner.Enable = 'on';
+                app.ExpandLimitsFactorLabel.Enable = 'on'; % Assuming label is named this
+            else
+                app.ExpandLimitsFactorSpinner.Enable = 'off';
+                app.ExpandLimitsFactorLabel.Enable = 'off';
+            end
           ]]>
         </body>
       </method>

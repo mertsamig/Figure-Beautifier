@@ -37,9 +37,26 @@ h_axes2 = subplot(1,2,2); scatter(rand(10,1), rand(10,1)); title('Second Plot');
 beautify_figure([h_axes1, h_axes2]); % Apply default to specific axes
 ```
 
+## Using the Beautify Figure App (GUI)
+
+For users who prefer a graphical interface, this project also includes `BeautifyFigureApp.mlapp`. This app provides an interactive way to apply many of the beautification settings available in the `beautify_figure.m` script.
+
+**To launch the app:**
+1.  Open `BeautifyFigureApp.mlapp` in the MATLAB editor.
+2.  Click the "Run" button in the editor's toolbar.
+Alternatively, if the project is packaged as a MATLAB App (`.mlappinstall` file), you can install it via the MATLAB Apps tab and then run it from the Apps toolbar.
+
+The app allows you to:
+*   Load and apply settings to the currently active figure.
+*   Adjust parameters through various UI controls (dropdowns, checkboxes, spinners).
+*   Import and export parameter presets as `.mat` files.
+*   Access a built-in help dialog for app usage.
+
+While the app covers many common parameters, the full range of options and fine-grained control (especially for complex parameters like custom color palettes as matrices or detailed marker style cycling) is available through the `beautify_figure.m` script directly.
+
 ## Parameters
 
-This function offers a wide range of customizable parameters. These are passed as fields in a structure. For a detailed list of all parameters and their default values, please refer to the extensive help text within the `beautify_figure.m` script itself (e.g., by typing `help beautify_figure` in MATLAB).
+The `beautify_figure.m` script offers a wide range of customizable parameters. These are passed as fields in a structure. For a detailed list of all parameters and their default values, please refer to the extensive help text within the `beautify_figure.m` script itself (e.g., by typing `help beautify_figure` in MATLAB).
 
 Key parameters include:
 *   `style_preset`: String, e.g., 'default', 'publication', 'presentation_dark', 'presentation_light', 'minimalist'. Applies a predefined set of styles.
