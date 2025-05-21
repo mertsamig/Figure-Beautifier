@@ -55,6 +55,27 @@ function beautify_figure(user_params_or_axes_handle, user_params_for_specific_ax
 %     - open_exported_file: (false) If true, attempts to open the file after export.
 %     - renderer: ('painters') Renderer to use. For `print`: 'painters', 'opengl', 'vector'. `exportgraphics` usually manages this automatically or via content type.
 %     - ui: (false) If true and `exportgraphics` is available (R2020a+), it's preferred. Otherwise, `print` is used. Set to false to force `print -noui`.
+%   - panel_labeling: (struct) Settings for automated panel labeling.
+%     - enabled: (false) Set to true to enable panel labels.
+%     - style: ('A') Label style: 'A','a','a)','I','i','1'.
+%     - position: ('northwest_inset') e.g., 'northwest_inset', 'northeast_inset', 'southwest_inset', 'southeast_inset'.
+%     - font_scale_factor: (1.0) Font size scale factor relative to title font size.
+%     - font_weight: ('bold') Font weight for panel labels.
+%     - x_offset: (0.02) Normalized X offset for label position.
+%     - y_offset: (0.02) Normalized Y offset for label position.
+%     - text_color: ([]) Label text color (inherits from global text_color if empty).
+%     - font_name: ([]) Label font name (inherits from global font_name if empty).
+%   - stats_overlay: (struct) Settings for statistical data overlay.
+%     - enabled: (false) Set to true to enable statistical overlay.
+%     - statistics: ({'mean', 'std'}) Cell array of stats to display, e.g., 'min', 'max', 'N', 'median', 'sum'.
+%     - position: ('northeast_inset') Position of the stats text box, e.g., 'northeast_inset', 'southwest_inset'.
+%     - precision: (2) Number of decimal places for displayed statistics.
+%     - target_plot_handle_tag: ('') Tag of a specific plot object to analyze. If empty, uses the first valid plot in the axes.
+%     - font_scale_factor: (0.9) Font size scale factor relative to label font size.
+%     - text_color: ([]) Stats text color (inherits from global text_color if empty).
+%     - font_name: ([]) Stats font name (inherits from global font_name if empty).
+%     - background_color: ([]) Background of the stats text box (e.g., [0.9 0.9 0.9], 'yellow', or 'figure'). Default is none.
+%     - edge_color: ([]) Edge color of the stats text box (e.g., [0.5 0.5 0.5], 'black', or 'axes'). Default is none.
 %   ... and many more. Explore the default_params structure within the code.
 %
 % EXAMPLE:
@@ -152,6 +173,29 @@ default_params.export_settings.renderer = 'painters'; % Suggested: 'painters', '
 default_params.export_settings.ui = false; % If true, tries to use exportgraphics, else print -noui
 
 default_params.style_preset = 'default'; % Added new preset parameter
+
+   % Automated Panel Labeling
+   default_params.panel_labeling.enabled = false;
+   default_params.panel_labeling.style = 'A'; % Options: 'A', 'a', 'a)', 'I', 'i', '1'
+   default_params.panel_labeling.position = 'northwest_inset'; % Options: 'northwest_inset', 'northeast_inset', 'southwest_inset', 'southeast_inset', 'northwest_outset', etc.
+   default_params.panel_labeling.font_scale_factor = 1.0; % Relative to axes title font size
+   default_params.panel_labeling.font_weight = 'bold';
+   default_params.panel_labeling.x_offset = 0.02; % Normalized units from edge for inset, or absolute for outset
+   default_params.panel_labeling.y_offset = 0.02; % Normalized units from edge for inset, or absolute for outset
+   default_params.panel_labeling.text_color = []; % Inherits from params.text_color if empty
+   default_params.panel_labeling.font_name = []; % Inherits from params.font_name if empty
+
+   % Basic Statistical Overlay
+   default_params.stats_overlay.enabled = false;
+   default_params.stats_overlay.statistics = {'mean', 'std'}; % Cell array: 'mean', 'std', 'min', 'max', 'N', 'median', 'sum'
+   default_params.stats_overlay.position = 'northeast_inset'; % Options like panel_labeling, or 'best_text', 'manual_normalized_coords'
+   default_params.stats_overlay.precision = 2; % Decimal places
+   default_params.stats_overlay.text_color = []; % Inherits
+   default_params.stats_overlay.font_name = []; % Inherits
+   default_params.stats_overlay.font_scale_factor = 0.9; % Relative to axes label font size
+   default_params.stats_overlay.background_color = []; % Default none. Can be 'figure' or a color spec.
+   default_params.stats_overlay.edge_color = []; % Default none. Can be 'axes' or a color spec.
+   default_params.stats_overlay.target_plot_handle_tag = ''; % Tag of specific plot to analyze, empty for first valid
 
 % --- Parameter Parsing and Initialization ---
 base_defaults = default_params; % Store original defaults
@@ -313,6 +357,29 @@ log_message(params, sprintf('Unknown parameter: "%s". This parameter will be ign
 end
 end
 
+   % Merge panel_labeling sub-struct
+   if isfield(user_provided_params_struct, 'panel_labeling') && isstruct(user_provided_params_struct.panel_labeling)
+       user_pl_fields = fieldnames(user_provided_params_struct.panel_labeling);
+       for k_pl = 1:length(user_pl_fields)
+           if isfield(params.panel_labeling, user_pl_fields{k_pl})
+               params.panel_labeling.(user_pl_fields{k_pl}) = user_provided_params_struct.panel_labeling.(user_pl_fields{k_pl});
+           else
+               log_message(params, sprintf('Unknown panel_labeling parameter: "%s". This parameter will be ignored.', user_pl_fields{k_pl}), 1, 'Warning');
+           end
+       end
+   end
+   % Merge stats_overlay sub-struct
+   if isfield(user_provided_params_struct, 'stats_overlay') && isstruct(user_provided_params_struct.stats_overlay)
+       user_so_fields = fieldnames(user_provided_params_struct.stats_overlay);
+       for k_so = 1:length(user_so_fields)
+           if isfield(params.stats_overlay, user_so_fields{k_so})
+               params.stats_overlay.(user_so_fields{k_so}) = user_provided_params_struct.stats_overlay.(user_so_fields{k_so});
+           else
+               log_message(params, sprintf('Unknown stats_overlay parameter: "%s". This parameter will be ignored.', user_so_fields{k_so}), 1, 'Warning');
+           end
+       end
+   end
+
 % Apply theme defaults intelligently after presets and user params have been merged.
 % The goal is to apply generic theme colors ONLY if they haven't been specifically
 % set by a preset (for that theme) or by the user.
@@ -397,7 +464,7 @@ parent_layout = ancestor(ax, 'matlab.graphics.layout.TiledChartLayout');
 num_to_scale_by = get_scale_basis_for_axes(ax, parent_layout, params);
 scale_factor = get_scale_factor(num_to_scale_by, params.scaling_map, params.min_scale_factor, params.max_scale_factor);
 log_message(params, sprintf('  Processing Axes (Tag: %s, Type: %s). Scale: %.2f', ax.Tag, class(ax), scale_factor), 2, 'Info');
-beautify_single_axes(ax, params, scale_factor);
+beautify_single_axes(ax, params, scale_factor, i);
 else
 log_message(params, sprintf('  Skipping invalid axes handle at index %d.', i), 1, 'Warning');
 end
@@ -655,8 +722,8 @@ num_to_scale_by = get_scale_basis_for_axes(axes_in_layout(1), current_tiled_layo
     scale_factor = get_scale_factor(num_to_scale_by, params.scaling_map, params.min_scale_factor, params.max_scale_factor);
     grid_size_disp = current_tiled_layout.GridSize;
     log_message(params, sprintf('  TiledLayout (Grid: %dx%d, Axes: %d). Scale: %.2f', grid_size_disp(1), grid_size_disp(2), num_axes_found, scale_factor), 2, 'Info');
-    for ax_idx = 1:num_axes_found
-        if isvalid(axes_in_layout(ax_idx)); beautify_single_axes(axes_in_layout(ax_idx), params, scale_factor); end
+    for ax_loop_idx = 1:num_axes_found
+        if isvalid(axes_in_layout(ax_loop_idx)); beautify_single_axes(axes_in_layout(ax_loop_idx), params, scale_factor, ax_loop_idx); end
     end
 end
 IGNORE_WHEN_COPYING_START
@@ -672,7 +739,7 @@ num_axes_found = numel(all_axes_in_container);
 scale_factor = get_scale_factor(num_axes_found, params.scaling_map, params.min_scale_factor, params.max_scale_factor);
 log_message(params, sprintf('  Container has %d axes (no TiledLayout). Scale: %.2f', num_axes_found, scale_factor), 2, 'Info');
 for ax_idx = 1:num_axes_found
-if isvalid(all_axes_in_container(ax_idx)); beautify_single_axes(all_axes_in_container(ax_idx), params, scale_factor); end
+if isvalid(all_axes_in_container(ax_idx)); beautify_single_axes(all_axes_in_container(ax_idx), params, scale_factor, ax_idx); end
 end
 end
 end
@@ -742,7 +809,7 @@ end; end; sf = max(min_sf, min(max_sf, sf));
 end
 
 % --- Core Function: Beautify a Single Axes Object ---
-function beautify_single_axes(ax, params, scale_factor)
+function beautify_single_axes(ax, params, scale_factor, axes_idx)
 if ~isvalid(ax); return; end
 current_hold_state = ishold(ax); if ~current_hold_state; safe_hold(ax, 'on'); end
 
@@ -935,6 +1002,24 @@ beautify_legend(ax, params, plottable_children_for_legend, fs, alw);
 
 % --- Handle Colorbar ---
 if params.apply_to_colorbars; beautify_colorbar(ax, params, fs, lfs, alw); end
+
+   % Apply Automated Panel Labeling
+   if params.panel_labeling.enabled && axes_idx > 0 % axes_idx used to generate label
+       try 
+           apply_panel_labeling(ax, params, scale_factor, axes_idx);
+       catch ME_panel_label
+           log_message(params, sprintf('Error applying panel labeling to Axes (Tag: %s): %s (Line: %d)', ax.Tag, ME_panel_label.message, ME_panel_label.stack(1).line), 1, 'Warning');
+       end
+   end
+
+   % Apply Basic Statistical Overlay
+   if params.stats_overlay.enabled
+       try 
+           apply_stats_overlay(ax, params, scale_factor);
+       catch ME_stats_overlay
+           log_message(params, sprintf('Error applying stats overlay to Axes (Tag: %s): %s (Line: %d)', ax.Tag, ME_stats_overlay.message, ME_stats_overlay.stack(1).line), 1, 'Warning');
+       end
+   end
 
 if ~current_hold_state; safe_hold(ax, 'off'); end
 end
@@ -1393,4 +1478,209 @@ if nargin < 4; type_str = 'Info'; end % Default type
 if isfield(params_struct, 'log_level') && params_struct.log_level >= level
 fprintf('[BeautifyFig - %s L%d] %s\n', type_str, level, message_str);
 end
+end
+
+% --- Helper Function: Convert Number to Roman Numeral String ---
+function str = local_roman_numeral(n_in) % Renamed input to avoid conflict with outer scope n
+    if n_in <= 0 || n_in >= 4000 || floor(n_in) ~= n_in 
+        str = num2str(n_in); 
+        return;
+    end
+    map_values = [1000, 900, 500, 400, 100, 90, 50, 40, 10, 9, 5, 4, 1];
+    map_symbols = {'M', 'CM', 'D', 'CD', 'C', 'XC', 'L', 'XL', 'X', 'IX', 'V', 'IV', 'I'};
+    str = '';
+    for i_roman = 1:length(map_values) 
+        while n_in >= map_values(i_roman)
+            str = [str, map_symbols{i_roman}];
+            n_in = n_in - map_values(i_roman);
+        end
+    end
+end
+
+% --- Helper Function: Apply Panel Labeling ---
+function apply_panel_labeling(ax, params, scale_factor, axes_idx)
+% Applies automated panel labels (A, B, C...) to the axes.
+pl_params = params.panel_labeling; 
+
+label_str = '';
+% Ensure local_roman_numeral is accessible if used.
+switch lower(pl_params.style)
+    case 'a'; label_str = char('A' + axes_idx - 1);
+    case 'a)'; label_str = [char('a' + axes_idx - 1), ')'];
+    case 'i'; label_str = lower(local_roman_numeral(axes_idx)); 
+    case 'I'; label_str = upper(local_roman_numeral(axes_idx)); 
+    case '1'; label_str = num2str(axes_idx);
+    otherwise; label_str = [char('A' + axes_idx - 1), '.']; % Default
+end
+
+% Basic check for going out of typical alphabet range for single char labels
+if length(label_str) == 1 && isletter(label_str(1)) && ((label_str(1) > 'Z' && label_str(1) < 'a') || label_str(1) > 'z')
+    log_message(params, sprintf('Panel label index %d out of typical alphabet range for style "%s". Skipping.', axes_idx, pl_params.style),1,'Warning'); return;
+elseif isempty(label_str)
+    log_message(params, sprintf('Panel label generation failed for index %d, style "%s". Skipping.', axes_idx, pl_params.style),1,'Warning'); return;
+end
+
+panel_font_name = pl_params.font_name; if isempty(panel_font_name); panel_font_name = params.font_name; end
+panel_text_color = pl_params.text_color; if isempty(panel_text_color); panel_text_color = params.text_color; end
+
+base_label_fs = round(params.base_font_size * params.title_scale * scale_factor); % Reference title font size
+label_fs = round(base_label_fs * pl_params.font_scale_factor);
+label_fs = max(label_fs, 6); % Minimum sensible font size
+
+original_axes_units = get(ax, 'Units');
+safe_set(ax, 'Units', 'normalized'); 
+
+x_abs_offset = pl_params.x_offset; 
+y_abs_offset = pl_params.y_offset;
+
+text_x_norm = 0; text_y_norm = 0; 
+horz_align = 'left'; vert_align = 'bottom';
+
+switch lower(pl_params.position)
+    case 'northwest_inset'
+        text_x_norm = x_abs_offset; text_y_norm = 1 - y_abs_offset; horz_align = 'left'; vert_align = 'top';
+    case 'northeast_inset'
+        text_x_norm = 1 - x_abs_offset; text_y_norm = 1 - y_abs_offset; horz_align = 'right'; vert_align = 'top';
+    case 'southwest_inset'
+        text_x_norm = x_abs_offset; text_y_norm = y_abs_offset; horz_align = 'left'; vert_align = 'bottom';
+    case 'southeast_inset'
+        text_x_norm = 1 - x_abs_offset; text_y_norm = y_abs_offset; horz_align = 'right'; vert_align = 'bottom';
+    otherwise 
+        text_x_norm = x_abs_offset; text_y_norm = 1 - y_abs_offset; horz_align = 'left'; vert_align = 'top'; % Default
+end
+
+text(ax, text_x_norm, text_y_norm, label_str, ...
+    'Units', 'normalized', ... 
+    'FontName', panel_font_name, ...
+    'FontSize', label_fs, ...
+    'FontWeight', pl_params.font_weight, ...
+    'Color', panel_text_color, ...
+    'HorizontalAlignment', horz_align, ...
+    'VerticalAlignment', vert_align, ...
+    'PickableParts', 'none', 'HandleVisibility', 'off', 'Tag', 'BeautifyFig_PanelLabel'); 
+
+safe_set(ax, 'Units', original_axes_units); 
+end
+
+% --- Helper Function: Apply Stats Overlay ---
+function apply_stats_overlay(ax, params, scale_factor)
+so_params = params.stats_overlay; 
+
+target_plots = [];
+children = get(ax, 'Children'); % Get children of the current axes
+if ~isempty(so_params.target_plot_handle_tag)
+    for i = 1:length(children) % Search only within current axes children
+        if isa(children(i), 'matlab.graphics.primitive.Group') % Handle groups like hggroup for boxplot
+            potential_matches = findobj(children(i), 'Type',{'line','scatter'},'Tag', so_params.target_plot_handle_tag);
+            if ~isempty(potential_matches)
+                target_plots = potential_matches(1); break;
+            end
+        elseif isprop(children(i),'Tag') && strcmp(get(children(i),'Tag'), so_params.target_plot_handle_tag) && ...
+           (isa(children(i), 'matlab.graphics.chart.primitive.Line') || isa(children(i), 'matlab.graphics.chart.primitive.Scatter'))
+            target_plots = children(i); break;
+        end
+    end
+else 
+    for i = 1:length(children)
+        if (isa(children(i), 'matlab.graphics.chart.primitive.Line') || ...
+            isa(children(i), 'matlab.graphics.chart.primitive.Scatter')) && ...
+           isprop(children(i), 'YData') && ~isempty(children(i).YData) && ...
+           isprop(children(i), 'Visible') && strcmp(get(children(i),'Visible'),'on')
+            target_plots = children(i); break; 
+        end
+    end
+end
+
+if isempty(target_plots); log_message(params, 'Stats Overlay: No suitable plot found or specified in current axes.', 2, 'Info'); return; end
+
+plot_obj = target_plots(1); 
+y_data = get(plot_obj, 'YData');
+if isempty(y_data) || ~isnumeric(y_data); log_message(params, 'Stats Overlay: YData empty/non-numeric.', 2, 'Info'); return; end
+y_data = y_data(isfinite(y_data)); 
+if isempty(y_data); log_message(params, 'Stats Overlay: No finite YData.', 2, 'Info'); return; end
+
+stats_str_lines = cell(1,0); % Initialize as row cell
+for i = 1:length(so_params.statistics)
+    stat_name = lower(so_params.statistics{i});
+    val = NaN; stat_label = '';
+    switch stat_name
+        case 'mean'; val = mean(y_data); stat_label = 'Mean';
+        case 'std'; val = std(y_data); stat_label = 'Std Dev';
+        case 'min'; val = min(y_data); stat_label = 'Min';
+        case 'max'; val = max(y_data); stat_label = 'Max';
+        case 'n'; val = length(y_data); stat_label = 'N';
+        case 'median'; val = median(y_data); stat_label = 'Median';
+        case 'sum'; val = sum(y_data); stat_label = 'Sum';
+        otherwise; log_message(params,['Stats Overlay: Unknown statistic "' stat_name '" requested.'],1,'Warning'); continue; 
+    end
+    if ~isnan(val)
+        if any(strcmp(stat_name, {'n', 'count'})); stats_str_lines{end+1} = sprintf('%s: %d', stat_label, round(val));
+        else; stats_str_lines{end+1} = sprintf('%s: %.*f', stat_label, so_params.precision, val); end
+    end
+end
+
+if isempty(stats_str_lines); return; end
+full_stats_str = strjoin(stats_str_lines, '\newline');
+
+stats_font_name = so_params.font_name; if isempty(stats_font_name); stats_font_name = params.font_name; end
+stats_text_color = so_params.text_color; if isempty(stats_text_color); stats_text_color = params.text_color; end
+
+base_stats_fs = round(params.base_font_size * params.label_scale * scale_factor); % Reference label font size
+stats_fs = round(base_stats_fs * so_params.font_scale_factor);
+stats_fs = max(stats_fs, 5);
+
+original_axes_units = get(ax, 'Units');
+safe_set(ax, 'Units', 'normalized'); 
+
+x_text_offset_norm = 0.03; y_text_offset_norm = 0.03; 
+
+text_x_norm = 0; text_y_norm = 0; horz_align = 'left'; vert_align = 'bottom';
+
+switch lower(so_params.position)
+    case 'northeast_inset'; text_x_norm = 1 - x_text_offset_norm; text_y_norm = 1 - y_text_offset_norm; horz_align = 'right'; vert_align = 'top';
+    case 'northwest_inset'; text_x_norm = x_text_offset_norm; text_y_norm = 1 - y_text_offset_norm; horz_align = 'left'; vert_align = 'top';
+    case 'southwest_inset'; text_x_norm = x_text_offset_norm; text_y_norm = y_text_offset_norm; horz_align = 'left'; vert_align = 'bottom';
+    case 'southeast_inset'; text_x_norm = 1 - x_text_offset_norm; text_y_norm = y_text_offset_norm; horz_align = 'right'; vert_align = 'bottom';
+    otherwise; text_x_norm = 1 - x_text_offset_norm; text_y_norm = 1 - y_text_offset_norm; horz_align = 'right'; vert_align = 'top'; % Default NE
+end
+
+text_props = {
+    'Units', 'normalized', 'String', full_stats_str, 'FontName', stats_font_name, ...
+    'FontSize', stats_fs, 'Color', stats_text_color, 'HorizontalAlignment', horz_align, ...
+    'VerticalAlignment', vert_align, 'PickableParts', 'none', 'HandleVisibility', 'off', 'Tag', 'BeautifyFig_StatsOverlay'
+};
+
+if ~isempty(so_params.background_color) || ~isempty(so_params.edge_color)
+    bg_color_final = 'none'; % Default to 'none'
+    edge_color_final = 'none'; % Default to 'none'
+
+    if ~isempty(so_params.background_color)
+        bg_color_val = so_params.background_color;
+        if ischar(bg_color_val) && strcmpi(bg_color_val, 'figure')
+            fig_h = ancestor(ax,'figure'); 
+            if ~isempty(fig_h); bg_color_val = get(fig_h,'Color'); else bg_color_val = 'none'; end
+        end
+        if ~(ischar(bg_color_val) && strcmpi(bg_color_val, 'none')); bg_color_final = bg_color_val; end
+    end
+    
+    if ~isempty(so_params.edge_color)
+        edge_color_val = so_params.edge_color;
+        if ischar(edge_color_val) && strcmpi(edge_color_val, 'axes'); edge_color_val = params.axis_color; end
+        if ~(ischar(edge_color_val) && strcmpi(edge_color_val, 'none')); edge_color_final = edge_color_val; end
+    end
+
+    has_background = ~(ischar(bg_color_final) && strcmpi(bg_color_final, 'none'));
+    has_edge = ~(ischar(edge_color_final) && strcmpi(edge_color_final, 'none'));
+
+    if has_background; text_props = [text_props, {'BackgroundColor', bg_color_final}]; end
+    if has_edge; text_props = [text_props, {'EdgeColor', edge_color_final}]; end
+    
+    if has_background || has_edge % Add margin if either background or edge is active
+        text_props = [text_props, {'Margin', stats_fs*0.3}]; 
+    end
+end
+
+text(ax, text_x_norm, text_y_norm, text_props{:});
+
+safe_set(ax, 'Units', original_axes_units);
 end
