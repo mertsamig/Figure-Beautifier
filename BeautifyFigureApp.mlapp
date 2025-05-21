@@ -1,0 +1,1119 @@
+< déployer>
+  <application appTitle="Beautify Figure App" appName="BeautifyFigureApp" matlabMajorVersion="9" matlabMinorVersion="13" matlabReleaseName="R2022b" preferredTarget="mlapp">
+    <defaults>
+      <object class="matlab.ui.Figure" name="UIFigure">
+        <property name="Position" type="matlab.internal.datatype.matlab.graphics.datatype.Position" value="[100 100 800 600]"/>
+        <property name="Name" type="matlab.internal.datatype.matlab.graphics.datatype.char" value="Beautify Figure App"/>
+        <property name="Visible" type="matlab.internal.datatype.codegen.োডেকেরমান" value="off"/>
+      </object>
+      <object class="matlab.ui.container.GridLayout" name="MainGridLayout">
+        <property name="ColumnWidth" type="matlab.internal.datatype.matlab.graphics.datatype.auto" value="{'1x','1x'}"/>
+        <property name="RowHeight" type="matlab.internal.datatype.matlab.graphics.datatype.auto" value="{'1x','1x','1x','fit'}"/>
+      </object>
+    </defaults>
+    <components>
+      <object class="matlab.ui.Figure" name="UIFigure">
+        <property name="Scrollable" type="matlab.internal.datatype.codegen.োডেকেরমান" value="on"/>
+        <object class="matlab.ui.container.GridLayout" name="MainGridLayout">
+          <property name="Parent" type="matlab.ui.Figure" value="UIFigure"/>
+          <property name="Layout" type="matlab.ui.layout.GridLayoutOptions"/>
+        </object>
+      <object class="matlab.ui.container.Panel" name="GeneralSettingsPanel">
+        <property name="Parent" type="matlab.ui.container.GridLayout" value="MainGridLayout"/>
+        <property name="Title" type="matlab.internal.datatype.matlab.graphics.datatype.char" value="General Settings"/>
+        <property name="Layout" type="matlab.ui.layout.GridLayoutOptions">
+          <property name="Row" type="matlab.internal.datatype.matlab.graphics.datatype.numeric" value="1"/>
+          <property name="Column" type="matlab.internal.datatype.matlab.graphics.datatype.numeric" value="1"/>
+        </property>
+        <object class="matlab.ui.container.GridLayout" name="GeneralSettingsGridLayout">
+          <property name="Parent" type="matlab.ui.container.Panel" value="GeneralSettingsPanel"/>
+          <property name="RowHeight" type="matlab.internal.datatype.matlab.graphics.datatype.auto" value="{'fit','fit','fit','fit','fit'}"/>
+          <property name="ColumnWidth" type="matlab.internal.datatype.matlab.graphics.datatype.auto" value="{'fit','1x'}"/>
+        </object>
+        <object class="matlab.ui.control.Label" name="StylePresetLabel">
+          <property name="Parent" type="matlab.ui.container.GridLayout" value="GeneralSettingsGridLayout"/>
+          <property name="Text" type="matlab.internal.datatype.matlab.graphics.datatype.char" value="Style Preset"/>
+          <property name="Layout" type="matlab.ui.layout.GridLayoutOptions">
+            <property name="Row" type="matlab.internal.datatype.matlab.graphics.datatype.numeric" value="1"/>
+            <property name="Column" type="matlab.internal.datatype.matlab.graphics.datatype.numeric" value="1"/>
+          </property>
+        </object>
+        <object class="matlab.ui.control.DropDown" name="StylePresetDropDown">
+          <property name="Parent" type="matlab.ui.container.GridLayout" value="GeneralSettingsGridLayout"/>
+          <property name="Items" type="matlab.internal.datatype.matlab.graphics.datatype.cell" value="{'default', 'publication', 'presentation_dark', 'presentation_light', 'minimalist'}"/>
+          <property name="Value" type="matlab.internal.datatype.matlab.graphics.datatype.char" value="default"/>
+          <property name="Layout" type="matlab.ui.layout.GridLayoutOptions">
+            <property name="Row" type="matlab.internal.datatype.matlab.graphics.datatype.numeric" value="1"/>
+            <property name="Column" type="matlab.internal.datatype.matlab.graphics.datatype.numeric" value="2"/>
+          </property>
+        </object>
+        <object class="matlab.ui.control.Label" name="ThemeLabel">
+          <property name="Parent" type="matlab.ui.container.GridLayout" value="GeneralSettingsGridLayout"/>
+          <property name="Text" type="matlab.internal.datatype.matlab.graphics.datatype.char" value="Theme"/>
+          <property name="Layout" type="matlab.ui.layout.GridLayoutOptions">
+            <property name="Row" type="matlab.internal.datatype.matlab.graphics.datatype.numeric" value="2"/>
+            <property name="Column" type="matlab.internal.datatype.matlab.graphics.datatype.numeric" value="1"/>
+          </property>
+        </object>
+        <object class="matlab.ui.control.DropDown" name="ThemeDropDown">
+          <property name="Parent" type="matlab.ui.container.GridLayout" value="GeneralSettingsGridLayout"/>
+          <property name="Items" type="matlab.internal.datatype.matlab.graphics.datatype.cell" value="{'light', 'dark'}"/>
+          <property name="Value" type="matlab.internal.datatype.matlab.graphics.datatype.char" value="light"/>
+          <property name="Layout" type="matlab.ui.layout.GridLayoutOptions">
+            <property name="Row" type="matlab.internal.datatype.matlab.graphics.datatype.numeric" value="2"/>
+            <property name="Column" type="matlab.internal.datatype.matlab.graphics.datatype.numeric" value="2"/>
+          </property>
+        </object>
+        <object class="matlab.ui.control.Label" name="FontNameLabel">
+          <property name="Parent" type="matlab.ui.container.GridLayout" value="GeneralSettingsGridLayout"/>
+          <property name="Text" type="matlab.internal.datatype.matlab.graphics.datatype.char" value="Font Name"/>
+          <property name="Layout" type="matlab.ui.layout.GridLayoutOptions">
+            <property name="Row" type="matlab.internal.datatype.matlab.graphics.datatype.numeric" value="3"/>
+            <property name="Column" type="matlab.internal.datatype.matlab.graphics.datatype.numeric" value="1"/>
+          </property>
+        </object>
+        <object class="matlab.ui.control.DropDown" name="FontNameDropDown">
+          <property name="Parent" type="matlab.ui.container.GridLayout" value="GeneralSettingsGridLayout"/>
+          <property name="Items" type="matlab.internal.datatype.matlab.graphics.datatype.cell" value="{'Helvetica', 'Arial', 'Times New Roman'}"/>
+          <property name="Value" type="matlab.internal.datatype.matlab.graphics.datatype.char" value="Helvetica"/>
+          <property name="Editable" type="matlab.internal.datatype.codegen.োডেকেরমান" value="true"/>
+          <property name="Layout" type="matlab.ui.layout.GridLayoutOptions">
+            <property name="Row" type="matlab.internal.datatype.matlab.graphics.datatype.numeric" value="3"/>
+            <property name="Column" type="matlab.internal.datatype.matlab.graphics.datatype.numeric" value="2"/>
+          </property>
+        </object>
+        <object class="matlab.ui.control.Label" name="BaseFontSizeLabel">
+          <property name="Parent" type="matlab.ui.container.GridLayout" value="GeneralSettingsGridLayout"/>
+          <property name="Text" type="matlab.internal.datatype.matlab.graphics.datatype.char" value="Base Font Size"/>
+          <property name="Layout" type="matlab.ui.layout.GridLayoutOptions">
+            <property name="Row" type="matlab.internal.datatype.matlab.graphics.datatype.numeric" value="4"/>
+            <property name="Column" type="matlab.internal.datatype.matlab.graphics.datatype.numeric" value="1"/>
+          </property>
+        </object>
+        <object class="matlab.ui.control.Spinner" name="BaseFontSizeSpinner">
+          <property name="Parent" type="matlab.ui.container.GridLayout" value="GeneralSettingsGridLayout"/>
+          <property name="Value" type="matlab.internal.datatype.matlab.graphics.datatype.numeric" value="10"/>
+          <property name="Layout" type="matlab.ui.layout.GridLayoutOptions">
+            <property name="Row" type="matlab.internal.datatype.matlab.graphics.datatype.numeric" value="4"/>
+            <property name="Column" type="matlab.internal.datatype.matlab.graphics.datatype.numeric" value="2"/>
+          </property>
+        </object>
+        <object class="matlab.ui.control.Label" name="GlobalFontScaleFactorLabel">
+          <property name="Parent" type="matlab.ui.container.GridLayout" value="GeneralSettingsGridLayout"/>
+          <property name="Text" type="matlab.internal.datatype.matlab.graphics.datatype.char" value="Global Font Scale Factor"/>
+          <property name="Layout" type="matlab.ui.layout.GridLayoutOptions">
+            <property name="Row" type="matlab.internal.datatype.matlab.graphics.datatype.numeric" value="5"/>
+            <property name="Column" type="matlab.internal.datatype.matlab.graphics.datatype.numeric" value="1"/>
+          </property>
+        </object>
+        <object class="matlab.ui.control.Spinner" name="GlobalFontScaleFactorSpinner">
+          <property name="Parent" type="matlab.ui.container.GridLayout" value="GeneralSettingsGridLayout"/>
+          <property name="Value" type="matlab.internal.datatype.matlab.graphics.datatype.numeric" value="1.0"/>
+          <property name="Step" type="matlab.internal.datatype.matlab.graphics.datatype.numeric" value="0.1"/>
+          <property name="Layout" type="matlab.ui.layout.GridLayoutOptions">
+            <property name="Row" type="matlab.internal.datatype.matlab.graphics.datatype.numeric" value="5"/>
+            <property name="Column" type="matlab.internal.datatype.matlab.graphics.datatype.numeric" value="2"/>
+          </property>
+        </object>
+      </object>
+      <object class="matlab.ui.container.GridLayout" name="ButtonGridLayout">
+        <property name="Parent" type="matlab.ui.container.GridLayout" value="MainGridLayout"/>
+        <property name="RowHeight" type="matlab.internal.datatype.matlab.graphics.datatype.auto" value="{'fit'}"/>
+        <property name="ColumnWidth" type="matlab.internal.datatype.matlab.graphics.datatype.auto" value="{'1x','1x','1x','1x'}"/>
+        <property name="Layout" type="matlab.ui.layout.GridLayoutOptions">
+          <property name="Row" type="matlab.internal.datatype.matlab.graphics.datatype.numeric" value="4"/>
+          <property name="Column" type="matlab.internal.datatype.matlab.graphics.datatype.numeric" value="1"/>
+          <property name="ColumnSpan" type="matlab.internal.datatype.matlab.graphics.datatype.numeric" value="2"/>
+        </property>
+        <object class="matlab.ui.control.Button" name="ApplyBeautificationButton" pushedFcn="app.ApplyBeautificationButtonPushed">
+          <property name="Parent" type="matlab.ui.container.GridLayout" value="ButtonGridLayout"/>
+          <property name="Text" type="matlab.internal.datatype.matlab.graphics.datatype.char" value="Apply Beautification"/>
+          <property name="Layout" type="matlab.ui.layout.GridLayoutOptions">
+            <property name="Row" type="matlab.internal.datatype.matlab.graphics.datatype.numeric" value="1"/>
+            <property name="Column" type="matlab.internal.datatype.matlab.graphics.datatype.numeric" value="1"/>
+          </property>
+        </object>
+        <object class="matlab.ui.control.Button" name="ImportPresetButton" pushedFcn="app.ImportPresetButtonPushed">
+          <property name="Parent" type="matlab.ui.container.GridLayout" value="ButtonGridLayout"/>
+          <property name="Text" type="matlab.internal.datatype.matlab.graphics.datatype.char" value="Import Preset"/>
+          <property name="Layout" type="matlab.ui.layout.GridLayoutOptions">
+            <property name="Row" type="matlab.internal.datatype.matlab.graphics.datatype.numeric" value="1"/>
+            <property name="Column" type="matlab.internal.datatype.matlab.graphics.datatype.numeric" value="2"/>
+          </property>
+        </object>
+        <object class="matlab.ui.control.Button" name="ExportPresetButton" pushedFcn="app.ExportPresetButtonPushed">
+          <property name="Parent" type="matlab.ui.container.GridLayout" value="ButtonGridLayout"/>
+          <property name="Text" type="matlab.internal.datatype.matlab.graphics.datatype.char" value="Export Preset"/>
+          <property name="Layout" type="matlab.ui.layout.GridLayoutOptions">
+            <property name="Row" type="matlab.internal.datatype.matlab.graphics.datatype.numeric" value="1"/>
+            <property name="Column" type="matlab.internal.datatype.matlab.graphics.datatype.numeric" value="3"/>
+          </property>
+        </object>
+        <object class="matlab.ui.control.Button" name="HelpButton" pushedFcn="app.HelpButtonPushed">
+          <property name="Parent" type="matlab.ui.container.GridLayout" value="ButtonGridLayout"/>
+          <property name="Text" type="matlab.internal.datatype.matlab.graphics.datatype.char" value="Help"/>
+          <property name="Layout" type="matlab.ui.layout.GridLayoutOptions">
+            <property name="Row" type="matlab.internal.datatype.matlab.graphics.datatype.numeric" value="1"/>
+            <property name="Column" type="matlab.internal.datatype.matlab.graphics.datatype.numeric" value="4"/>
+          </property>
+        </object>
+      </object>
+      <object class="matlab.ui.container.Panel" name="ExportSettingsPanel">
+        <property name="Parent" type="matlab.ui.container.GridLayout" value="MainGridLayout"/>
+        <property name="Title" type="matlab.internal.datatype.matlab.graphics.datatype.char" value="Export Settings"/>
+        <property name="Layout" type="matlab.ui.layout.GridLayoutOptions">
+          <property name="Row" type="matlab.internal.datatype.matlab.graphics.datatype.numeric" value="4"/>
+          <property name="Column" type="matlab.internal.datatype.matlab.graphics.datatype.numeric" value="2"/>
+        </property>
+        <object class="matlab.ui.container.GridLayout" name="ExportSettingsGridLayout">
+          <property name="Parent" type="matlab.ui.container.Panel" value="ExportSettingsPanel"/>
+          <property name="RowHeight" type="matlab.internal.datatype.matlab.graphics.datatype.auto" value="{'fit','fit','fit','fit'}"/>
+          <property name="ColumnWidth" type="matlab.internal.datatype.matlab.graphics.datatype.auto" value="{'fit','1x'}"/>
+        </object>
+        <object class="matlab.ui.control.CheckBox" name="EnableExportCheckBox" valueChangedFcn="app.updateExportSettingsControlsEnable">
+          <property name="Parent" type="matlab.ui.container.GridLayout" value="ExportSettingsGridLayout"/>
+          <property name="Text" type="matlab.internal.datatype.matlab.graphics.datatype.char" value="Enable Export"/>
+          <property name="Value" type="matlab.internal.datatype.codegen.োডেকেরমান" value="false"/>
+          <property name="Layout" type="matlab.ui.layout.GridLayoutOptions">
+            <property name="Row" type="matlab.internal.datatype.matlab.graphics.datatype.numeric" value="1"/>
+            <property name="Column" type="matlab.internal.datatype.matlab.graphics.datatype.numeric" value="1"/>
+            <property name="ColumnSpan" type="matlab.internal.datatype.matlab.graphics.datatype.numeric" value="2"/>
+          </property>
+        </object>
+        <object class="matlab.ui.control.Label" name="FilenameLabel">
+          <property name="Parent" type="matlab.ui.container.GridLayout" value="ExportSettingsGridLayout"/>
+          <property name="Text" type="matlab.internal.datatype.matlab.graphics.datatype.char" value="Filename"/>
+          <property name="Layout" type="matlab.ui.layout.GridLayoutOptions">
+            <property name="Row" type="matlab.internal.datatype.matlab.graphics.datatype.numeric" value="2"/>
+            <property name="Column" type="matlab.internal.datatype.matlab.graphics.datatype.numeric" value="1"/>
+          </property>
+        </object>
+        <object class="matlab.ui.control.EditField" name="FilenameEditField">
+          <property name="Parent" type="matlab.ui.container.GridLayout" value="ExportSettingsGridLayout"/>
+          <property name="Value" type="matlab.internal.datatype.matlab.graphics.datatype.char" value="beautified_figure"/>
+          <property name="Layout" type="matlab.ui.layout.GridLayoutOptions">
+            <property name="Row" type="matlab.internal.datatype.matlab.graphics.datatype.numeric" value="2"/>
+            <property name="Column" type="matlab.internal.datatype.matlab.graphics.datatype.numeric" value="2"/>
+          </property>
+        </object>
+        <object class="matlab.ui.control.Label" name="FormatLabel">
+          <property name="Parent" type="matlab.ui.container.GridLayout" value="ExportSettingsGridLayout"/>
+          <property name="Text" type="matlab.internal.datatype.matlab.graphics.datatype.char" value="Format"/>
+          <property name="Layout" type="matlab.ui.layout.GridLayoutOptions">
+            <property name="Row" type="matlab.internal.datatype.matlab.graphics.datatype.numeric" value="3"/>
+            <property name="Column" type="matlab.internal.datatype.matlab.graphics.datatype.numeric" value="1"/>
+          </property>
+        </object>
+        <object class="matlab.ui.control.DropDown" name="FormatDropDown">
+          <property name="Parent" type="matlab.ui.container.GridLayout" value="ExportSettingsGridLayout"/>
+          <property name="Items" type="matlab.internal.datatype.matlab.graphics.datatype.cell" value="{'png', 'jpeg', 'pdf', 'eps', 'svg', 'tiff'}"/>
+          <property name="Value" type="matlab.internal.datatype.matlab.graphics.datatype.char" value="png"/>
+          <property name="Layout" type="matlab.ui.layout.GridLayoutOptions">
+            <property name="Row" type="matlab.internal.datatype.matlab.graphics.datatype.numeric" value="3"/>
+            <property name="Column" type="matlab.internal.datatype.matlab.graphics.datatype.numeric" value="2"/>
+          </property>
+        </object>
+        <object class="matlab.ui.control.Label" name="ResolutionDPILabel">
+          <property name="Parent" type="matlab.ui.container.GridLayout" value="ExportSettingsGridLayout"/>
+          <property name="Text" type="matlab.internal.datatype.matlab.graphics.datatype.char" value="Resolution (DPI)"/>
+          <property name="Layout" type="matlab.ui.layout.GridLayoutOptions">
+            <property name="Row" type="matlab.internal.datatype.matlab.graphics.datatype.numeric" value="4"/>
+            <property name="Column" type="matlab.internal.datatype.matlab.graphics.datatype.numeric" value="1"/>
+          </property>
+        </object>
+        <object class="matlab.ui.control.Spinner" name="ResolutionDPISpinner">
+          <property name="Parent" type="matlab.ui.container.GridLayout" value="ExportSettingsGridLayout"/>
+          <property name="Value" type="matlab.internal.datatype.matlab.graphics.datatype.numeric" value="300"/>
+          <property name="Layout" type="matlab.ui.layout.GridLayoutOptions">
+            <property name="Row" type="matlab.internal.datatype.matlab.graphics.datatype.numeric" value="4"/>
+            <property name="Column" type="matlab.internal.datatype.matlab.graphics.datatype.numeric" value="2"/>
+          </property>
+        </object>
+      </object>
+      <object class="matlab.ui.container.Panel" name="StatsOverlayPanel">
+        <property name="Parent" type="matlab.ui.container.GridLayout" value="MainGridLayout"/>
+        <property name="Title" type="matlab.internal.datatype.matlab.graphics.datatype.char" value="Stats Overlay"/>
+        <property name="Layout" type="matlab.ui.layout.GridLayoutOptions">
+          <property name="Row" type="matlab.internal.datatype.matlab.graphics.datatype.numeric" value="3"/>
+          <property name="Column" type="matlab.internal.datatype.matlab.graphics.datatype.numeric" value="2"/>
+        </property>
+        <object class="matlab.ui.container.GridLayout" name="StatsOverlayGridLayout">
+          <property name="Parent" type="matlab.ui.container.Panel" value="StatsOverlayPanel"/>
+          <property name="RowHeight" type="matlab.internal.datatype.matlab.graphics.datatype.auto" value="{'fit','fit','fit','fit'}"/>
+          <property name="ColumnWidth" type="matlab.internal.datatype.matlab.graphics.datatype.auto" value="{'fit','1x'}"/>
+        </object>
+        <object class="matlab.ui.control.CheckBox" name="EnableStatsOverlayCheckBox" valueChangedFcn="app.updateStatsOverlayControlsEnable">
+          <property name="Parent" type="matlab.ui.container.GridLayout" value="StatsOverlayGridLayout"/>
+          <property name="Text" type="matlab.internal.datatype.matlab.graphics.datatype.char" value="Enable Stats Overlay"/>
+          <property name="Value" type="matlab.internal.datatype.codegen.োডেকেরমান" value="false"/>
+          <property name="Layout" type="matlab.ui.layout.GridLayoutOptions">
+            <property name="Row" type="matlab.internal.datatype.matlab.graphics.datatype.numeric" value="1"/>
+            <property name="Column" type="matlab.internal.datatype.matlab.graphics.datatype.numeric" value="1"/>
+            <property name="ColumnSpan" type="matlab.internal.datatype.matlab.graphics.datatype.numeric" value="2"/>
+          </property>
+        </object>
+        <object class="matlab.ui.control.Label" name="StatisticsLabel">
+          <property name="Parent" type="matlab.ui.container.GridLayout" value="StatsOverlayGridLayout"/>
+          <property name="Text" type="matlab.internal.datatype.matlab.graphics.datatype.char" value="Statistics"/>
+          <property name="Layout" type="matlab.ui.layout.GridLayoutOptions">
+            <property name="Row" type="matlab.internal.datatype.matlab.graphics.datatype.numeric" value="2"/>
+            <property name="Column" type="matlab.internal.datatype.matlab.graphics.datatype.numeric" value="1"/>
+          </property>
+        </object>
+        <object class="matlab.ui.control.EditField" name="StatisticsEditField">
+          <property name="Parent" type="matlab.ui.container.GridLayout" value="StatsOverlayGridLayout"/>
+          <property name="Value" type="matlab.internal.datatype.matlab.graphics.datatype.char" value="{'mean', 'std'}"/>
+          <property name="Layout" type="matlab.ui.layout.GridLayoutOptions">
+            <property name="Row" type="matlab.internal.datatype.matlab.graphics.datatype.numeric" value="2"/>
+            <property name="Column" type="matlab.internal.datatype.matlab.graphics.datatype.numeric" value="2"/>
+          </property>
+        </object>
+        <object class="matlab.ui.control.Label" name="StatsOverlayPositionLabel">
+          <property name="Parent" type="matlab.ui.container.GridLayout" value="StatsOverlayGridLayout"/>
+          <property name="Text" type="matlab.internal.datatype.matlab.graphics.datatype.char" value="Position"/>
+          <property name="Layout" type="matlab.ui.layout.GridLayoutOptions">
+            <property name="Row" type="matlab.internal.datatype.matlab.graphics.datatype.numeric" value="3"/>
+            <property name="Column" type="matlab.internal.datatype.matlab.graphics.datatype.numeric" value="1"/>
+          </property>
+        </object>
+        <object class="matlab.ui.control.DropDown" name="StatsOverlayPositionDropDown">
+          <property name="Parent" type="matlab.ui.container.GridLayout" value="StatsOverlayGridLayout"/>
+          <property name="Items" type="matlab.internal.datatype.matlab.graphics.datatype.cell" value="{'northeast_inset', 'northwest_inset', 'southwest_inset', 'southeast_inset'}"/>
+          <property name="Value" type="matlab.internal.datatype.matlab.graphics.datatype.char" value="northeast_inset"/>
+          <property name="Layout" type="matlab.ui.layout.GridLayoutOptions">
+            <property name="Row" type="matlab.internal.datatype.matlab.graphics.datatype.numeric" value="3"/>
+            <property name="Column" type="matlab.internal.datatype.matlab.graphics.datatype.numeric" value="2"/>
+          </property>
+        </object>
+        <object class="matlab.ui.control.Label" name="StatsOverlayPrecisionLabel">
+          <property name="Parent" type="matlab.ui.container.GridLayout" value="StatsOverlayGridLayout"/>
+          <property name="Text" type="matlab.internal.datatype.matlab.graphics.datatype.char" value="Precision"/>
+          <property name="Layout" type="matlab.ui.layout.GridLayoutOptions">
+            <property name="Row" type="matlab.internal.datatype.matlab.graphics.datatype.numeric" value="4"/>
+            <property name="Column" type="matlab.internal.datatype.matlab.graphics.datatype.numeric" value="1"/>
+          </property>
+        </object>
+        <object class="matlab.ui.control.Spinner" name="StatsOverlayPrecisionSpinner">
+          <property name="Parent" type="matlab.ui.container.GridLayout" value="StatsOverlayGridLayout"/>
+          <property name="Value" type="matlab.internal.datatype.matlab.graphics.datatype.numeric" value="2"/>
+          <property name="Layout" type="matlab.ui.layout.GridLayoutOptions">
+            <property name="Row" type="matlab.internal.datatype.matlab.graphics.datatype.numeric" value="4"/>
+            <property name="Column" type="matlab.internal.datatype.matlab.graphics.datatype.numeric" value="2"/>
+          </property>
+        </object>
+      </object>
+      <object class="matlab.ui.container.Panel" name="PanelLabelingPanel">
+        <property name="Parent" type="matlab.ui.container.GridLayout" value="MainGridLayout"/>
+        <property name="Title" type="matlab.internal.datatype.matlab.graphics.datatype.char" value="Panel Labeling"/>
+        <property name="Layout" type="matlab.ui.layout.GridLayoutOptions">
+          <property name="Row" type="matlab.internal.datatype.matlab.graphics.datatype.numeric" value="2"/>
+          <property name="Column" type="matlab.internal.datatype.matlab.graphics.datatype.numeric" value="2"/>
+        </property>
+        <object class="matlab.ui.container.GridLayout" name="PanelLabelingGridLayout">
+          <property name="Parent" type="matlab.ui.container.Panel" value="PanelLabelingPanel"/>
+          <property name="RowHeight" type="matlab.internal.datatype.matlab.graphics.datatype.auto" value="{'fit','fit','fit','fit','fit'}"/>
+          <property name="ColumnWidth" type="matlab.internal.datatype.matlab.graphics.datatype.auto" value="{'fit','1x'}"/>
+        </object>
+        <object class="matlab.ui.control.CheckBox" name="EnablePanelLabelingCheckBox" valueChangedFcn="app.updatePanelLabelingControlsEnable">
+          <property name="Parent" type="matlab.ui.container.GridLayout" value="PanelLabelingGridLayout"/>
+          <property name="Text" type="matlab.internal.datatype.matlab.graphics.datatype.char" value="Enable Panel Labeling"/>
+          <property name="Value" type="matlab.internal.datatype.codegen.োডেকেরমান" value="false"/>
+          <property name="Layout" type="matlab.ui.layout.GridLayoutOptions">
+            <property name="Row" type="matlab.internal.datatype.matlab.graphics.datatype.numeric" value="1"/>
+            <property name="Column" type="matlab.internal.datatype.matlab.graphics.datatype.numeric" value="1"/>
+            <property name="ColumnSpan" type="matlab.internal.datatype.matlab.graphics.datatype.numeric" value="2"/>
+          </property>
+        </object>
+        <object class="matlab.ui.control.Label" name="PanelLabelingStyleLabel">
+          <property name="Parent" type="matlab.ui.container.GridLayout" value="PanelLabelingGridLayout"/>
+          <property name="Text" type="matlab.internal.datatype.matlab.graphics.datatype.char" value="Style"/>
+          <property name="Layout" type="matlab.ui.layout.GridLayoutOptions">
+            <property name="Row" type="matlab.internal.datatype.matlab.graphics.datatype.numeric" value="2"/>
+            <property name="Column" type="matlab.internal.datatype.matlab.graphics.datatype.numeric" value="1"/>
+          </property>
+        </object>
+        <object class="matlab.ui.control.DropDown" name="PanelLabelingStyleDropDown">
+          <property name="Parent" type="matlab.ui.container.GridLayout" value="PanelLabelingGridLayout"/>
+          <property name="Items" type="matlab.internal.datatype.matlab.graphics.datatype.cell" value="{'A', 'a', 'a)', 'I', 'i', '1'}"/>
+          <property name="Value" type="matlab.internal.datatype.matlab.graphics.datatype.char" value="A"/>
+          <property name="Layout" type="matlab.ui.layout.GridLayoutOptions">
+            <property name="Row" type="matlab.internal.datatype.matlab.graphics.datatype.numeric" value="2"/>
+            <property name="Column" type="matlab.internal.datatype.matlab.graphics.datatype.numeric" value="2"/>
+          </property>
+        </object>
+        <object class="matlab.ui.control.Label" name="PanelLabelingPositionLabel">
+          <property name="Parent" type="matlab.ui.container.GridLayout" value="PanelLabelingGridLayout"/>
+          <property name="Text" type="matlab.internal.datatype.matlab.graphics.datatype.char" value="Position"/>
+          <property name="Layout" type="matlab.ui.layout.GridLayoutOptions">
+            <property name="Row" type="matlab.internal.datatype.matlab.graphics.datatype.numeric" value="3"/>
+            <property name="Column" type="matlab.internal.datatype.matlab.graphics.datatype.numeric" value="1"/>
+          </property>
+        </object>
+        <object class="matlab.ui.control.DropDown" name="PanelLabelingPositionDropDown">
+          <property name="Parent" type="matlab.ui.container.GridLayout" value="PanelLabelingGridLayout"/>
+          <property name="Items" type="matlab.internal.datatype.matlab.graphics.datatype.cell" value="{'northwest_inset', 'northeast_inset', 'southwest_inset', 'southeast_inset'}"/>
+          <property name="Value" type="matlab.internal.datatype.matlab.graphics.datatype.char" value="northwest_inset"/>
+          <property name="Layout" type="matlab.ui.layout.GridLayoutOptions">
+            <property name="Row" type="matlab.internal.datatype.matlab.graphics.datatype.numeric" value="3"/>
+            <property name="Column" type="matlab.internal.datatype.matlab.graphics.datatype.numeric" value="2"/>
+          </property>
+        </object>
+        <object class="matlab.ui.control.Label" name="PanelLabelingFontScaleFactorLabel">
+          <property name="Parent" type="matlab.ui.container.GridLayout" value="PanelLabelingGridLayout"/>
+          <property name="Text" type="matlab.internal.datatype.matlab.graphics.datatype.char" value="Font Scale Factor"/>
+          <property name="Layout" type="matlab.ui.layout.GridLayoutOptions">
+            <property name="Row" type="matlab.internal.datatype.matlab.graphics.datatype.numeric" value="4"/>
+            <property name="Column" type="matlab.internal.datatype.matlab.graphics.datatype.numeric" value="1"/>
+          </property>
+        </object>
+        <object class="matlab.ui.control.Spinner" name="PanelLabelingFontScaleFactorSpinner">
+          <property name="Parent" type="matlab.ui.container.GridLayout" value="PanelLabelingGridLayout"/>
+          <property name="Value" type="matlab.internal.datatype.matlab.graphics.datatype.numeric" value="1"/>
+          <property name="Step" type="matlab.internal.datatype.matlab.graphics.datatype.numeric" value="0.1"/>
+          <property name="Layout" type="matlab.ui.layout.GridLayoutOptions">
+            <property name="Row" type="matlab.internal.datatype.matlab.graphics.datatype.numeric" value="4"/>
+            <property name="Column" type="matlab.internal.datatype.matlab.graphics.datatype.numeric" value="2"/>
+          </property>
+        </object>
+        <object class="matlab.ui.control.Label" name="PanelLabelingFontWeightLabel">
+          <property name="Parent" type="matlab.ui.container.GridLayout" value="PanelLabelingGridLayout"/>
+          <property name="Text" type="matlab.internal.datatype.matlab.graphics.datatype.char" value="Font Weight"/>
+          <property name="Layout" type="matlab.ui.layout.GridLayoutOptions">
+            <property name="Row" type="matlab.internal.datatype.matlab.graphics.datatype.numeric" value="5"/>
+            <property name="Column" type="matlab.internal.datatype.matlab.graphics.datatype.numeric" value="1"/>
+          </property>
+        </object>
+        <object class="matlab.ui.control.DropDown" name="PanelLabelingFontWeightDropDown">
+          <property name="Parent" type="matlab.ui.container.GridLayout" value="PanelLabelingGridLayout"/>
+          <property name="Items" type="matlab.internal.datatype.matlab.graphics.datatype.cell" value="{'normal', 'bold'}"/>
+          <property name="Layout" type="matlab.ui.layout.GridLayoutOptions">
+            <property name="Row" type="matlab.internal.datatype.matlab.graphics.datatype.numeric" value="5"/>
+            <property name="Column" type="matlab.internal.datatype.matlab.graphics.datatype.numeric" value="2"/>
+          </property>
+        </object>
+      </object>
+      <object class="matlab.ui.container.Panel" name="LegendSettingsPanel">
+        <property name="Parent" type="matlab.ui.container.GridLayout" value="MainGridLayout"/>
+        <property name="Title" type="matlab.internal.datatype.matlab.graphics.datatype.char" value="Legend Settings"/>
+        <property name="Layout" type="matlab.ui.layout.GridLayoutOptions">
+          <property name="Row" type="matlab.internal.datatype.matlab.graphics.datatype.numeric" value="1"/>
+          <property name="Column" type="matlab.internal.datatype.matlab.graphics.datatype.numeric" value="2"/>
+        </property>
+        <object class="matlab.ui.container.GridLayout" name="LegendSettingsGridLayout">
+          <property name="Parent" type="matlab.ui.container.Panel" value="LegendSettingsPanel"/>
+          <property name="RowHeight" type="matlab.internal.datatype.matlab.graphics.datatype.auto" value="{'fit','fit','fit'}"/>
+          <property name="ColumnWidth" type="matlab.internal.datatype.matlab.graphics.datatype.auto" value="{'fit','1x'}"/>
+        </object>
+        <object class="matlab.ui.control.Label" name="LegendLocationLabel">
+          <property name="Parent" type="matlab.ui.container.GridLayout" value="LegendSettingsGridLayout"/>
+          <property name="Text" type="matlab.internal.datatype.matlab.graphics.datatype.char" value="Legend Location"/>
+          <property name="Layout" type="matlab.ui.layout.GridLayoutOptions">
+            <property name="Row" type="matlab.internal.datatype.matlab.graphics.datatype.numeric" value="1"/>
+            <property name="Column" type="matlab.internal.datatype.matlab.graphics.datatype.numeric" value="1"/>
+          </property>
+        </object>
+        <object class="matlab.ui.control.DropDown" name="LegendLocationDropDown">
+          <property name="Parent" type="matlab.ui.container.GridLayout" value="LegendSettingsGridLayout"/>
+          <property name="Items" type="matlab.internal.datatype.matlab.graphics.datatype.cell" value="{'best', 'northeast', 'southeast', 'southwest', 'northwest', 'northeastoutside', 'none'}"/>
+          <property name="Layout" type="matlab.ui.layout.GridLayoutOptions">
+            <property name="Row" type="matlab.internal.datatype.matlab.graphics.datatype.numeric" value="1"/>
+            <property name="Column" type="matlab.internal.datatype.matlab.graphics.datatype.numeric" value="2"/>
+          </property>
+        </object>
+        <object class="matlab.ui.control.CheckBox" name="SmartLegendDisplayCheckBox">
+          <property name="Parent" type="matlab.ui.container.GridLayout" value="LegendSettingsGridLayout"/>
+          <property name="Text" type="matlab.internal.datatype.matlab.graphics.datatype.char" value="Smart Legend Display"/>
+          <property name="Layout" type="matlab.ui.layout.GridLayoutOptions">
+            <property name="Row" type="matlab.internal.datatype.matlab.graphics.datatype.numeric" value="2"/>
+            <property name="Column" type="matlab.internal.datatype.matlab.graphics.datatype.numeric" value="1"/>
+            <property name="ColumnSpan" type="matlab.internal.datatype.matlab.graphics.datatype.numeric" value="2"/>
+          </property>
+        </object>
+        <object class="matlab.ui.control.CheckBox" name="InteractiveLegendCheckBox">
+          <property name="Parent" type="matlab.ui.container.GridLayout" value="LegendSettingsGridLayout"/>
+          <property name="Text" type="matlab.internal.datatype.matlab.graphics.datatype.char" value="Interactive Legend"/>
+          <property name="Layout" type="matlab.ui.layout.GridLayoutOptions">
+            <property name="Row" type="matlab.internal.datatype.matlab.graphics.datatype.numeric" value="3"/>
+            <property name="Column" type="matlab.internal.datatype.matlab.graphics.datatype.numeric" value="1"/>
+            <property name="ColumnSpan" type="matlab.internal.datatype.matlab.graphics.datatype.numeric" value="2"/>
+          </property>
+        </object>
+      </object>
+      <object class="matlab.ui.container.Panel" name="AxesConfigurationPanel">
+        <property name="Parent" type="matlab.ui.container.GridLayout" value="MainGridLayout"/>
+        <property name="Title" type="matlab.internal.datatype.matlab.graphics.datatype.char" value="Axes Configuration"/>
+        <property name="Layout" type="matlab.ui.layout.GridLayoutOptions">
+          <property name="Row" type="matlab.internal.datatype.matlab.graphics.datatype.numeric" value="3"/>
+          <property name="Column" type="matlab.internal.datatype.matlab.graphics.datatype.numeric" value="1"/>
+        </property>
+        <object class="matlab.ui.container.GridLayout" name="AxesConfigurationGridLayout">
+          <property name="Parent" type="matlab.ui.container.Panel" value="AxesConfigurationPanel"/>
+          <property name="RowHeight" type="matlab.internal.datatype.matlab.graphics.datatype.auto" value="{'fit','fit','fit'}"/>
+          <property name="ColumnWidth" type="matlab.internal.datatype.matlab.graphics.datatype.auto" value="{'fit','1x'}"/>
+        </object>
+        <object class="matlab.ui.control.Label" name="GridDensityLabel">
+          <property name="Parent" type="matlab.ui.container.GridLayout" value="AxesConfigurationGridLayout"/>
+          <property name="Text" type="matlab.internal.datatype.matlab.graphics.datatype.char" value="Grid Density"/>
+          <property name="Layout" type="matlab.ui.layout.GridLayoutOptions">
+            <property name="Row" type="matlab.internal.datatype.matlab.graphics.datatype.numeric" value="1"/>
+            <property name="Column" type="matlab.internal.datatype.matlab.graphics.datatype.numeric" value="1"/>
+          </property>
+        </object>
+        <object class="matlab.ui.control.DropDown" name="GridDensityDropDown">
+          <property name="Parent" type="matlab.ui.container.GridLayout" value="AxesConfigurationGridLayout"/>
+          <property name="Items" type="matlab.internal.datatype.matlab.graphics.datatype.cell" value="{'normal', 'major_only', 'none'}"/>
+          <property name="Value" type="matlab.internal.datatype.matlab.graphics.datatype.char" value="normal"/>
+          <property name="Layout" type="matlab.ui.layout.GridLayoutOptions">
+            <property name="Row" type="matlab.internal.datatype.matlab.graphics.datatype.numeric" value="1"/>
+            <property name="Column" type="matlab.internal.datatype.matlab.graphics.datatype.numeric" value="2"/>
+          </property>
+        </object>
+        <object class="matlab.ui.control.Label" name="AxisBoxStyleLabel">
+          <property name="Parent" type="matlab.ui.container.GridLayout" value="AxesConfigurationGridLayout"/>
+          <property name="Text" type="matlab.internal.datatype.matlab.graphics.datatype.char" value="Axis Box Style"/>
+          <property name="Layout" type="matlab.ui.layout.GridLayoutOptions">
+            <property name="Row" type="matlab.internal.datatype.matlab.graphics.datatype.numeric" value="2"/>
+            <property name="Column" type="matlab.internal.datatype.matlab.graphics.datatype.numeric" value="1"/>
+          </property>
+        </object>
+        <object class="matlab.ui.control.DropDown" name="AxisBoxStyleDropDown">
+          <property name="Parent" type="matlab.ui.container.GridLayout" value="AxesConfigurationGridLayout"/>
+          <property name="Items" type="matlab.internal.datatype.matlab.graphics.datatype.cell" value="{'on', 'off', 'left-bottom'}"/>
+          <property name="Value" type="matlab.internal.datatype.matlab.graphics.datatype.char" value="on"/>
+          <property name="Layout" type="matlab.ui.layout.GridLayoutOptions">
+            <property name="Row" type="matlab.internal.datatype.matlab.graphics.datatype.numeric" value="2"/>
+            <property name="Column" type="matlab.internal.datatype.matlab.graphics.datatype.numeric" value="2"/>
+          </property>
+        </object>
+        <object class="matlab.ui.control.Label" name="AxesLayerLabel">
+          <property name="Parent" type="matlab.ui.container.GridLayout" value="AxesConfigurationGridLayout"/>
+          <property name="Text" type="matlab.internal.datatype.matlab.graphics.datatype.char" value="Axes Layer"/>
+          <property name="Layout" type="matlab.ui.layout.GridLayoutOptions">
+            <property name="Row" type="matlab.internal.datatype.matlab.graphics.datatype.numeric" value="3"/>
+            <property name="Column" type="matlab.internal.datatype.matlab.graphics.datatype.numeric" value="1"/>
+          </property>
+        </object>
+        <object class="matlab.ui.control.DropDown" name="AxesLayerDropDown">
+          <property name="Parent" type="matlab.ui.container.GridLayout" value="AxesConfigurationGridLayout"/>
+          <property name="Items" type="matlab.internal.datatype.matlab.graphics.datatype.cell" value="{'top', 'bottom'}"/>
+          <property name="Value" type="matlab.internal.datatype.matlab.graphics.datatype.char" value="top"/>
+          <property name="Layout" type="matlab.ui.layout.GridLayoutOptions">
+            <property name="Row" type="matlab.internal.datatype.matlab.graphics.datatype.numeric" value="3"/>
+            <property name="Column" type="matlab.internal.datatype.matlab.graphics.datatype.numeric" value="2"/>
+          </property>
+        </object>
+      </object>
+      <object class="matlab.ui.container.Panel" name="PlotAppearancePanel">
+        <property name="Parent" type="matlab.ui.container.GridLayout" value="MainGridLayout"/>
+        <property name="Title" type="matlab.internal.datatype.matlab.graphics.datatype.char" value="Plot Appearance"/>
+        <property name="Layout" type="matlab.ui.layout.GridLayoutOptions">
+          <property name="Row" type="matlab.internal.datatype.matlab.graphics.datatype.numeric" value="2"/>
+          <property name="Column" type="matlab.internal.datatype.matlab.graphics.datatype.numeric" value="1"/>
+        </property>
+        <object class="matlab.ui.container.GridLayout" name="PlotAppearanceGridLayout">
+          <property name="Parent" type="matlab.ui.container.Panel" value="PlotAppearancePanel"/>
+          <property name="RowHeight" type="matlab.internal.datatype.matlab.graphics.datatype.auto" value="{'fit','fit','fit','fit'}"/>
+          <property name="ColumnWidth" type="matlab.internal.datatype.matlab.graphics.datatype.auto" value="{'fit','1x'}"/>
+        </object>
+        <object class="matlab.ui.control.Label" name="PlotLineWidthLabel">
+          <property name="Parent" type="matlab.ui.container.GridLayout" value="PlotAppearanceGridLayout"/>
+          <property name="Text" type="matlab.internal.datatype.matlab.graphics.datatype.char" value="Plot Line Width"/>
+          <property name="Layout" type="matlab.ui.layout.GridLayoutOptions">
+            <property name="Row" type="matlab.internal.datatype.matlab.graphics.datatype.numeric" value="1"/>
+            <property name="Column" type="matlab.internal.datatype.matlab.graphics.datatype.numeric" value="1"/>
+          </property>
+        </object>
+        <object class="matlab.ui.control.Spinner" name="PlotLineWidthSpinner">
+          <property name="Parent" type="matlab.ui.container.GridLayout" value="PlotAppearanceGridLayout"/>
+          <property name="Value" type="matlab.internal.datatype.matlab.graphics.datatype.numeric" value="1.5"/>
+          <property name="Step" type="matlab.internal.datatype.matlab.graphics.datatype.numeric" value="0.1"/>
+          <property name="Layout" type="matlab.ui.layout.GridLayoutOptions">
+            <property name="Row" type="matlab.internal.datatype.matlab.graphics.datatype.numeric" value="1"/>
+            <property name="Column" type="matlab.internal.datatype.matlab.graphics.datatype.numeric" value="2"/>
+          </property>
+        </object>
+        <object class="matlab.ui.control.Label" name="MarkerSizeLabel">
+          <property name="Parent" type="matlab.ui.container.GridLayout" value="PlotAppearanceGridLayout"/>
+          <property name="Text" type="matlab.internal.datatype.matlab.graphics.datatype.char" value="Marker Size"/>
+          <property name="Layout" type="matlab.ui.layout.GridLayoutOptions">
+            <property name="Row" type="matlab.internal.datatype.matlab.graphics.datatype.numeric" value="2"/>
+            <property name="Column" type="matlab.internal.datatype.matlab.graphics.datatype.numeric" value="1"/>
+          </property>
+        </object>
+        <object class="matlab.ui.control.Spinner" name="MarkerSizeSpinner">
+          <property name="Parent" type="matlab.ui.container.GridLayout" value="PlotAppearanceGridLayout"/>
+          <property name="Value" type="matlab.internal.datatype.matlab.graphics.datatype.numeric" value="6"/>
+          <property name="Layout" type="matlab.ui.layout.GridLayoutOptions">
+            <property name="Row" type="matlab.internal.datatype.matlab.graphics.datatype.numeric" value="2"/>
+            <property name="Column" type="matlab.internal.datatype.matlab.graphics.datatype.numeric" value="2"/>
+          </property>
+        </object>
+        <object class="matlab.ui.control.Label" name="ColorPaletteLabel">
+          <property name="Parent" type="matlab.ui.container.GridLayout" value="PlotAppearanceGridLayout"/>
+          <property name="Text" type="matlab.internal.datatype.matlab.graphics.datatype.char" value="Color Palette"/>
+          <property name="Layout" type="matlab.ui.layout.GridLayoutOptions">
+            <property name="Row" type="matlab.internal.datatype.matlab.graphics.datatype.numeric" value="3"/>
+            <property name="Column" type="matlab.internal.datatype.matlab.graphics.datatype.numeric" value="1"/>
+          </property>
+        </object>
+        <object class="matlab.ui.control.DropDown" name="ColorPaletteDropDown" valueChangedFcn="app.updateCustomColorPaletteFieldEnable">
+          <property name="Parent" type="matlab.ui.container.GridLayout" value="PlotAppearanceGridLayout"/>
+          <property name="Items" type="matlab.internal.datatype.matlab.graphics.datatype.cell" value="{'default_matlab', 'lines', 'parula', 'viridis', 'cbrewer_qual_Set1', 'cbrewer_qual_Set2', 'cbrewer_qual_Set3', 'cbrewer_seq_blues', 'cbrewer_div_brbg', 'custom'}"/>
+          <property name="Value" type="matlab.internal.datatype.matlab.graphics.datatype.char" value="default_matlab"/>
+          <property name="Layout" type="matlab.ui.layout.GridLayoutOptions">
+            <property name="Row" type="matlab.internal.datatype.matlab.graphics.datatype.numeric" value="3"/>
+            <property name="Column" type="matlab.internal.datatype.matlab.graphics.datatype.numeric" value="2"/>
+          </property>
+        </object>
+        <object class="matlab.ui.control.Label" name="CustomColorPaletteLabel">
+          <property name="Parent" type="matlab.ui.container.GridLayout" value="PlotAppearanceGridLayout"/>
+          <property name="Text" type="matlab.internal.datatype.matlab.graphics.datatype.char" value="Custom Color Palette"/>
+          <property name="Layout" type="matlab.ui.layout.GridLayoutOptions">
+            <property name="Row" type="matlab.internal.datatype.matlab.graphics.datatype.numeric" value="4"/>
+            <property name="Column" type="matlab.internal.datatype.matlab.graphics.datatype.numeric" value="1"/>
+          </property>
+        </object>
+        <object class="matlab.ui.control.EditField" name="CustomColorPaletteEditField">
+          <property name="Parent" type="matlab.ui.container.GridLayout" value="PlotAppearanceGridLayout"/>
+          <property name="Value" type="matlab.internal.datatype.matlab.graphics.datatype.char" value="[[0 0 1]; [1 0 0]]"/>
+          <property name="Layout" type="matlab.ui.layout.GridLayoutOptions">
+            <property name="Row" type="matlab.internal.datatype.matlab.graphics.datatype.numeric" value="4"/>
+            <property name="Column" type="matlab.internal.datatype.matlab.graphics.datatype.numeric" value="2"/>
+          </property>
+        </object>
+      </object>
+    </components>
+    <methods>
+      <method name="appstartupfcn" access="public">
+        <input/>
+        <output/>
+        <body>
+          <![CDATA[
+            % appstartupfcn: Executes on app startup.
+            % Initializes the app figure visibility, populates dynamic UI elements (fonts),
+            % and sets the initial enabled/disabled state of conditional UI sections.
+
+            app.UIFigure.Visible = 'on'; % Make the UIFigure visible
+            
+            app.populateFontNameDropDown(); % Populate Font Name DropDown with system and default fonts
+
+            % Initialize enable/disable states for conditional UI sections
+            app.updateCustomColorPaletteFieldEnable();
+            app.updatePanelLabelingControlsEnable();
+            app.updateStatsOverlayControlsEnable();
+            app.updateExportSettingsControlsEnable();
+          ]]>
+        </body>
+      </method>
+      <method name="populateFontNameDropDown" access="private">
+        <input>
+          <arg name="app" type="app.BeautifyFigureApp"/>
+        </input>
+        <output/>
+        <body>
+          <![CDATA[
+            % populateFontNameDropDown: Populates the FontNameDropDown with system and default fonts.
+            % It attempts to use listTrueTypeFonts and falls back to a predefined list.
+            % Sets a sensible default font like 'Helvetica' or 'Arial'.
+
+            defaultFonts = {'Helvetica', 'Arial', 'Times New Roman', 'Courier New', 'Verdana', 'Tahoma', 'Geneva', 'SansSerif', 'Serif'};
+            availableFonts = defaultFonts; % Default fallback in case listTrueTypeFonts fails
+            try
+                % Attempt to get system fonts using listTrueTypeFonts
+                system_fonts = listTrueTypeFonts(); 
+                if ~isempty(system_fonts) && iscell(system_fonts)
+                    % Combine with defaults, ensure uniqueness, and keep defaults at the top for easy access
+                    availableFonts = unique([defaultFonts(:); system_fonts(:)], 'stable');
+                else
+                    disp('listTrueTypeFonts did not return a valid cell array. Using default fonts.');
+                end
+            catch ME
+                disp('Failed to get system fonts using listTrueTypeFonts. Using a default list.');
+                disp(['Error message: ', ME.message]);
+                % availableFonts remains defaultFonts as set initially
+            end
+            
+            app.FontNameDropDown.Items = availableFonts; % Set the items for the dropdown
+            
+            % Preserve current value if already set (e.g., by a loaded preset) and valid,
+            % otherwise, set a preferred default font.
+            current_value = app.FontNameDropDown.Value; 
+            if ~ismember(current_value, availableFonts)
+                if ismember('Helvetica', availableFonts)
+                    app.FontNameDropDown.Value = 'Helvetica';
+                elseif ismember('Arial', availableFonts)
+                    app.FontNameDropDown.Value = 'Arial';
+                elseif ~isempty(availableFonts)
+                    app.FontNameDropDown.Value = availableFonts{1}; % Fallback to the first available font
+                else
+                    % This case should ideally not be reached if defaultFonts is not empty
+                    app.FontNameDropDown.Items = {'Error - No Fonts'};
+                    app.FontNameDropDown.Value = 'Error - No Fonts';
+                    disp('Critical error: No fonts available for FontNameDropDown, not even defaults.');
+                end
+            % If current_value is valid and in availableFonts, it's preserved.
+            end
+          ]]>
+        </body>
+      </method>
+      <method name="updateCustomColorPaletteFieldEnable" access="private">
+        <input/>
+        <output/>
+        <body>
+          <![CDATA[
+            % updateCustomColorPaletteFieldEnable: Enables or disables the
+            % CustomColorPaletteEditField based on the selection in ColorPaletteDropDown.
+            if strcmp(app.ColorPaletteDropDown.Value, 'custom')
+                app.CustomColorPaletteEditField.Enable = 'on';
+            else
+                app.CustomColorPaletteEditField.Enable = 'off';
+            end
+          ]]>
+        </body>
+      </method>
+      <method name="updatePanelLabelingControlsEnable" access="private">
+        <input/>
+        <output/>
+        <body>
+          <![CDATA[
+            % updatePanelLabelingControlsEnable: Enables or disables controls in the
+            % Panel Labeling section based on the EnablePanelLabelingCheckBox state.
+            if app.EnablePanelLabelingCheckBox.Value
+                app.PanelLabelingStyleDropDown.Enable = 'on';
+                app.PanelLabelingPositionDropDown.Enable = 'on';
+                app.PanelLabelingFontScaleFactorSpinner.Enable = 'on';
+                app.PanelLabelingFontWeightDropDown.Enable = 'on';
+            else
+                app.PanelLabelingStyleDropDown.Enable = 'off';
+                app.PanelLabelingPositionDropDown.Enable = 'off';
+                app.PanelLabelingFontScaleFactorSpinner.Enable = 'off';
+                app.PanelLabelingFontWeightDropDown.Enable = 'off';
+            end
+          ]]>
+        </body>
+      </method>
+      <method name="updateStatsOverlayControlsEnable" access="private">
+        <input/>
+        <output/>
+        <body>
+          <![CDATA[
+            % updateStatsOverlayControlsEnable: Enables or disables controls in the
+            % Stats Overlay section based on the EnableStatsOverlayCheckBox state.
+            if app.EnableStatsOverlayCheckBox.Value
+                app.StatisticsEditField.Enable = 'on';
+                app.StatsOverlayPositionDropDown.Enable = 'on';
+                app.StatsOverlayPrecisionSpinner.Enable = 'on';
+            else
+                app.StatisticsEditField.Enable = 'off';
+                app.StatsOverlayPositionDropDown.Enable = 'off';
+                app.StatsOverlayPrecisionSpinner.Enable = 'off';
+            end
+          ]]>
+        </body>
+      </method>
+      <method name="updateExportSettingsControlsEnable" access="private">
+        <input/>
+        <output/>
+        <body>
+          <![CDATA[
+            % updateExportSettingsControlsEnable: Enables or disables controls in the
+            % Export Settings section based on the EnableExportCheckBox state.
+            if app.EnableExportCheckBox.Value
+                app.FilenameEditField.Enable = 'on';
+                app.FormatDropDown.Enable = 'on';
+                app.ResolutionDPISpinner.Enable = 'on';
+            else
+                app.FilenameEditField.Enable = 'off';
+                app.FormatDropDown.Enable = 'off';
+                app.ResolutionDPISpinner.Enable = 'off';
+            end
+          ]]>
+        </body>
+      </method>
+      <method name="ApplyBeautificationButtonPushed" access="public">
+        <input>
+          <arg name="app" type="app.BeautifyFigureApp"/>
+          <arg name="event" type="matlab.ui.control.ButtonPushedData"/>
+        </input>
+        <output/>
+        <body>
+          <![CDATA[
+            % ApplyBeautificationButtonPushed: Callback for the "Apply Beautification" button.
+            % Gathers settings from the UI, finds a target figure, and calls beautify_figure.m.
+            % Handles UI feedback (pointer change, alerts).
+
+            originalPointer = app.UIFigure.Pointer; % Store original pointer state
+            app.UIFigure.Pointer = 'watch'; % Change pointer to watch (busy indicator)
+            drawnow; % Ensure pointer updates immediately
+
+            try
+                params_struct = app.getUISettings(); % Gather all settings from UI
+                
+                % --- Target Figure Selection Logic ---
+                % Find all figures except the app UI itself (assuming app UI has a specific Tag or Name)
+                all_figs = findobj('Type', 'figure');
+                target_fig = [];
+                candidate_figs = [];
+                for i = 1:length(all_figs)
+                    % Exclude the BeautifyFigureApp UI itself
+                    if ~(strcmp(all_figs(i).Tag, app.UIFigure.Tag) || strcmp(all_figs(i).Name, app.UIFigure.Name))
+                        candidate_figs = [candidate_figs; all_figs(i)]; %#ok<AGROW>
+                    end
+                end
+
+                if isempty(candidate_figs)
+                    uialert(app.UIFigure, 'No figure selected to beautify. Please open or select a target figure.', 'No Figure Selected');
+                    app.UIFigure.Pointer = originalPointer; % Restore pointer
+                    return;
+                elseif length(candidate_figs) == 1
+                    target_fig = candidate_figs(1);
+                else % Multiple candidate figures
+                    % Check if current figure (gcf) is one of the candidates
+                    current_fig_handle = gcf;
+                    if ismember(current_fig_handle, candidate_figs)
+                        target_fig = current_fig_handle;
+                    else
+                        % If gcf is the app or some other non-candidate, prompt user
+                        uialert(app.UIFigure, 'Multiple figures open. Please click on the target figure to make it active, then click "Apply Beautification" again.', 'Select Target Figure');
+                        app.UIFigure.Pointer = originalPointer; % Restore pointer
+                        return;
+                    end
+                end
+                % --- End Target Figure Selection Logic ---
+
+                params_struct.figure_handle = target_fig; % Add figure handle to parameters
+
+                beautify_figure(params_struct); % Call the main beautification script
+                
+                uialert(app.UIFigure, 'Figure beautified successfully!', 'Success');
+                
+            catch ME
+                % Catch errors from getUISettings, figure selection, or beautify_figure
+                uialert(app.UIFigure, ['Error applying settings: ' ME.message], 'Error Applying Settings');
+                disp(['Error in ApplyBeautificationButtonPushed: ', ME.identifier]);
+                for i=1:length(ME.stack)
+                    disp([ME.stack(i).file, ' at line ', num2str(ME.stack(i).line), ' in ', ME.stack(i).name]);
+                end
+            end
+            
+            % Restore original pointer state
+            app.UIFigure.Pointer = originalPointer;
+            drawnow;
+          ]]>
+        </body>
+      </method>
+      <method name="ImportPresetButtonPushed" access="public">
+        <input>
+          <arg name="app" type="app.BeautifyFigureApp"/>
+          <arg name="event" type="matlab.ui.control.ButtonPushedData"/>
+        </input>
+        <output/>
+        <body>
+          <![CDATA[
+            % ImportPresetButtonPushed: Callback for the "Import Preset" button.
+            % Prompts user for a .mat file and loads settings into the UI.
+            try
+                [filename, pathname] = uigetfile('*.mat', 'Load Preset'); % Show file dialog
+                
+                if isequal(filename, 0) || isequal(pathname, 0) % User cancelled
+                    uialert(app.UIFigure, 'Preset import cancelled.', 'Import Cancelled');
+                    return;
+                end
+                
+                full_path = fullfile(pathname, filename);
+                loaded_data = load(full_path, 'settings'); % Load 'settings' struct from .mat
+                
+                if isfield(loaded_data, 'settings') && isstruct(loaded_data.settings)
+                    app.applyUISettings(loaded_data.settings); % Apply loaded settings to UI
+                    % applyUISettings shows its own success/error alert for application
+                else
+                    uialert(app.UIFigure, 'Invalid preset file. File must contain a struct variable named "settings".', 'Import Error');
+                end
+                
+            catch ME
+                uialert(app.UIFigure, ['Error importing preset: ' ME.message], 'Import Error');
+                disp(['Error in ImportPresetButtonPushed: ', ME.message]);
+            end
+          ]]>
+        </body>
+      </method>
+      <method name="ExportPresetButtonPushed" access="public">
+        <input>
+          <arg name="app" type="app.BeautifyFigureApp"/>
+          <arg name="event" type="matlab.ui.control.ButtonPushedData"/>
+        </input>
+        <output/>
+        <body>
+          <![CDATA[
+            % ExportPresetButtonPushed: Callback for the "Export Preset" button.
+            % Gathers current UI settings and saves them to a .mat file.
+            try
+                settings = app.getUISettings(); % Get current settings from UI
+                
+                % Prompt user for save location and filename
+                [filename, pathname] = uiputfile('*.mat', 'Save Preset As', 'beautify_preset.mat');
+                
+                if isequal(filename, 0) || isequal(pathname, 0) % User cancelled
+                    uialert(app.UIFigure, 'Preset export cancelled.', 'Export Cancelled');
+                    return;
+                end
+                
+                full_path = fullfile(pathname, filename);
+                save(full_path, 'settings'); % Save the 'settings' struct
+                
+                uialert(app.UIFigure, ['Preset saved successfully to: ' full_path], 'Export Successful');
+                
+            catch ME
+                uialert(app.UIFigure, ['Error exporting preset: ' ME.message], 'Export Error');
+                disp(['Error in ExportPresetButtonPushed: ', ME.message]);
+            end
+          ]]>
+        </body>
+      </method>
+      <method name="applyUISettings" access="private">
+        <input>
+          <arg name="app" type="app.BeautifyFigureApp"/>
+          <arg name="settings" type="struct"/>
+        </input>
+        <output/>
+        <body>
+          <![CDATA[
+            % applyUISettings: Applies a given settings struct to all UI components.
+            % Also ensures that conditional UI sections are updated based on loaded values.
+            try
+                % General Settings
+                app.StylePresetDropDown.Value = settings.style_preset;
+                app.ThemeDropDown.Value = settings.theme;
+                % Font Name - ensure the loaded font is in the list, if not, add it (dropdown is editable)
+                if isfield(settings, 'font_name') && ~ismember(settings.font_name, app.FontNameDropDown.Items)
+                    app.FontNameDropDown.Items = unique([app.FontNameDropDown.Items(:); {settings.font_name}],'stable');
+                end
+                app.FontNameDropDown.Value = settings.font_name;
+                app.BaseFontSizeSpinner.Value = settings.base_font_size;
+                app.GlobalFontScaleFactorSpinner.Value = settings.global_font_scale_factor;
+
+                % Plot Appearance
+                app.PlotLineWidthSpinner.Value = settings.plot_line_width;
+                app.MarkerSizeSpinner.Value = settings.marker_size;
+                app.ColorPaletteDropDown.Value = settings.color_palette;
+                if strcmp(settings.color_palette, 'custom')
+                    if isnumeric(settings.custom_color_palette)
+                        app.CustomColorPaletteEditField.Value = mat2str(settings.custom_color_palette);
+                    elseif iscell(settings.custom_color_palette) % Handle cell array of colors
+                         str_val = '{';
+                         for i = 1:length(settings.custom_color_palette)
+                             if isnumeric(settings.custom_color_palette{i})
+                                 str_val = [str_val, mat2str(settings.custom_color_palette{i})]; %#ok<AGROW>
+                             elseif ischar(settings.custom_color_palette{i})
+                                 str_val = [str_val, '''' , settings.custom_color_palette{i}, '''']; %#ok<AGROW>
+                             end
+                             if i < length(settings.custom_color_palette)
+                                 str_val = [str_val, '; ']; %#ok<AGROW>
+                             end
+                         end
+                         str_val = [str_val, '}'];
+                         app.CustomColorPaletteEditField.Value = str_val;
+                    elseif ischar(settings.custom_color_palette) % Already a string
+                        app.CustomColorPaletteEditField.Value = settings.custom_color_palette;
+                    else
+                        app.CustomColorPaletteEditField.Value = ''; % Default or error representation
+                    end
+                end
+                app.updateCustomColorPaletteFieldEnable(); % Update enable state for custom palette field
+
+                % Axes Configuration
+                app.GridDensityDropDown.Value = settings.grid_density;
+                app.AxisBoxStyleDropDown.Value = settings.axis_box_style;
+                app.AxesLayerDropDown.Value = settings.axes_layer;
+
+                % Legend Settings
+                app.LegendLocationDropDown.Value = settings.legend_location;
+                app.SmartLegendDisplayCheckBox.Value = settings.smart_legend_display;
+                app.InteractiveLegendCheckBox.Value = settings.interactive_legend;
+
+                % Panel Labeling
+                if isfield(settings, 'panel_labeling') && isstruct(settings.panel_labeling)
+                    app.EnablePanelLabelingCheckBox.Value = settings.panel_labeling.enabled;
+                    app.PanelLabelingStyleDropDown.Value = settings.panel_labeling.style;
+                    app.PanelLabelingPositionDropDown.Value = settings.panel_labeling.position;
+                    app.PanelLabelingFontScaleFactorSpinner.Value = settings.panel_labeling.font_scale_factor;
+                    app.PanelLabelingFontWeightDropDown.Value = settings.panel_labeling.font_weight;
+                end
+                app.updatePanelLabelingControlsEnable(); % Update enable state for panel labeling section
+
+                % Stats Overlay
+                if isfield(settings, 'stats_overlay') && isstruct(settings.stats_overlay)
+                    app.EnableStatsOverlayCheckBox.Value = settings.stats_overlay.enabled;
+                    if iscell(settings.stats_overlay.statistics)
+                        % Convert cell array of strings to a string representation like {'mean', 'std'}
+                        app.StatisticsEditField.Value = ['{''' strjoin(settings.stats_overlay.statistics, ''', ''') '''}'];
+                    elseif ischar(settings.stats_overlay.statistics) % Already a string
+                        app.StatisticsEditField.Value = settings.stats_overlay.statistics;
+                    else
+                        app.StatisticsEditField.Value = ''; % Default or error representation
+                    end
+                    app.StatsOverlayPositionDropDown.Value = settings.stats_overlay.position;
+                    app.StatsOverlayPrecisionSpinner.Value = settings.stats_overlay.precision;
+                end
+                app.updateStatsOverlayControlsEnable(); % Update enable state for stats overlay section
+
+                % Export Settings
+                if isfield(settings, 'export_settings') && isstruct(settings.export_settings)
+                    app.EnableExportCheckBox.Value = settings.export_settings.enabled;
+                    app.FilenameEditField.Value = settings.export_settings.filename;
+                    app.FormatDropDown.Value = settings.export_settings.format;
+                    app.ResolutionDPISpinner.Value = settings.export_settings.resolution_dpi;
+                end
+                app.updateExportSettingsControlsEnable(); % Update enable state for export settings section
+                
+                uialert(app.UIFigure, 'Preset settings applied successfully.', 'Preset Loaded');
+
+            catch ME
+                uialert(app.UIFigure, ['Error applying preset: ' ME.message], 'Error Loading Preset');
+                disp(['Error applying settings: ', ME.identifier, ' - ', ME.message]);
+                for i = 1:length(ME.stack)
+                    disp([ME.stack(i).file, ' at line ', num2str(ME.stack(i).line)]);
+                end
+            end
+          ]]>
+        </body>
+      </method>
+      <method name="HelpButtonPushed" access="public">
+        <input>
+          <arg name="app" type="app.BeautifyFigureApp"/>
+          <arg name="event" type="matlab.ui.control.ButtonPushedData"/>
+        </input>
+        <output/>
+        <body>
+          <![CDATA[
+            % HelpButtonPushed: Callback for the "Help" button.
+            % Displays a modal dialog with help information about using the app.
+            help_title = 'Beautify Figure App - Help';
+            help_message = sprintf([...
+                'BEAUTIFY FIGURE APP - HELP\n\n' ...
+                'Overview:\n' ...
+                'This app allows you to interactively configure and apply settings from the ''beautify_figure.m'' function to your MATLAB figures, enhancing their appearance for presentations or publications.\n\n' ...
+                'How to Use:\n' ...
+                '1. Open or generate a MATLAB figure you wish to modify.\n' ...
+                '2. Adjust parameters in the various sections of this app:\n' ...
+                '   - General Settings: Control overall style, theme, font name, and base font sizes.\n' ...
+                '     The ''Font Name'' dropdown attempts to list system fonts and is also editable for custom font names.\n' ...
+                '   - Plot Appearance: Modify line widths, marker sizes, and color palettes.\n' ...
+                '     The ''Custom Color Palette'' field becomes active only when ''custom'' is selected in the ''ColorPalette'' dropdown. Input format is a MATLAB matrix string, e.g., [[1 0 0]; [0 1 0]; [0 0 1]] for red, green, blue.\n' ...
+                '   - Axes Configuration: Adjust grid density, axis box style, and layer position.\n' ...
+                '   - Legend Settings: Control legend location and behavior.\n' ...
+                '   - Panel Labeling: Enable and configure automated subplot labels (e.g., A, B, C). Requires ''Enable Panel Labeling'' to be checked.\n' ...
+                '   - Stats Overlay: Enable and configure statistical overlays on plots. Requires ''Enable Stats Overlay'' to be checked. Input format for statistics is a cell array string, e.g., {''mean'', ''std''}.\n' ...
+                '   - Export Settings: Enable and configure figure export options. Requires ''Enable Export'' to be checked.\n' ...
+                '3. Click the ''Apply Beautification'' button. \n' ...
+                '   - If multiple figures are open, ensure the desired figure is the current active figure (click on it) before applying.\n' ...
+                '   - If no figure is open (or only the app itself), an alert will prompt you to open one.\n\n' ...
+                'Presets:\n' ...
+                '- Use ''Export Preset'' to save your current UI settings to a .mat file for later use.\n' ...
+                '- Use ''Import Preset'' to load settings from a previously saved .mat file, quickly restoring a configuration.\n\n' ...
+                'Advanced Details:\n' ...
+                'For comprehensive information on each beautification parameter and its effects, please refer to the documentation within the ''beautify_figure.m'' script itself (e.g., type ''help beautify_figure'' in the MATLAB Command Window).\n\n' ...
+                'Enjoy beautifying your figures!'
+            ]);
+
+            uialert(app.UIFigure, help_message, help_title, 'Icon', 'info', 'Modal', true);
+          ]]>
+        </body>
+      </method>
+      <method name="getUISettings" access="private">
+        <input>
+          <arg name="app" type="app.BeautifyFigureApp"/>
+        </input>
+        <output>
+          <arg name="settings" type="struct"/>
+        </output>
+        <body>
+          <![CDATA[
+            % getUISettings: Gathers all current settings from the UI components
+            % into a structured MATLAB variable.
+            % Includes error handling for potentially malformed user inputs in text fields.
+
+            settings = struct(); % Initialize empty struct
+
+            % General Settings
+            settings.style_preset = app.StylePresetDropDown.Value;
+            settings.theme = app.ThemeDropDown.Value;
+            settings.font_name = app.FontNameDropDown.Value;
+            settings.base_font_size = app.BaseFontSizeSpinner.Value;
+            settings.global_font_scale_factor = app.GlobalFontScaleFactorSpinner.Value;
+
+            % Plot Appearance
+            settings.plot_line_width = app.PlotLineWidthSpinner.Value;
+            settings.marker_size = app.MarkerSizeSpinner.Value;
+            settings.color_palette = app.ColorPaletteDropDown.Value;
+            if strcmp(settings.color_palette, 'custom')
+                try
+                    custom_palette_str = app.CustomColorPaletteEditField.Value;
+                    % Attempt to evaluate string input as MATLAB code (e.g., matrix or cell array)
+                    evaluated_palette = evalin('base', custom_palette_str);
+                    if isnumeric(evaluated_palette) || iscell(evaluated_palette)
+                        settings.custom_color_palette = evaluated_palette;
+                    else
+                        settings.custom_color_palette = custom_palette_str; % Store as string if not numeric/cell
+                    end
+                catch ME
+                    disp(['Error evaluating custom color palette: ', ME.message]);
+                    settings.custom_color_palette = app.CustomColorPaletteEditField.Value; % Store original string on error
+                end
+            else
+                settings.custom_color_palette = []; % Use empty or a specific non-custom marker
+            end
+
+            % Axes Configuration
+            settings.grid_density = app.GridDensityDropDown.Value;
+            settings.axis_box_style = app.AxisBoxStyleDropDown.Value;
+            settings.axes_layer = app.AxesLayerDropDown.Value;
+
+            % Legend Settings
+            settings.legend_location = app.LegendLocationDropDown.Value;
+            settings.smart_legend_display = app.SmartLegendDisplayCheckBox.Value;
+            settings.interactive_legend = app.InteractiveLegendCheckBox.Value;
+
+            % Panel Labeling (nested struct)
+            settings.panel_labeling.enabled = app.EnablePanelLabelingCheckBox.Value;
+            settings.panel_labeling.style = app.PanelLabelingStyleDropDown.Value;
+            settings.panel_labeling.position = app.PanelLabelingPositionDropDown.Value;
+            settings.panel_labeling.font_scale_factor = app.PanelLabelingFontScaleFactorSpinner.Value;
+            settings.panel_labeling.font_weight = app.PanelLabelingFontWeightDropDown.Value;
+
+            % Stats Overlay (nested struct)
+            settings.stats_overlay.enabled = app.EnableStatsOverlayCheckBox.Value;
+            stats_str = strtrim(app.StatisticsEditField.Value);
+            if startsWith(stats_str, '{') && endsWith(stats_str, '}') % Check if it looks like a cell array string
+                try
+                    % Attempt to evaluate as a cell array of strings
+                    evaluated_stats = evalin('base', stats_str);
+                    if iscellstr(evaluated_stats) %#ok<ISCLSTR> Validated cell array of strings
+                        settings.stats_overlay.statistics = evaluated_stats;
+                    else
+                        % If not a cell array of strings, try to split string by common delimiters
+                        settings.stats_overlay.statistics = strsplit(regexprep(stats_str, '[{}]', ''), {',', ';', ' '}, 'CollapseDelimiters', true);
+                    end
+                catch ME_stats
+                    disp(['Error evaluating statistics string: ', ME_stats.message]);
+                    % Fallback: store as a single-element cell array or split by comma
+                    settings.stats_overlay.statistics = strsplit(regexprep(stats_str, '[{}]', ''), ',');
+                end
+            else
+                 % Handle plain string by splitting (e.g. "mean std" or "mean,std")
+                settings.stats_overlay.statistics = strsplit(stats_str, {',', ';', ' '}, 'CollapseDelimiters', true);
+            end
+            settings.stats_overlay.position = app.StatsOverlayPositionDropDown.Value;
+            settings.stats_overlay.precision = app.StatsOverlayPrecisionSpinner.Value;
+
+            % Export Settings (nested struct)
+            settings.export_settings.enabled = app.EnableExportCheckBox.Value;
+            settings.export_settings.filename = app.FilenameEditField.Value;
+            settings.export_settings.format = app.FormatDropDown.Value;
+            settings.export_settings.resolution_dpi = app.ResolutionDPISpinner.Value;
+          ]]>
+        </body>
+      </method>
+    </methods>
+  </application>
+</deployer>
