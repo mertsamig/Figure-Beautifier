@@ -37,7 +37,10 @@ function beautify_figure(user_params_or_axes_handle, user_params_for_specific_ax
 %   - axis_to_plot_linewidth_ratio: Ratio of axis line width to plot line width.
 %   - marker_size: Base marker size.
 %   - color_palette: Name of a color palette ('default_matlab', 'lines', 'parula',
-%                    'viridis', 'cbrewer_qual_Set1', etc.) or an Nx3 RGB matrix.
+%                    'viridis', 'turbo', 'cividis', 'cbrewer_qual_Set1', etc.) or an Nx3 RGB matrix.
+%   - view_preset_3d: ('none') Applies predefined 3D views. Options: 
+%     'none' (no change), 'iso' (isometric), 'top' (top-down, view(0,90)), 
+%     'front' (view(0,0)), 'side_left' (view(-90,0)), 'side_right' (view(90,0)).
 %   - cycle_marker_styles: 'auto' (default), true, false. Controls marker cycling.
 %   - cycle_line_styles: 'auto' (default), true, false. Controls line style cycling.
 %   - grid_density: 'normal' (default), 'major_only', 'none'.
@@ -193,6 +196,8 @@ default_params.style_preset = 'default'; % Added new preset parameter
    default_params.stats_overlay.background_color = []; % Default none. Can be 'figure' or a color spec.
    default_params.stats_overlay.edge_color = []; % Default none. Can be 'axes' or a color spec.
    default_params.stats_overlay.target_plot_handle_tag = ''; % Tag of specific plot to analyze, empty for first valid
+
+default_params.view_preset_3d = 'none'; % Options: 'none', 'iso', 'top', 'front', 'side_left', 'side_right'
 
 % --- Parameter Parsing and Initialization ---
 base_defaults = default_params; % Store original defaults
@@ -959,6 +964,20 @@ end
 
 % --- Helper Function: Get Color Palette ---
 function active_palette = get_color_palette(params, fig_handle)
+    % Define Turbo and Cividis 10-color maps locally
+    turbo_map_10 = [
+        0.18995,0.07176,0.23217; 0.29325,0.31756,0.97420; 0.15136,0.56099,0.93081; 
+        0.06059,0.75147,0.71000; 0.33951,0.86366,0.39968; 0.68301,0.88631,0.18263; 
+        0.90100,0.79200,0.21400; 0.98324,0.59224,0.27638; 0.90093,0.34687,0.20899; 
+        0.73263,0.16332,0.09368
+    ];
+    cividis_map_10 = [
+        0.00000,0.12911,0.27800; 0.24196,0.21900,0.46080; 0.41211,0.30930,0.55020; 
+        0.56453,0.40778,0.57890; 0.70838,0.51325,0.55930; 0.84693,0.62846,0.50350; 
+        0.97397,0.75820,0.42250; 0.99520,0.89370,0.41480; 0.93696,0.99212,0.58970; 
+        0.96822,0.99868,0.97000
+    ];
+
 palette_source = params.color_palette;
 if ischar(palette_source)
 switch lower(palette_source)
@@ -967,6 +986,10 @@ case 'parula'; active_palette = parula(10);
 case 'viridis'
 if exist('viridis','file') == 2; active_palette = viridis(10);
 else; log_message(params,'"viridis" colormap not found. Using "lines".',1,'Warning'); active_palette = lines(7); end
+case 'turbo'
+active_palette = turbo_map_10;
+case 'cividis'
+active_palette = cividis_map_10;
 case 'default_matlab'
 original_visibility = ''; fig_valid = isvalid(fig_handle);
 if fig_valid && isprop(fig_handle, 'HandleVisibility'); original_visibility = get(fig_handle,'HandleVisibility'); set(fig_handle,'HandleVisibility','on'); end
@@ -1303,6 +1326,39 @@ beautify_legend(ax, params, plottable_children_for_legend, fs, alw);
 
 % --- Handle Colorbar ---
 if params.apply_to_colorbars; beautify_colorbar(ax, params, fs, lfs, alw); end
+
+    % --- Apply 3D View Preset ---
+    if isprop(ax, 'View') && ~isempty(params.view_preset_3d) && ~strcmpi(params.view_preset_3d, 'none')
+        % A common way to check if axes is intended for 3D is to see if ZLim has a span
+        is_really_3d = (abs(diff(get(ax,'ZLim'))) > 1e-9); 
+        
+        % For this feature, we will apply the view if requested, even if the plot appears 2D.
+        % User might be setting up axes for future 3D data or wants a specific 2D projection.
+        % if ~is_really_3d 
+        %    log_message(params, sprintf('Axes (Tag: %s) appears 2D based on ZLim. Applying 3D view preset "%s" may have unintended effects.', ax.Tag, params.view_preset_3d), 2, 'Info');
+        % end
+
+        current_view_preset = lower(params.view_preset_3d);
+        log_message(params, sprintf('Applying 3D view preset "%s" to Axes (Tag: %s).', current_view_preset, ax.Tag), 2, 'Info');
+        try
+            switch current_view_preset
+                case 'iso'
+                    view(ax, 3); % Standard MATLAB isometric view
+                case 'top'
+                    view(ax, 0, 90);
+                case 'front'
+                    view(ax, 0, 0);
+                case 'side_left' % View from the left side
+                    view(ax, -90, 0);
+                case 'side_right' % View from the right side
+                    view(ax, 90, 0);
+                otherwise
+                    log_message(params, sprintf('Unknown 3D view preset: "%s". No view change applied.', params.view_preset_3d), 1, 'Warning');
+            end
+        catch ME_view
+            log_message(params, sprintf('Error applying 3D view preset "%s": %s', params.view_preset_3d, ME_view.message), 1, 'Warning');
+        end
+    end
 
    % Apply Automated Panel Labeling
    if params.panel_labeling.enabled && axes_idx > 0 % axes_idx used to generate label

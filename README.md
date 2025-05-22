@@ -64,7 +64,8 @@ Key parameters include:
 *   `font_name`: Font family (e.g., 'Arial', 'Helvetica'). (Can be part of a preset).
 *   `base_font_size`: Base font size for scaling elements.
 *   `plot_line_width`: Base line width for plotted data.
-*   `color_palette`: Predefined palettes or custom RGB matrix.
+*   `color_palette`: Predefined palettes ('default_matlab', 'lines', 'parula', 'viridis', 'turbo', 'cividis', 'cbrewer_qual_Set1', etc.) or custom RGB matrix.
+*   `view_preset_3d`: ('none') Applies predefined 3D views (e.g., 'iso', 'top').
 *   `export_settings`: Structure for controlling automatic figure export (see details below).
 *   `panel_labeling`: Structure for automated panel labeling (see details below).
 *   `stats_overlay`: Structure for basic statistical overlay (see details below).
@@ -197,6 +198,28 @@ my_settings.stats_overlay.edge_color = [0.5 0.5 0.5];      % Gray border
 beautify_figure(my_settings);
 % Expected: A text box in the bottom-right of the plot showing mean, std, N, and max
 % for the 'TemperatureData' line, with a light yellow background and gray border.
+```
+
+### 3D View Presets
+
+The `view_preset_3d` parameter allows for quick application of common camera views to 3D plots. This is particularly useful for standardizing views across multiple figures.
+
+*   `view_preset_3d` (string):
+    *   `'none'` (default): No change to the current view.
+    *   `'iso'`: Standard MATLAB isometric view (`view(3)`).
+    *   `'top'`: Top-down view (`view(0,90)`).
+    *   `'front'`: Front view (`view(0,0)`).
+    *   `'side_left'`: View from the left (`view(-90,0)`).
+    *   `'side_right'`: View from the right (`view(90,0)`).
+
+Example:
+```matlab
+figure;
+surf(peaks(25));
+title('Peak Surface');
+my_settings.view_preset_3d = 'iso';
+beautify_figure(my_settings);
+% The figure will now show an isometric view of the peaks surface.
 ```
 
 ## Dependencies
