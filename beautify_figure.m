@@ -91,10 +91,7 @@ function beautify_figure(user_params_or_axes_handle, user_params_for_specific_ax
 %   beautify_figure(custom_settings); % Apply custom settings
 %
 % See also: gcf, legend, tiledlayout, axes, plot, set, get
-%
-% Author: BeautifyFigure Contributors
-% Version: 2.1 (Production Ready) % Updated Version
-% Date: 2024-07-24 (Last Major Update)
+
 
 % --- Default Beautification Parameters ---
 % These are the master defaults. They can be overridden by user_params.
