@@ -53,6 +53,7 @@ The app allows you to:
 *   Access a built-in help dialog for app usage.
 
 While the app covers many common parameters, the full range of options and fine-grained control (especially for complex parameters like custom color palettes as matrices or detailed marker style cycling) is available through the `beautify_figure.m` script directly.
+Note: Advanced features like Panel Labeling and Stats Overlay are configurable via the `beautify_figure.m` script, but GUI controls in the `BeautifyFigureApp.mlapp` are planned for a future update.
 
 ## Parameters
 
@@ -237,13 +238,7 @@ The `test_beautify_figure.m` script has been significantly expanded to improve t
 *   Handling of **invalid parameters** passed to `beautify_figure.m`, ensuring that the function logs appropriate warnings/errors and does not crash, instead applying default or valid portions of parameters where possible.
 
 ### Status of `beautify_figure.m` Refactoring
-An initial objective for this development phase included some refactoring of the main `beautify_figure.m` script. This was aimed at aspects such as:
-*   Modifying helper functions (e.g., `safe_set`, `safe_hold`) to explicitly accept a `params` struct for logging, rather than using `evalin('caller', ...)`.
-*   Potentially more granular error handling within the main function.
-
-However, these direct modifications to `beautify_figure.m` encountered persistent technical issues with the available automated code modification tools. Specifically, applying the necessary changes via diffs repeatedly failed due to mismatches between the provided search context and the tool's internal representation of the file, even after workspace resets and careful diff construction.
-
-Given these tooling challenges, the focus of this phase shifted towards enhancing the stability, robustness, and test coverage of the user-facing `BeautifyFigureApp.mlapp` and the `test_beautify_figure.m` script. These improvements significantly contribute to the overall usability and reliability of the `beautify_figure` package, even though the planned internal refactoring of the main script was not completed.
+The `beautify_figure.m` script is continuously maintained, with ongoing efforts to improve its functionality and robustness. Future updates may include further refactoring and feature enhancements.
 
 ## Dependencies
 
