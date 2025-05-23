@@ -1135,7 +1135,7 @@ end
 % --- Core Function: Beautify a Single Axes Object ---
 function beautify_single_axes(ax, params, scale_factor, axes_idx)
 if ~isvalid(ax); return; end
-current_hold_state = ishold(ax); if ~current_hold_state; safe_hold(ax, 'on'); end
+current_hold_state = ishold(ax); if ~current_hold_state; safe_hold(params, ax, 'on'); end
 
 % Calculate scaled dimensions
 fs = round(params.base_font_size * scale_factor);
@@ -1155,8 +1155,8 @@ case 'on'; common_props = [common_props, {'Box', 'on'}];
 case 'off'; common_props = [common_props, {'Box', 'off'}];
 case 'left-bottom'
 common_props = [common_props, {'Box', 'off', 'XAxisLocation', 'bottom', 'YAxisLocation', 'left'}];
-try; if isprop(ax, 'XAxis') && numel(ax.XAxis)>1; safe_set(ax.XAxis(2), 'Visible', 'off'); end; catch; end
-try; if isprop(ax, 'YAxis') && numel(ax.YAxis)>1; safe_set(ax.YAxis(2), 'Visible', 'off'); end; catch; end
+try; if isprop(ax, 'XAxis') && numel(ax.XAxis)>1; safe_set(params, ax.XAxis(2), 'Visible', 'off'); end; catch; end
+try; if isprop(ax, 'YAxis') && numel(ax.YAxis)>1; safe_set(params, ax.YAxis(2), 'Visible', 'off'); end; catch; end
 end
 
 major_grid_on = 'off'; minor_grid_on = 'off';
@@ -1165,7 +1165,7 @@ elseif strcmpi(params.grid_density, 'major_only'); major_grid_on = 'on'; end
 
 try
 if isa(ax, 'matlab.graphics.axis.Axes')
-safe_set(ax, common_props{:}, 'XGrid', major_grid_on, 'YGrid', major_grid_on, 'ZGrid', major_grid_on, ...
+safe_set(params, ax, common_props{:}, 'XGrid', major_grid_on, 'YGrid', major_grid_on, 'ZGrid', major_grid_on, ...
 'XMinorGrid', minor_grid_on, 'YMinorGrid', minor_grid_on, 'ZMinorGrid', minor_grid_on, ...
 'XColor', params.axis_color, 'YColor', params.axis_color, 'ZColor', params.axis_color, ...
 'Layer', params.axes_layer); % NEW: Set Layer property
@@ -1188,7 +1188,7 @@ if ~isgeoaxes(ax) && strcmpi(params.axis_limit_mode, 'padded') && params.expand_
     end
 elseif isa(ax, 'matlab.graphics.axis.PolarAxes') && params.apply_to_polaraxes
     % PolarAxes does not have 'Layer' property
-    safe_set(ax, common_props{:}, 'RGrid', major_grid_on, 'ThetaGrid', major_grid_on, ...
+    safe_set(params, ax, common_props{:}, 'RGrid', major_grid_on, 'ThetaGrid', major_grid_on, ...
         'RColor', params.axis_color, 'ThetaColor', params.axis_color);
     process_text_prop(ax.Title, ax.Title.String, tfs, 'bold', params.text_color, params.font_name, params);
 end
@@ -1258,44 +1258,44 @@ current_color = []; current_marker_style_name = [];
 
     % Apply properties to different plot types
     if isa(child, 'matlab.graphics.chart.primitive.Line')
-        safe_set(child, 'LineWidth', actual_plot_lw, 'MarkerSize', ms);
-        if ~isempty(current_color); safe_set(child, 'Color', current_color); end
+        safe_set(params, child, 'LineWidth', actual_plot_lw, 'MarkerSize', ms);
+        if ~isempty(current_color); safe_set(params, child, 'Color', current_color); end
 
         % NEW: Line style cycling
         if activate_linestyle_cycle_now && is_leg_cand_current && num_line_styles > 0
             current_line_style_name_for_line = params.line_style_order{mod(color_idx-1, num_line_styles)+1};
-            safe_set(child, 'LineStyle', current_line_style_name_for_line);
+            safe_set(params, child, 'LineStyle', current_line_style_name_for_line);
         end
 
         if ~isempty(current_marker_style_name) && ~strcmpi(child.LineStyle,'none')
-            safe_set(child, 'Marker', current_marker_style_name);
+            safe_set(params, child, 'Marker', current_marker_style_name);
             if ~strcmpi(current_marker_style_name,'none') && ~strcmpi(current_marker_style_name,'.') && ~isempty(current_color)
-                safe_set(child, 'MarkerFaceColor', current_color, 'MarkerEdgeColor', current_color*0.7);
-            elseif strcmpi(current_marker_style_name,'.') && ~isempty(current_color); safe_set(child, 'MarkerEdgeColor',current_color); end
+                safe_set(params, child, 'MarkerFaceColor', current_color, 'MarkerEdgeColor', current_color*0.7);
+            elseif strcmpi(current_marker_style_name,'.') && ~isempty(current_color); safe_set(params, child, 'MarkerEdgeColor',current_color); end
         elseif ~strcmpi(child.Marker,'none') && ~isempty(current_color) % No cycle, but marker exists & color assigned
-            if isprop(child,'MarkerFaceColor')&&~ischar(child.MarkerFaceColor)&&~any(strcmpi(child.MarkerFaceColor,{'auto','none'}));safe_set(child,'MarkerFaceColor',current_color);end
-            if isprop(child,'MarkerEdgeColor')&&~ischar(child.MarkerEdgeColor)&&~any(strcmpi(child.MarkerEdgeColor,{'auto','none'}));safe_set(child,'MarkerEdgeColor',current_color*0.7);end
+            if isprop(child,'MarkerFaceColor')&&~ischar(child.MarkerFaceColor)&&~any(strcmpi(child.MarkerFaceColor,{'auto','none'}));safe_set(params, child,'MarkerFaceColor',current_color);end
+            if isprop(child,'MarkerEdgeColor')&&~ischar(child.MarkerEdgeColor)&&~any(strcmpi(child.MarkerEdgeColor,{'auto','none'}));safe_set(params, child,'MarkerEdgeColor',current_color*0.7);end
         end
     elseif isa(child, 'matlab.graphics.chart.primitive.Scatter')
         % BUGFIX: Corrected SizeData scaling. ms is already scaled points value. SizeData is points^2.
-        safe_set(child, 'SizeData', ms^2, 'LineWidth', actual_plot_lw*0.5); % Scatter markers often look better with thinner lines than primary plot lines
+        safe_set(params, child, 'SizeData', ms^2, 'LineWidth', actual_plot_lw*0.5); % Scatter markers often look better with thinner lines than primary plot lines
         if ~isempty(current_color)
-            if ~(ischar(child.MarkerFaceColor)&&any(strcmpi(child.MarkerFaceColor,{'none','flat'}))); safe_set(child,'MarkerFaceColor',current_color); end
-            if ~(ischar(child.MarkerEdgeColor)&&strcmpi(child.MarkerEdgeColor,'none')); safe_set(child,'MarkerEdgeColor',current_color*0.75); end
+            if ~(ischar(child.MarkerFaceColor)&&any(strcmpi(child.MarkerFaceColor,{'none','flat'}))); safe_set(params, child,'MarkerFaceColor',current_color); end
+            if ~(ischar(child.MarkerEdgeColor)&&strcmpi(child.MarkerEdgeColor,'none')); safe_set(params, child,'MarkerEdgeColor',current_color*0.75); end
         end
-        if ~isempty(current_marker_style_name); safe_set(child, 'Marker', current_marker_style_name); end
+        if ~isempty(current_marker_style_name); safe_set(params, child, 'Marker', current_marker_style_name); end
     elseif isa(child, 'matlab.graphics.chart.primitive.Bar')
-        safe_set(child, 'LineWidth', alw*0.9, 'EdgeColor', params.axis_color*0.7);
-        if ~isempty(current_color) && ((ischar(child.FaceColor)&&~strcmpi(child.FaceColor,'flat'))||~ischar(child.FaceColor)); safe_set(child, 'FaceColor', current_color); end
+        safe_set(params, child, 'LineWidth', alw*0.9, 'EdgeColor', params.axis_color*0.7);
+        if ~isempty(current_color) && ((ischar(child.FaceColor)&&~strcmpi(child.FaceColor,'flat'))||~ischar(child.FaceColor)); safe_set(params, child, 'FaceColor', current_color); end
     elseif isa(child, 'matlab.graphics.chart.primitive.Histogram')
-        safe_set(child, 'LineWidth', alw*0.8, 'EdgeColor', params.axis_color*0.5, 'FaceAlpha', 0.7);
-        if ~isempty(current_color); safe_set(child, 'FaceColor', current_color); end
+        safe_set(params, child, 'LineWidth', alw*0.8, 'EdgeColor', params.axis_color*0.5, 'FaceAlpha', 0.7);
+        if ~isempty(current_color); safe_set(params, child, 'FaceColor', current_color); end
     elseif isa(child, 'matlab.graphics.chart.primitive.ErrorBar')
-        safe_set(child, 'LineWidth', actual_plot_lw*0.8, 'MarkerSize', ms*0.8, 'CapSize', actual_plot_lw*params.errorbar_cap_size_scale*6); % Capsize scaled with line width, factor 6 is empirical
-        if ~isempty(current_color); safe_set(child,'Color',current_color); end
-        if ~isempty(current_marker_style_name); safe_set(child, 'Marker', current_marker_style_name); end
+        safe_set(params, child, 'LineWidth', actual_plot_lw*0.8, 'MarkerSize', ms*0.8, 'CapSize', actual_plot_lw*params.errorbar_cap_size_scale*6); % Capsize scaled with line width, factor 6 is empirical
+        if ~isempty(current_color); safe_set(params, child,'Color',current_color); end
+        if ~isempty(current_marker_style_name); safe_set(params, child, 'Marker', current_marker_style_name); end
     elseif isa(child,'matlab.graphics.primitive.Surface')||isa(child,'matlab.graphics.chart.primitive.Surface')||isa(child,'matlab.graphics.primitive.Patch')
-        safe_set(child, 'EdgeColor', params.axis_color*0.6, 'LineWidth', alw*0.7);
+        safe_set(params, child, 'EdgeColor', params.axis_color*0.6, 'LineWidth', alw*0.7);
     end
 catch ME_child
     log_message(params, sprintf('Error processing child object (Type: %s, Tag: %s): %s', class(child), child.Tag, ME_child.message), 1, 'Warning');
@@ -1378,7 +1378,7 @@ if params.apply_to_colorbars; beautify_colorbar(ax, params, fs, lfs, alw); end
        end
    end
 
-if ~current_hold_state; safe_hold(ax, 'off'); end
+if ~current_hold_state; safe_hold(params, ax, 'off'); end
 end
 
 % --- Helper Function: Check if an object is a legend candidate ---
@@ -1453,18 +1453,18 @@ should_show_legend = false;
 %    - Shows/creates legend if >0 items (or 1 item if force_single_entry is true).
 %    - Hides legend otherwise.
 if strcmpi(params.legend_location,'none')
-    if ~isempty(existing_legend)&&isvalid(existing_legend); safe_set(existing_legend,'Visible','off');end
+    if ~isempty(existing_legend)&&isvalid(existing_legend); safe_set(params, existing_legend,'Visible','off');end
 else
     if params.smart_legend_display
         if num_actual_legend_entries>1; should_show_legend=(~isempty(existing_legend)&&isvalid(existing_legend)); % Only if exists
             % BUGFIX: Corrected typo from &¶ms to && params
         elseif num_actual_legend_entries==1 && params.legend_force_single_entry; should_show_legend=true; % Can create new
-        else; if ~isempty(existing_legend)&&isvalid(existing_legend);safe_set(existing_legend,'Visible','off');end; end
+        else; if ~isempty(existing_legend)&&isvalid(existing_legend);safe_set(params, existing_legend,'Visible','off');end; end
     else % Not smart display: create if plottable items exist and not single (unless forced)
         if num_actual_legend_entries>0
-            if num_actual_legend_entries==1&&~params.legend_force_single_entry; if ~isempty(existing_legend)&&isvalid(existing_legend);safe_set(existing_legend,'Visible','off');end
+            if num_actual_legend_entries==1&&~params.legend_force_single_entry; if ~isempty(existing_legend)&&isvalid(existing_legend);safe_set(params, existing_legend,'Visible','off');end
             else; should_show_legend=true; end
-        else; if ~isempty(existing_legend)&&isvalid(existing_legend);safe_set(existing_legend,'Visible','off');end; end
+        else; if ~isempty(existing_legend)&&isvalid(existing_legend);safe_set(params, existing_legend,'Visible','off');end; end
     end
 end
 
@@ -1509,11 +1509,11 @@ if ~isempty(leg_handle_to_use)&&isvalid(leg_handle_to_use)
 
     if isprop(leg_handle_to_use,'Title')
         if ~isempty(params.legend_title_string)
-            safe_set(leg_handle_to_use.Title, 'String', params.legend_title_string, 'Visible', 'on');
+            safe_set(params, leg_handle_to_use.Title, 'String', params.legend_title_string, 'Visible', 'on');
             process_text_prop(leg_handle_to_use.Title,params.legend_title_string,round(leg_props.FontSize*1.05),'bold',params.text_color,params.font_name,params);
-        else; safe_set(leg_handle_to_use.Title, 'Visible', 'off'); end
+        else; safe_set(params, leg_handle_to_use.Title, 'Visible', 'off'); end
     end
-    safe_set(leg_handle_to_use,leg_props);
+    safe_set(params, leg_handle_to_use,leg_props);
 
     if params.interactive_legend && isprop(leg_handle_to_use, 'ItemHitFcn') && verLessThan('matlab','9.7') == 0 % R2019b+ for ItemHitFcn
         try; if ~isempty(leg_handle_to_use.ItemHitFcn);leg_handle_to_use.ItemHitFcn='';end % Clear previous
@@ -1557,7 +1557,7 @@ if isempty(cb) && isprop(ax,'Colorbar') && isvalid(ax.Colorbar); cb=ax.Colorbar;
 
 if ~isempty(cb) && isvalid(cb)
     cb=cb(1); % Take the first one if multiple (should not happen for a single axes peer)
-    safe_set(cb, 'FontSize', round(fs*0.9), 'LineWidth', alw*0.85, 'Color', params.axis_color, 'TickDirection', 'out');
+    safe_set(params, cb, 'FontSize', round(fs*0.9), 'LineWidth', alw*0.85, 'Color', params.axis_color, 'TickDirection', 'out');
     if isprop(cb,'Label') && isvalid(cb.Label)
         process_text_prop(cb.Label,cb.Label.String,lfs,'normal',params.text_color,params.font_name,params);
     end
@@ -1583,12 +1583,12 @@ fixed_str = format_text_string(original_str);
 is_truly_empty = (ischar(original_str)&&isempty(original_str))||(iscell(original_str)&&(isempty(original_str)||all(cellfun('isempty',original_str))))||(isstring(original_str)&&(isempty(original_str)||all(original_str=="")));
 
 if isempty(fixed_str) && is_truly_empty
-    if isprop(text_handle,'Visible'); safe_set(text_handle,'Visible','off'); end; return;
+    if isprop(text_handle,'Visible'); safe_set(params, text_handle,'Visible','off'); end; return;
 else
-    if isprop(text_handle,'Visible'); safe_set(text_handle,'Visible','on'); end;
+    if isprop(text_handle,'Visible'); safe_set(params, text_handle,'Visible','on'); end;
 end
 
-safe_set(text_handle,'String',fixed_str,'FontName',font_name,'FontSize',max(1,font_size),'FontWeight',font_weight,'Color',color);
+safe_set(params, text_handle,'String',fixed_str,'FontName',font_name,'FontSize',max(1,font_size),'FontWeight',font_weight,'Color',color);
 if isprop(text_handle,'Interpreter')
     should_use_latex = false;
     if ~force_latex_off_for_this
@@ -1597,7 +1597,7 @@ if isprop(text_handle,'Interpreter')
             should_use_latex = true;
         end
     end
-    if should_use_latex; safe_set(text_handle, 'Interpreter', 'latex'); else; safe_set(text_handle, 'Interpreter', 'tex'); end
+    if should_use_latex; safe_set(params, text_handle, 'Interpreter', 'latex'); else; safe_set(params, text_handle, 'Interpreter', 'tex'); end
 end
 IGNORE_WHEN_COPYING_START
 content_copy
@@ -1694,11 +1694,11 @@ isolation_active=getappdata(legend_handle,'IsolationModeActive');if isempty(isol
 
 if is_ctrl_cmd_pressed
     if isolation_active&&isappdata(legend_handle,'IsolatedObject')&&getappdata(legend_handle,'IsolatedObject')==clicked_plot_object
-        for k=1:length(all_legend_plots);if k<=length(original_vis_states);safe_set(all_legend_plots(k),'Visible',original_vis_states{k});end;end
+        for k=1:length(all_legend_plots);if k<=length(original_vis_states);safe_set(params, all_legend_plots(k),'Visible',original_vis_states{k});end;end
         setappdata(legend_handle,'IsolationModeActive',false);rmappdata(legend_handle,'IsolatedObject');log_message(params,'Legend: Isolation mode deactivated.',2,'Info');
     else
         for k=1:length(all_legend_plots)
-            if all_legend_plots(k)==clicked_plot_object;safe_set(all_legend_plots(k),'Visible','on');else;safe_set(all_legend_plots(k),'Visible','off');end
+            if all_legend_plots(k)==clicked_plot_object;safe_set(params, all_legend_plots(k),'Visible','on');else;safe_set(params, all_legend_plots(k),'Visible','off');end
         end
         setappdata(legend_handle,'IsolationModeActive',true);setappdata(legend_handle,'IsolatedObject',clicked_plot_object);
         obj_disp_name = ''; if isprop(clicked_plot_object,'DisplayName'); obj_disp_name = get(clicked_plot_object,'DisplayName'); end
@@ -1706,13 +1706,13 @@ if is_ctrl_cmd_pressed
     end
 else
     if isolation_active
-        for k=1:length(all_legend_plots);if k<=length(original_vis_states);safe_set(all_legend_plots(k),'Visible',original_vis_states{k});end;end
+        for k=1:length(all_legend_plots);if k<=length(original_vis_states);safe_set(params, all_legend_plots(k),'Visible',original_vis_states{k});end;end
         setappdata(legend_handle,'IsolationModeActive',false);if isappdata(legend_handle,'IsolatedObject');rmappdata(legend_handle,'IsolatedObject');end
         log_message(params,'Legend: Isolation mode deactivated by normal click.',2,'Info');
     end
     % Regular toggle after deactivating isolation (if any)
     current_visibility=get(clicked_plot_object,'Visible');
-    if strcmpi(current_visibility,'on');safe_set(clicked_plot_object,'Visible','off');else;safe_set(clicked_plot_object,'Visible','on');end
+    if strcmpi(current_visibility,'on');safe_set(params, clicked_plot_object,'Visible','off');else;safe_set(params, clicked_plot_object,'Visible','on');end
     % Update original_vis_states if not in isolation mode when click happened
     if ~isolation_active && ~isempty(original_vis_states)
         idx=find(all_legend_plots==clicked_plot_object,1);
@@ -1751,8 +1751,8 @@ for i=1:num_to_process
     is_plot_visible=strcmpi(get(corresponding_plot,'Visible'),'on');
 
     if isprop(entry,'Label')&&isprop(entry.Label,'Color')
-        if is_plot_visible; safe_set(entry.Label,'Color',params.text_color);
-        else; safe_set(entry.Label,'Color',params.text_color*0.4+0.5);end % Faded color
+        if is_plot_visible; safe_set(params, entry.Label,'Color',params.text_color);
+        else; safe_set(params, entry.Label,'Color',params.text_color*0.4+0.5);end % Faded color
     end
 
     if isprop(entry,'Icon') && isprop(entry.Icon,'Children')
@@ -1775,15 +1775,15 @@ for i=1:num_to_process
 
             % This part is tricky as Icon parts are complex. Focus on Color and Alpha if available.
             if isprop(part, 'Color') && ~ischar(part.Color)
-                safe_set(part, 'Color', original_part_color); % Set base color first
-                if isprop(part, 'ColorAlpha'); safe_set(part,'ColorAlpha', alpha_val); % R2022a+ for Line
-                elseif isprop(part, 'FaceAlpha') && ~ischar(part.FaceColor); safe_set(part, 'FaceAlpha', alpha_val); % For patches in icon
-                elseif isprop(part, 'EdgeAlpha'); safe_set(part, 'EdgeAlpha', alpha_val);
+                safe_set(params, part, 'Color', original_part_color); % Set base color first
+                if isprop(part, 'ColorAlpha'); safe_set(params, part,'ColorAlpha', alpha_val); % R2022a+ for Line
+                elseif isprop(part, 'FaceAlpha') && ~ischar(part.FaceColor); safe_set(params, part, 'FaceAlpha', alpha_val); % For patches in icon
+                elseif isprop(part, 'EdgeAlpha'); safe_set(params, part, 'EdgeAlpha', alpha_val);
                 end
             end
             % For older MATLAB, direct alpha on icon parts might not work well.
             % Fading color might be an alternative but less ideal.
-            if isprop(part, 'Visible'); safe_set(part, 'Visible', 'on'); end % Ensure visible
+            if isprop(part, 'Visible'); safe_set(params, part, 'Visible', 'on'); end % Ensure visible
         end
     end
 end
@@ -1799,7 +1799,7 @@ end
 end
 
 % --- Helper Function: Safely Set Graphics Property ---
-function safe_set(handle, varargin)
+function safe_set(params_for_log, handle, varargin)
 try
 % Only set if property exists and new value is different (for non-color props)
 for i = 1:2:length(varargin)
@@ -1819,28 +1819,29 @@ catch ME_set
 % as the main function's try-catch will handle major issues.
 % Or, log it at a very verbose level if needed.
     try
-        % Attempt to get params from the caller's workspace
-        params_caller = evalin('caller', 'params');
-        if isstruct(params_caller) && isfield(params_caller, 'log_level')
-            % Check if varargin{i} (prop_name) exists; it might not if error is very early
-            prop_name_for_log = 'unknown_property';
-            if i <= numel(varargin) && ischar(varargin{i})
-                prop_name_for_log = varargin{i};
+        % Use passed params_for_log for logging
+        if exist('params_for_log', 'var') && isstruct(params_for_log) && isfield(params_for_log, 'log_level')
+            prop_name_for_log = 'unknown_property_in_safe_set_catch';
+            % Best effort to get property name if 'i' (loop var from the try block) is available
+            try 
+                if exist('i', 'var') && i <= numel(varargin) && ischar(varargin{i}) 
+                    prop_name_for_log = varargin{i};
+                end
+            catch
+                % If 'i' is not defined (e.g. error before loop), prop_name_for_log remains as initialized.
             end
-            log_message(params_caller, sprintf('safe_set failed for property "%s" on handle of type "%s": %s', prop_name_for_log, class(handle), ME_set.message), 2, 'Debug');
+            log_message(params_for_log, sprintf('safe_set failed for property "%s" on handle of type "%s": %s', prop_name_for_log, class(handle), ME_set.message), 2, 'Debug');
         else
-            % Fallback if params not available or not structured as expected in caller
-            fprintf(2, '[BeautifyFig - Debug L2] safe_set failed: %s (Params not available in caller for full log)\n', ME_set.message);
+            fprintf(2, '[BeautifyFig - Debug L2] safe_set failed: %s (params_for_log was not valid for full log)\n', ME_set.message);
         end
-    catch E_evalin
-        % Fallback if evalin fails or any other issue in logging attempt
-        fprintf(2, '[BeautifyFig - Debug L2] safe_set failed: %s (Error during log attempt: %s)\n', ME_set.message, E_evalin.message);
+    catch E_log_attempt 
+        fprintf(2, '[BeautifyFig - Debug L2] safe_set failed: %s (Error during log attempt: %s)\n', ME_set.message, E_log_attempt.message);
     end
 end
 end
 
 % --- Helper Function: Safely Hold Axes ---
-function safe_hold(ax_handle, state)
+function safe_hold(params_for_log, ax_handle, state)
 try
 if isvalid(ax_handle) && isprop(ax_handle, 'NextPlot')
 current_nextplot = get(ax_handle, 'NextPlot');
@@ -1852,17 +1853,14 @@ end
 end
 catch ME_hold
     try
-        % Attempt to get params from the caller's workspace
-        params_caller = evalin('caller', 'params');
-        if isstruct(params_caller) && isfield(params_caller, 'log_level')
-            log_message(params_caller, sprintf('safe_hold failed for state "%s" on handle of type "%s": %s', state, class(ax_handle), ME_hold.message), 2, 'Debug');
+        % Use passed params_for_log for logging
+        if exist('params_for_log', 'var') && isstruct(params_for_log) && isfield(params_for_log, 'log_level')
+            log_message(params_for_log, sprintf('safe_hold failed for state "%s" on handle of type "%s": %s', state, class(ax_handle), ME_hold.message), 2, 'Debug');
         else
-            % Fallback if params not available or not structured as expected in caller
-            fprintf(2, '[BeautifyFig - Debug L2] safe_hold failed for state "%s" on handle of type "%s": %s (Params not available in caller for full log)\n', state, class(ax_handle), ME_hold.message);
+            fprintf(2, '[BeautifyFig - Debug L2] safe_hold failed for state "%s" on handle of type "%s": %s (params_for_log was not valid for full log)\n', state, class(ax_handle), ME_hold.message);
         end
-    catch E_evalin
-        % Fallback if evalin fails or any other issue in logging attempt
-         fprintf(2, '[BeautifyFig - Debug L2] safe_hold failed for state "%s" on handle of type "%s": %s (Error during log attempt: %s)\n', state, class(ax_handle), ME_hold.message, E_evalin.message);
+    catch E_log_attempt 
+         fprintf(2, '[BeautifyFig - Debug L2] safe_hold failed for state "%s" on handle of type "%s": %s (Error during log attempt: %s)\n', state, class(ax_handle), ME_hold.message, E_log_attempt.message);
     end
 end
 end
@@ -1923,7 +1921,7 @@ label_fs = round(base_label_fs * pl_params.font_scale_factor);
 label_fs = max(label_fs, 6); % Minimum sensible font size
 
 original_axes_units = get(ax, 'Units');
-safe_set(ax, 'Units', 'normalized'); 
+safe_set(params, ax, 'Units', 'normalized');
 
 x_abs_offset = pl_params.x_offset; 
 y_abs_offset = pl_params.y_offset;
@@ -1954,7 +1952,7 @@ text(ax, text_x_norm, text_y_norm, label_str, ...
     'VerticalAlignment', vert_align, ...
     'PickableParts', 'none', 'HandleVisibility', 'off', 'Tag', 'BeautifyFig_PanelLabel'); 
 
-safe_set(ax, 'Units', original_axes_units); 
+safe_set(params, ax, 'Units', original_axes_units);
 end
 
 % --- Helper Function: Apply Stats Overlay ---
@@ -2025,7 +2023,7 @@ stats_fs = round(base_stats_fs * so_params.font_scale_factor);
 stats_fs = max(stats_fs, 5);
 
 original_axes_units = get(ax, 'Units');
-safe_set(ax, 'Units', 'normalized'); 
+safe_set(params, ax, 'Units', 'normalized');
 
 x_text_offset_norm = 0.03; y_text_offset_norm = 0.03; 
 
@@ -2077,5 +2075,5 @@ end
 
 text(ax, text_x_norm, text_y_norm, text_props{:});
 
-safe_set(ax, 'Units', original_axes_units);
+safe_set(params, ax, 'Units', original_axes_units);
 end
