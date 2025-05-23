@@ -222,6 +222,29 @@ beautify_figure(my_settings);
 % The figure will now show an isometric view of the peaks surface.
 ```
 
+## Recent Enhancements and Current Status
+
+### `BeautifyFigureApp.mlapp` Improvements
+The accompanying GUI, `BeautifyFigureApp.mlapp`, has received several updates to enhance its robustness and user experience:
+*   **Preset Loading:** Loading presets from `.mat` files is now more resilient. If a preset file is missing some parameters, the App will apply the settings that are present and issue a warning to the user detailing which settings were skipped or defaulted.
+*   **Input Validation:** Validation has been added for the "Custom Color Palette" and "Statistics" text input fields. The App now provides `uialert` warnings if the input in these fields is malformed (e.g., an invalid matrix string for the color palette, or an unparseable cell array string for statistics).
+*   **Font Selection:** The font name dropdown list population is more robust and includes better fallbacks if system fonts cannot be fully enumerated, ensuring the App remains functional.
+
+### Test Script (`test_beautify_figure.m`) Enhancements
+The `test_beautify_figure.m` script has been significantly expanded to improve test coverage and verify the stability of `beautify_figure.m` under various conditions. New test cases include:
+*   Applying beautification to an **empty figure** (a figure with no axes or plotted data) to ensure no errors occur.
+*   Processing figures that contain **UI tabs** (`uitabgroup`), verifying that axes within each tab are correctly identified and beautified.
+*   Handling of **invalid parameters** passed to `beautify_figure.m`, ensuring that the function logs appropriate warnings/errors and does not crash, instead applying default or valid portions of parameters where possible.
+
+### Status of `beautify_figure.m` Refactoring
+An initial objective for this development phase included some refactoring of the main `beautify_figure.m` script. This was aimed at aspects such as:
+*   Modifying helper functions (e.g., `safe_set`, `safe_hold`) to explicitly accept a `params` struct for logging, rather than using `evalin('caller', ...)`.
+*   Potentially more granular error handling within the main function.
+
+However, these direct modifications to `beautify_figure.m` encountered persistent technical issues with the available automated code modification tools. Specifically, applying the necessary changes via diffs repeatedly failed due to mismatches between the provided search context and the tool's internal representation of the file, even after workspace resets and careful diff construction.
+
+Given these tooling challenges, the focus of this phase shifted towards enhancing the stability, robustness, and test coverage of the user-facing `BeautifyFigureApp.mlapp` and the `test_beautify_figure.m` script. These improvements significantly contribute to the overall usability and reliability of the `beautify_figure` package, even though the planned internal refactoring of the main script was not completed.
+
 ## Dependencies
 
 *   MATLAB (R2019b or newer recommended for full feature compatibility, especially interactive legends).

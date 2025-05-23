@@ -965,6 +965,295 @@ if ishandle(fig16_exclude); close(fig16_exclude); end
 
 test_case_idx = test_case_idx + 1;
 
+% --- Test Case 17: Empty Figure ---
+fprintf('\n--- Running Test Case %d: Empty Figure ---\n', test_case_idx);
+test_name_case17_empty = sprintf('test_case_%02d_empty_figure', test_case_idx);
+
+% Create an empty figure
+fig_empty = figure('Visible', 'off');
+fprintf('  Created an empty figure (no axes, no data).\n');
+
+% Save the original empty figure
+% Note: save_comparison_figure might add a title if one doesn't exist, 
+% or we might need to ensure it handles figures with no axes gracefully.
+% For this test, the primary goal is that beautify_figure doesn't error.
+% We won't add a title to the original empty figure to keep it truly empty.
+save_comparison_figure(fig_empty, test_name_case17_empty, 'original', output_dir);
+
+fprintf('  Applying beautify_figure() to the empty figure.\n');
+error_occurred_empty_fig_test = false; % Flag to track errors
+try
+    beautify_figure(fig_empty); % Apply with default parameters
+    fprintf('  Successfully applied beautify_figure() to an empty figure.\n');
+    % After beautification, the figure might have a default background color,
+    % or other figure-level properties applied. We can add a title now if desired
+    % to the saved "beautified" version for clarity in the output file,
+    % but the figure itself was empty when beautify_figure was called.
+    % title(fig_empty, [test_name_case17_empty ' Beautified (Empty Figure)']);
+catch ME
+    fprintf('  ERROR during Test Case %d (Empty Figure): %s\n', test_case_idx, ME.message);
+    error_occurred_empty_fig_test = true; % Set flag if error occurs
+end
+
+% Save the "beautified" empty figure
+% This will show if any figure-level defaults (like background color) were applied.
+if ~error_occurred_empty_fig_test
+    save_comparison_figure(fig_empty, test_name_case17_empty, 'beautified', output_dir);
+else
+    fprintf('  Skipping save of "beautified" empty figure due to error during beautification.\n');
+end
+
+% Close the figure for this test case
+if ishandle(fig_empty); close(fig_empty); end
+
+test_case_idx = test_case_idx + 1;
+
+% --- Test Case 18: Figure with UI Tabs ---
+fprintf('\n--- Running Test Case %d: Figure with UI Tabs ---\n', test_case_idx);
+test_name_case18_uitabs = sprintf('test_case_%02d_uitabs_figure', test_case_idx);
+
+% Create a figure with UI tabs
+fig_tabs = figure('Visible', 'off', 'Position', [100, 100, 700, 500]);
+fprintf('  Created a figure with UI tabs.\n');
+
+tab_group = uitabgroup(fig_tabs);
+
+% Tab 1
+tab1 = uitab(tab_group, 'Title', 'First Tab');
+ax1_tab = axes(tab1);
+plot(ax1_tab, 1:10, rand(1,10).* (1:10), 'r-o');
+title(ax1_tab, 'Plot in Tab 1');
+xlabel(ax1_tab, 'X-Tab1'); 
+ylabel(ax1_tab, 'Y-Tab1');
+grid(ax1_tab, 'on');
+
+% Tab 2
+tab2 = uitab(tab_group, 'Title', 'Second Tab');
+ax2_tab = axes(tab2);
+scatter(ax2_tab, rand(20,1), rand(20,1)*5, 36, 'b', 'filled', 'Marker', '*');
+title(ax2_tab, 'Plot in Tab 2');
+xlabel(ax2_tab, 'X-Tab2'); 
+ylabel(ax2_tab, 'Y-Tab2');
+grid(ax2_tab, 'on');
+
+% Set a main title for the figure if possible (sgtitle requires R2018b+)
+try
+    sgtitle(fig_tabs, [test_name_case18_uitabs ' Original']);
+catch
+    % sgtitle not available or error, place a general title on the figure
+    % This might not be visible if there's no space, but it's a fallback
+    % title(fig_tabs.Children(end), [test_name_case18_uitabs ' Original']); % Fallback to title on one of the axes
+end
+
+% Save the original figure
+% For uitabs, saveas captures the currently active tab.
+% To verify both, we'd ideally save each tab. For simplicity,
+% we'll rely on beautify_figure processing both and save the figure once.
+% The user will need to manually check both tabs in the output if opened.
+% For automated visual diff, each tab would need separate saving.
+save_comparison_figure(fig_tabs, test_name_case18_uitabs, 'original', output_dir);
+
+fprintf('  Applying beautify_figure() to the figure with UI tabs.\n');
+error_occurred_uitab_fig_test = false;
+try
+    % Apply default beautification. It should find axes in both tabs.
+    beautify_figure(fig_tabs); 
+    fprintf('  Successfully applied beautify_figure() to a figure with UI tabs.\n');
+    try
+        sgtitle(fig_tabs, [test_name_case18_uitabs ' Beautified']);
+    catch
+        % title(fig_tabs.Children(end), [test_name_case18_uitabs ' Beautified']);
+    end
+catch ME
+    fprintf('  ERROR during Test Case %d (UI Tabs Figure): %s\n', test_case_idx, ME.message);
+    error_occurred_uitab_fig_test = true;
+end
+
+% Save the "beautified" figure
+if ~error_occurred_uitab_fig_test
+    % To ensure the first tab is active for consistent saving after beautification
+    if isvalid(tab_group) && ~isempty(tab_group.Children)
+        tab_group.SelectedTab = tab1; 
+        drawnow; % Allow tab switch to render
+    end
+    save_comparison_figure(fig_tabs, test_name_case18_uitabs, 'beautified', output_dir);
+else
+    fprintf('  Skipping save of "beautified" UI tab figure due to error during beautification.\n');
+end
+
+% Close the figure for this test case
+if ishandle(fig_tabs); close(fig_tabs); end
+
+test_case_idx = test_case_idx + 1;
+
+% --- Test Case 19: Invalid Parameters ---
+fprintf('\n--- Running Test Case %d: Invalid Parameters ---\n', test_case_idx);
+test_name_case19_invalid = sprintf('test_case_%02d_invalid_params', test_case_idx);
+
+% Create a simple figure with a plot
+fig_invalid = figure('Visible', 'off');
+plot(1:10, rand(1,10));
+title([test_name_case19_invalid ' Original']);
+xlabel('X-axis'); ylabel('Y-axis');
+grid on;
+
+% Save the original figure
+save_comparison_figure(fig_invalid, test_name_case19_invalid, 'original', output_dir);
+
+% Define invalid parameters
+invalid_params.font_name = 123; % Invalid: font_name should be a string
+invalid_params.plot_line_width = 'not_a_number'; % Invalid: plot_line_width should be numeric
+invalid_params.theme = 'non_existent_theme'; % Invalid theme name
+invalid_params.log_level = 2; % Keep log level high to see potential warnings from beautify_figure
+invalid_params.export_settings = 'not_a_struct'; % Invalid type for a sub-struct
+invalid_params.panel_labeling.enabled = 'maybe'; % Invalid logical
+invalid_params.stats_overlay.precision = -1.5; % Invalid: should be non-negative integer
+
+fprintf('  Defined invalid parameters: font_name=123, plot_line_width=''not_a_number'', theme=''non_existent_theme'', export_settings=''not_a_struct'', panel_labeling.enabled=''maybe'', stats_overlay.precision=-1.5 \n');
+
+error_occurred_invalid_params_test = false;
+try
+    fprintf('  Applying beautify_figure() with intentionally invalid parameters. Expect warnings/errors in console.\n');
+    beautify_figure(fig_invalid, invalid_params);
+    fprintf('  beautify_figure() completed execution (may have logged errors/warnings as expected).\n');
+catch ME
+    fprintf('  CRITICAL ERROR: beautify_figure() crashed with invalid parameters: %s\n', ME.message);
+    fprintf('  Stack trace:\n');
+    for k_stack = 1:length(ME.stack)
+        fprintf('    File: %s, Name: %s, Line: %d\n', ME.stack(k_stack).file, ME.stack(k_stack).name, ME.stack(k_stack).line);
+    end
+    fprintf('  This test expects graceful handling (warnings/logging), not a crash.\n');
+    error_occurred_invalid_params_test = true;
+end
+
+% Save the "beautified" (or "after_attempted_beautify") figure
+if ishandle(fig_invalid) % Check if figure still exists (it should, even if beautify failed internally)
+    title([test_name_case19_invalid ' After Invalid Params Attempt']);
+    save_comparison_figure(fig_invalid, test_name_case19_invalid, 'beautified_after_invalid_attempt', output_dir);
+else
+    fprintf('  Figure handle for invalid params test became invalid. Cannot save "beautified" state.\n');
+end
+
+% Close the figure for this test case
+if ishandle(fig_invalid); close(fig_invalid); end
+
+% Report outcome
+if error_occurred_invalid_params_test
+    fprintf('  Test Case %d Result: FAILED (beautify_figure crashed).\n', test_case_idx);
+else
+    fprintf('  Test Case %d Result: PASSED (beautify_figure did not crash). Review console for logged warnings/errors from beautify_figure.\n', test_case_idx);
+end
+
+test_case_idx = test_case_idx + 1;
+
+% --- Test Case 20: Single String Input for Cell Array Parameter ---
+fprintf('\n--- Running Test Case %d: Single String Input for Cell Array Parameter ---\n', test_case_idx);
+test_name_case20_single_string_stat = sprintf('test_case_%02d_single_string_for_cell', test_case_idx);
+
+fprintf('  Testing if a single char string for stats_overlay.statistics is handled gracefully.\n');
+
+% Create a simple figure and plot
+fig_single_stat = figure('Visible', 'off');
+ax_single_stat = axes(fig_single_stat);
+x_data = 1:10;
+y_data = x_data * 2; % Simple predictable data
+plot(ax_single_stat, x_data, y_data, 'Tag', 'SimpleDataLine', 'LineWidth', 1);
+title(ax_single_stat, [test_name_case20_single_string_stat ' Original']);
+xlabel(ax_single_stat, 'X'); 
+ylabel(ax_single_stat, 'Y');
+grid(ax_single_stat, 'on');
+
+% Save the original figure
+save_comparison_figure(fig_single_stat, test_name_case20_single_string_stat, 'original', output_dir);
+
+% Define parameters
+stats_params_single_char.stats_overlay.enabled = true;
+stats_params_single_char.stats_overlay.target_plot_handle_tag = 'SimpleDataLine';
+stats_params_single_char.stats_overlay.statistics = 'mean'; % Single char string
+stats_params_single_char.stats_overlay.position = 'northwest_inset'; % Place it clearly
+stats_params_single_char.log_level = 2; % To observe potential conversion log
+
+error_occurred_single_char_stat = false;
+try
+    fprintf('  Applying beautify_figure() with stats_overlay.statistics = ''mean'' (single char).\n');
+    fprintf('  Expect info log message about char to cell conversion.\n');
+    beautify_figure(fig_single_stat, stats_params_single_char);
+    title(ax_single_stat, [test_name_case20_single_string_stat ' Beautified']); % Update title
+    fprintf('  beautify_figure() completed.\n');
+catch ME
+    fprintf('  ERROR during Test Case %d (Single String for Cell): %s\n', test_case_idx, ME.message);
+    error_occurred_single_char_stat = true;
+end
+
+% Save the "beautified" figure
+if ishandle(fig_single_stat)
+    save_comparison_figure(fig_single_stat, test_name_case20_single_string_stat, 'beautified', output_dir);
+else
+     fprintf('  Figure handle for single string stat test became invalid. Cannot save "beautified" state.\n');
+end
+
+% Close the figure for this test case
+if ishandle(fig_single_stat); close(fig_single_stat); end
+
+% Report outcome
+if error_occurred_single_char_stat
+    fprintf('  Test Case %d Result: FAILED (beautify_figure crashed or errored unexpectedly).\n', test_case_idx);
+else
+    fprintf('  Test Case %d Result: PASSED (beautify_figure ran). Review console for logs and image for stats overlay (mean only).\n', test_case_idx);
+end
+
+test_case_idx = test_case_idx + 1;
+
+% --- Test Case 21: Invalid Figure Handle with default_matlab Palette ---
+fprintf('\n--- Running Test Case %d: Invalid Figure Handle with default_matlab Palette ---\n', test_case_idx);
+test_name_case21_invalid_fig_default_palette = sprintf('test_case_%02d_invalid_fig_default_palette', test_case_idx);
+
+fprintf('  Testing beautify_figure with an invalid figure handle and "default_matlab" color_palette.\n');
+
+% Create and close a figure to get an invalid handle
+fig_to_close = figure('Visible', 'off');
+plot(fig_to_close, 1:5, rand(5)); % Add some content
+title(fig_to_close, 'Figure to be Closed');
+drawnow; % Ensure it's rendered
+invalid_fig_handle = fig_to_close; % Assign the handle
+close(fig_to_close); % Close the figure, invalidating the handle
+drawnow; % Ensure close operation completes
+
+% Verify it's invalid (optional, for test script's own sanity)
+if ishandle(invalid_fig_handle)
+    fprintf('  WARNING: Figure handle is still valid after close. Test may not be effective.\n');
+else
+    fprintf('  INFO: Figure handle successfully invalidated.\n');
+end
+
+% Define parameters
+palette_params.color_palette = 'default_matlab'; % Explicitly set to trigger the relevant code path
+palette_params.log_level = 2; % To observe potential warnings
+
+error_occurred_invalid_fig = false;
+try
+    fprintf('  Applying beautify_figure() with an invalid figure handle and "default_matlab" palette.\n');
+    fprintf('  Expect "No valid figure found" error log from beautify_figure, and no crash.\n');
+    beautify_figure(invalid_fig_handle, palette_params); 
+    fprintf('  beautify_figure() completed execution (may have logged errors as expected).\n');
+catch ME
+    fprintf('  CRITICAL ERROR: beautify_figure() crashed with invalid fig_handle: %s\n', ME.message);
+    fprintf('  Stack trace:\n');
+    for k_stack = 1:length(ME.stack)
+        fprintf('    File: %s, Name: %s, Line: %d\n', ME.stack(k_stack).file, ME.stack(k_stack).name, ME.stack(k_stack).line);
+    end
+    error_occurred_invalid_fig = true;
+end
+
+% Report outcome
+if error_occurred_invalid_fig
+    fprintf('  Test Case %d Result: FAILED (beautify_figure crashed).\n', test_case_idx);
+else
+    fprintf('  Test Case %d Result: PASSED (beautify_figure did not crash). Review console for expected "No valid figure" error log.\n', test_case_idx);
+end
+
+test_case_idx = test_case_idx + 1;
+
 
 %% Teardown
 fprintf('\n--- Test Script Complete ---\n');
