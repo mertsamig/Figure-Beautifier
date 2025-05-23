@@ -329,96 +329,6 @@
           </property>
         </object>
       </object>
-      <object class="matlab.ui.container.Panel" name="PanelLabelingPanel">
-        <property name="Parent" type="matlab.ui.container.GridLayout" value="MainGridLayout"/>
-        <property name="Title" type="matlab.internal.datatype.matlab.graphics.datatype.char" value="Panel Labeling"/>
-        <property name="Layout" type="matlab.ui.layout.GridLayoutOptions">
-          <property name="Row" type="matlab.internal.datatype.matlab.graphics.datatype.numeric" value="2"/>
-          <property name="Column" type="matlab.internal.datatype.matlab.graphics.datatype.numeric" value="2"/>
-        </property>
-        <object class="matlab.ui.container.GridLayout" name="PanelLabelingGridLayout">
-          <property name="Parent" type="matlab.ui.container.Panel" value="PanelLabelingPanel"/>
-          <property name="RowHeight" type="matlab.internal.datatype.matlab.graphics.datatype.auto" value="{'fit','fit','fit','fit','fit'}"/>
-          <property name="ColumnWidth" type="matlab.internal.datatype.matlab.graphics.datatype.auto" value="{'fit','1x'}"/>
-        </object>
-        <object class="matlab.ui.control.CheckBox" name="EnablePanelLabelingCheckBox" valueChangedFcn="app.updatePanelLabelingControlsEnable">
-          <property name="Parent" type="matlab.ui.container.GridLayout" value="PanelLabelingGridLayout"/>
-          <property name="Text" type="matlab.internal.datatype.matlab.graphics.datatype.char" value="Enable Panel Labeling"/>
-          <property name="Value" type="matlab.internal.datatype.codegen.োডেকেরমান" value="false"/>
-          <property name="Layout" type="matlab.ui.layout.GridLayoutOptions">
-            <property name="Row" type="matlab.internal.datatype.matlab.graphics.datatype.numeric" value="1"/>
-            <property name="Column" type="matlab.internal.datatype.matlab.graphics.datatype.numeric" value="1"/>
-            <property name="ColumnSpan" type="matlab.internal.datatype.matlab.graphics.datatype.numeric" value="2"/>
-          </property>
-        </object>
-        <object class="matlab.ui.control.Label" name="PanelLabelingStyleLabel">
-          <property name="Parent" type="matlab.ui.container.GridLayout" value="PanelLabelingGridLayout"/>
-          <property name="Text" type="matlab.internal.datatype.matlab.graphics.datatype.char" value="Style"/>
-          <property name="Layout" type="matlab.ui.layout.GridLayoutOptions">
-            <property name="Row" type="matlab.internal.datatype.matlab.graphics.datatype.numeric" value="2"/>
-            <property name="Column" type="matlab.internal.datatype.matlab.graphics.datatype.numeric" value="1"/>
-          </property>
-        </object>
-        <object class="matlab.ui.control.DropDown" name="PanelLabelingStyleDropDown">
-          <property name="Parent" type="matlab.ui.container.GridLayout" value="PanelLabelingGridLayout"/>
-          <property name="Items" type="matlab.internal.datatype.matlab.graphics.datatype.cell" value="{'A', 'a', 'a)', 'I', 'i', '1'}"/>
-          <property name="Value" type="matlab.internal.datatype.matlab.graphics.datatype.char" value="A"/>
-          <property name="Layout" type="matlab.ui.layout.GridLayoutOptions">
-            <property name="Row" type="matlab.internal.datatype.matlab.graphics.datatype.numeric" value="2"/>
-            <property name="Column" type="matlab.internal.datatype.matlab.graphics.datatype.numeric" value="2"/>
-          </property>
-        </object>
-        <object class="matlab.ui.control.Label" name="PanelLabelingPositionLabel">
-          <property name="Parent" type="matlab.ui.container.GridLayout" value="PanelLabelingGridLayout"/>
-          <property name="Text" type="matlab.internal.datatype.matlab.graphics.datatype.char" value="Position"/>
-          <property name="Layout" type="matlab.ui.layout.GridLayoutOptions">
-            <property name="Row" type="matlab.internal.datatype.matlab.graphics.datatype.numeric" value="3"/>
-            <property name="Column" type="matlab.internal.datatype.matlab.graphics.datatype.numeric" value="1"/>
-          </property>
-        </object>
-        <object class="matlab.ui.control.DropDown" name="PanelLabelingPositionDropDown">
-          <property name="Parent" type="matlab.ui.container.GridLayout" value="PanelLabelingGridLayout"/>
-          <property name="Items" type="matlab.internal.datatype.matlab.graphics.datatype.cell" value="{'northwest_inset', 'northeast_inset', 'southwest_inset', 'southeast_inset'}"/>
-          <property name="Value" type="matlab.internal.datatype.matlab.graphics.datatype.char" value="northwest_inset"/>
-          <property name="Layout" type="matlab.ui.layout.GridLayoutOptions">
-            <property name="Row" type="matlab.internal.datatype.matlab.graphics.datatype.numeric" value="3"/>
-            <property name="Column" type="matlab.internal.datatype.matlab.graphics.datatype.numeric" value="2"/>
-          </property>
-        </object>
-        <object class="matlab.ui.control.Label" name="PanelLabelingFontScaleFactorLabel">
-          <property name="Parent" type="matlab.ui.container.GridLayout" value="PanelLabelingGridLayout"/>
-          <property name="Text" type="matlab.internal.datatype.matlab.graphics.datatype.char" value="Font Scale Factor"/>
-          <property name="Layout" type="matlab.ui.layout.GridLayoutOptions">
-            <property name="Row" type="matlab.internal.datatype.matlab.graphics.datatype.numeric" value="4"/>
-            <property name="Column" type="matlab.internal.datatype.matlab.graphics.datatype.numeric" value="1"/>
-          </property>
-        </object>
-        <object class="matlab.ui.control.Spinner" name="PanelLabelingFontScaleFactorSpinner">
-          <property name="Parent" type="matlab.ui.container.GridLayout" value="PanelLabelingGridLayout"/>
-          <property name="Value" type="matlab.internal.datatype.matlab.graphics.datatype.numeric" value="1"/>
-          <property name="Step" type="matlab.internal.datatype.matlab.graphics.datatype.numeric" value="0.1"/>
-          <property name="Layout" type="matlab.ui.layout.GridLayoutOptions">
-            <property name="Row" type="matlab.internal.datatype.matlab.graphics.datatype.numeric" value="4"/>
-            <property name="Column" type="matlab.internal.datatype.matlab.graphics.datatype.numeric" value="2"/>
-          </property>
-        </object>
-        <object class="matlab.ui.control.Label" name="PanelLabelingFontWeightLabel">
-          <property name="Parent" type="matlab.ui.container.GridLayout" value="PanelLabelingGridLayout"/>
-          <property name="Text" type="matlab.internal.datatype.matlab.graphics.datatype.char" value="Font Weight"/>
-          <property name="Layout" type="matlab.ui.layout.GridLayoutOptions">
-            <property name="Row" type="matlab.internal.datatype.matlab.graphics.datatype.numeric" value="5"/>
-            <property name="Column" type="matlab.internal.datatype.matlab.graphics.datatype.numeric" value="1"/>
-          </property>
-        </object>
-        <object class="matlab.ui.control.DropDown" name="PanelLabelingFontWeightDropDown">
-          <property name="Parent" type="matlab.ui.container.GridLayout" value="PanelLabelingGridLayout"/>
-          <property name="Items" type="matlab.internal.datatype.matlab.graphics.datatype.cell" value="{'normal', 'bold'}"/>
-          <property name="Layout" type="matlab.ui.layout.GridLayoutOptions">
-            <property name="Row" type="matlab.internal.datatype.matlab.graphics.datatype.numeric" value="5"/>
-            <property name="Column" type="matlab.internal.datatype.matlab.graphics.datatype.numeric" value="2"/>
-          </property>
-        </object>
-      </object>
       <object class="matlab.ui.container.Panel" name="LegendSettingsPanel">
         <property name="Parent" type="matlab.ui.container.GridLayout" value="MainGridLayout"/>
         <property name="Title" type="matlab.internal.datatype.matlab.graphics.datatype.char" value="Legend Settings"/>
@@ -661,7 +571,6 @@
 
             % Initialize enable/disable states for conditional UI sections
             app.updateCustomColorPaletteFieldEnable();
-            app.updatePanelLabelingControlsEnable();
             app.updateStatsOverlayControlsEnable();
             app.updateExportSettingsControlsEnable();
             app.updateExpandLimitsFactorEnable(); % Add this call
@@ -742,27 +651,6 @@
                 app.CustomColorPaletteEditField.Enable = 'on';
             else
                 app.CustomColorPaletteEditField.Enable = 'off';
-            end
-          ]]>
-        </body>
-      </method>
-      <method name="updatePanelLabelingControlsEnable" access="private">
-        <input/>
-        <output/>
-        <body>
-          <![CDATA[
-            % updatePanelLabelingControlsEnable: Enables or disables controls in the
-            % Panel Labeling section based on the EnablePanelLabelingCheckBox state.
-            if app.EnablePanelLabelingCheckBox.Value
-                app.PanelLabelingStyleDropDown.Enable = 'on';
-                app.PanelLabelingPositionDropDown.Enable = 'on';
-                app.PanelLabelingFontScaleFactorSpinner.Enable = 'on';
-                app.PanelLabelingFontWeightDropDown.Enable = 'on';
-            else
-                app.PanelLabelingStyleDropDown.Enable = 'off';
-                app.PanelLabelingPositionDropDown.Enable = 'off';
-                app.PanelLabelingFontScaleFactorSpinner.Enable = 'off';
-                app.PanelLabelingFontWeightDropDown.Enable = 'off';
             end
           ]]>
         </body>
@@ -1038,18 +926,6 @@
                 if isfield(settings, 'smart_legend_display'); app.SmartLegendDisplayCheckBox.Value = settings.smart_legend_display; else; missing_fields_warnings{end+1} = 'smart_legend_display'; end
                 if isfield(settings, 'interactive_legend'); app.InteractiveLegendCheckBox.Value = settings.interactive_legend; else; missing_fields_warnings{end+1} = 'interactive_legend'; end
 
-                % Panel Labeling
-                if isfield(settings, 'panel_labeling') && isstruct(settings.panel_labeling)
-                    if isfield(settings.panel_labeling, 'enabled'); app.EnablePanelLabelingCheckBox.Value = settings.panel_labeling.enabled; else; missing_fields_warnings{end+1} = 'panel_labeling.enabled'; end
-                    if isfield(settings.panel_labeling, 'style'); app.PanelLabelingStyleDropDown.Value = settings.panel_labeling.style; else; missing_fields_warnings{end+1} = 'panel_labeling.style'; end
-                    if isfield(settings.panel_labeling, 'position'); app.PanelLabelingPositionDropDown.Value = settings.panel_labeling.position; else; missing_fields_warnings{end+1} = 'panel_labeling.position'; end
-                    if isfield(settings.panel_labeling, 'font_scale_factor'); app.PanelLabelingFontScaleFactorSpinner.Value = settings.panel_labeling.font_scale_factor; else; missing_fields_warnings{end+1} = 'panel_labeling.font_scale_factor'; end
-                    if isfield(settings.panel_labeling, 'font_weight'); app.PanelLabelingFontWeightDropDown.Value = settings.panel_labeling.font_weight; else; missing_fields_warnings{end+1} = 'panel_labeling.font_weight'; end
-                else
-                    missing_fields_warnings{end+1} = 'panel_labeling (entire section)';
-                end
-                app.updatePanelLabelingControlsEnable(); 
-
                 % Stats Overlay
                 if isfield(settings, 'stats_overlay') && isstruct(settings.stats_overlay)
                     if isfield(settings.stats_overlay, 'enabled'); app.EnableStatsOverlayCheckBox.Value = settings.stats_overlay.enabled; else; missing_fields_warnings{end+1} = 'stats_overlay.enabled'; end
@@ -1213,13 +1089,6 @@
             settings.legend_location = app.LegendLocationDropDown.Value;
             settings.smart_legend_display = app.SmartLegendDisplayCheckBox.Value;
             settings.interactive_legend = app.InteractiveLegendCheckBox.Value;
-
-            % Panel Labeling (nested struct)
-            settings.panel_labeling.enabled = app.EnablePanelLabelingCheckBox.Value;
-            settings.panel_labeling.style = app.PanelLabelingStyleDropDown.Value;
-            settings.panel_labeling.position = app.PanelLabelingPositionDropDown.Value;
-            settings.panel_labeling.font_scale_factor = app.PanelLabelingFontScaleFactorSpinner.Value;
-            settings.panel_labeling.font_weight = app.PanelLabelingFontWeightDropDown.Value;
 
             % Stats Overlay (nested struct)
             settings.stats_overlay.enabled = app.EnableStatsOverlayCheckBox.Value;

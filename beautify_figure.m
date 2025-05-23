@@ -174,17 +174,6 @@ default_params.export_settings.ui = false; % If true, tries to use exportgraphic
 
 default_params.style_preset = 'default'; % Added new preset parameter
 
-   % Automated Panel Labeling
-   default_params.panel_labeling.enabled = false;
-   default_params.panel_labeling.style = 'A'; % Options: 'A', 'a', 'a)', 'I', 'i', '1'
-   default_params.panel_labeling.position = 'northwest_inset'; % Options: 'northwest_inset', 'northeast_inset', 'southwest_inset', 'southeast_inset', 'northwest_outset', etc.
-   default_params.panel_labeling.font_scale_factor = 1.0; % Relative to axes title font size
-   default_params.panel_labeling.font_weight = 'bold';
-   default_params.panel_labeling.x_offset = 0.02; % Normalized units from edge for inset, or absolute for outset
-   default_params.panel_labeling.y_offset = 0.02; % Normalized units from edge for inset, or absolute for outset
-   default_params.panel_labeling.text_color = []; % Inherits from params.text_color if empty
-   default_params.panel_labeling.font_name = []; % Inherits from params.font_name if empty
-
    % Basic Statistical Overlay
    default_params.stats_overlay.enabled = false;
    default_params.stats_overlay.statistics = {'mean', 'std'}; % Cell array: 'mean', 'std', 'min', 'max', 'N', 'median', 'sum'
@@ -528,7 +517,7 @@ end
 
 
 % Validate top-level structure types first
-sub_struct_names = {'export_settings', 'panel_labeling', 'stats_overlay'};
+sub_struct_names = {'export_settings', 'stats_overlay'};
 for i = 1:length(sub_struct_names)
     ss_name = sub_struct_names{i};
     % Check if user intended to provide this struct (i.e., it was in user_provided_params_struct)
@@ -558,19 +547,6 @@ else % This case should ideally be caught by the top-level check if user provide
     end
 end
 
-% panel_labeling validation
-if isstruct(params.panel_labeling)
-    params = validate_numeric_scalar_field(params, base_defaults, 'panel_labeling', 'font_scale_factor', true, false, false); % non-negative
-    params = validate_numeric_scalar_field(params, base_defaults, 'panel_labeling', 'x_offset', false, false, false); % any real
-    params = validate_numeric_scalar_field(params, base_defaults, 'panel_labeling', 'y_offset', false, false, false); % any real
-    params = validate_logical_field(params, base_defaults, 'panel_labeling', 'enabled');
-else
-    if ~isstruct(params.panel_labeling) && any(strcmp(fieldnames(base_defaults), 'panel_labeling'))
-         log_message(params, sprintf('''params.panel_labeling'' is not a struct. Resetting to default.', class(params.panel_labeling)), 1, 'Warning');
-        params.panel_labeling = base_defaults.panel_labeling;
-    end
-end
-
 % stats_overlay validation
 if isstruct(params.stats_overlay)
     params = validate_numeric_scalar_field(params, base_defaults, 'stats_overlay', 'font_scale_factor', true, false, false); % non-negative
@@ -597,27 +573,7 @@ end
 % Step f: Merge the user-provided sub-struct fields for panel_labeling and stats_overlay
 % This ensures that user's specific field values are in `params` before detailed field validation.
 % Note: `params.export_settings` is typically handled as a whole struct assignment, not field-by-field merge here.
-log_message(params, 'Merging user-provided sub-struct fields (panel_labeling, stats_overlay)...', 2, 'Info');
-   if isfield(user_provided_params_struct, 'panel_labeling')
-       if isstruct(user_provided_params_struct.panel_labeling)
-           if ~isstruct(params.panel_labeling) % Safeguard: Ensure params.panel_labeling is a struct (should be due to prior type validation)
-               log_message(params, 'params.panel_labeling was not a struct before merging user fields. Resetting to default struct first.', 1, 'Warning');
-               params.panel_labeling = base_defaults.panel_labeling;
-           end
-           user_pl_fields = fieldnames(user_provided_params_struct.panel_labeling);
-           for k_pl = 1:length(user_pl_fields)
-               if isfield(params.panel_labeling, user_pl_fields{k_pl}) % Only merge known fields
-                   params.panel_labeling.(user_pl_fields{k_pl}) = user_provided_params_struct.panel_labeling.(user_pl_fields{k_pl});
-               else
-                   log_message(params, sprintf('Unknown panel_labeling parameter during merge: "%s". This parameter will be ignored.', user_pl_fields{k_pl}), 1, 'Warning');
-               end
-           end
-       else
-            % This case (user_provided_params_struct.panel_labeling is not a struct)
-            % should have been handled by the top-level type validation which would reset params.panel_labeling.
-            log_message(params, sprintf('User-provided ''panel_labeling'' was not a struct. Fields not merged. Default panel_labeling params will be used/validated.'), 2, 'Info');
-       end
-   end
+log_message(params, 'Merging user-provided sub-struct fields (stats_overlay)...', 2, 'Info');
    if isfield(user_provided_params_struct, 'stats_overlay')
        if isstruct(user_provided_params_struct.stats_overlay)
             if ~isstruct(params.stats_overlay) % Safeguard
@@ -650,17 +606,6 @@ else
     % This path should ideally not be reached if top-level type validation worked.
     log_message(params, '''params.export_settings'' is unexpectedly not a struct before field validation. This may indicate a problem.', 0, 'Error');
     if isfield(base_defaults, 'export_settings'); params.export_settings = base_defaults.export_settings; end % Attempt recovery
-end
-
-% panel_labeling validation
-if isstruct(params.panel_labeling)
-    params = validate_numeric_scalar_field(params, base_defaults, 'panel_labeling', 'font_scale_factor', true, false, false); % non-negative
-    params = validate_numeric_scalar_field(params, base_defaults, 'panel_labeling', 'x_offset', false, false, false); % any real
-    params = validate_numeric_scalar_field(params, base_defaults, 'panel_labeling', 'y_offset', false, false, false); % any real
-    params = validate_logical_field(params, base_defaults, 'panel_labeling', 'enabled');
-else
-    log_message(params, '''params.panel_labeling'' is unexpectedly not a struct before field validation.', 0, 'Error');
-    if isfield(base_defaults, 'panel_labeling'); params.panel_labeling = base_defaults.panel_labeling; end
 end
 
 % stats_overlay validation
@@ -1360,15 +1305,6 @@ if params.apply_to_colorbars; beautify_colorbar(ax, params, fs, lfs, alw); end
         end
     end
 
-   % Apply Automated Panel Labeling
-   if params.panel_labeling.enabled && axes_idx > 0 % axes_idx used to generate label
-       try 
-           apply_panel_labeling(ax, params, scale_factor, axes_idx);
-       catch ME_panel_label
-           log_message(params, sprintf('Error applying panel labeling to Axes (Tag: %s): %s (Line: %d)', ax.Tag, ME_panel_label.message, ME_panel_label.stack(1).line), 1, 'Warning');
-       end
-   end
-
    % Apply Basic Statistical Overlay
    if params.stats_overlay.enabled
        try 
@@ -1888,71 +1824,6 @@ function str = local_roman_numeral(n_in) % Renamed input to avoid conflict with 
             n_in = n_in - map_values(i_roman);
         end
     end
-end
-
-% --- Helper Function: Apply Panel Labeling ---
-function apply_panel_labeling(ax, params, scale_factor, axes_idx)
-% Applies automated panel labels (A, B, C...) to the axes.
-pl_params = params.panel_labeling; 
-
-label_str = '';
-% Ensure local_roman_numeral is accessible if used.
-switch lower(pl_params.style)
-    case 'a'; label_str = char('A' + axes_idx - 1);
-    case 'a)'; label_str = [char('a' + axes_idx - 1), ')'];
-    case 'i'; label_str = lower(local_roman_numeral(axes_idx)); 
-    case 'I'; label_str = upper(local_roman_numeral(axes_idx)); 
-    case '1'; label_str = num2str(axes_idx);
-    otherwise; label_str = [char('A' + axes_idx - 1), '.']; % Default
-end
-
-% Basic check for going out of typical alphabet range for single char labels
-if length(label_str) == 1 && isletter(label_str(1)) && ((label_str(1) > 'Z' && label_str(1) < 'a') || label_str(1) > 'z')
-    log_message(params, sprintf('Panel label index %d out of typical alphabet range for style "%s". Skipping.', axes_idx, pl_params.style),1,'Warning'); return;
-elseif isempty(label_str)
-    log_message(params, sprintf('Panel label generation failed for index %d, style "%s". Skipping.', axes_idx, pl_params.style),1,'Warning'); return;
-end
-
-panel_font_name = pl_params.font_name; if isempty(panel_font_name); panel_font_name = params.font_name; end
-panel_text_color = pl_params.text_color; if isempty(panel_text_color); panel_text_color = params.text_color; end
-
-base_label_fs = round(params.base_font_size * params.title_scale * scale_factor); % Reference title font size
-label_fs = round(base_label_fs * pl_params.font_scale_factor);
-label_fs = max(label_fs, 6); % Minimum sensible font size
-
-original_axes_units = get(ax, 'Units');
-safe_set(params, ax, 'Units', 'normalized');
-
-x_abs_offset = pl_params.x_offset; 
-y_abs_offset = pl_params.y_offset;
-
-text_x_norm = 0; text_y_norm = 0; 
-horz_align = 'left'; vert_align = 'bottom';
-
-switch lower(pl_params.position)
-    case 'northwest_inset'
-        text_x_norm = x_abs_offset; text_y_norm = 1 - y_abs_offset; horz_align = 'left'; vert_align = 'top';
-    case 'northeast_inset'
-        text_x_norm = 1 - x_abs_offset; text_y_norm = 1 - y_abs_offset; horz_align = 'right'; vert_align = 'top';
-    case 'southwest_inset'
-        text_x_norm = x_abs_offset; text_y_norm = y_abs_offset; horz_align = 'left'; vert_align = 'bottom';
-    case 'southeast_inset'
-        text_x_norm = 1 - x_abs_offset; text_y_norm = y_abs_offset; horz_align = 'right'; vert_align = 'bottom';
-    otherwise 
-        text_x_norm = x_abs_offset; text_y_norm = 1 - y_abs_offset; horz_align = 'left'; vert_align = 'top'; % Default
-end
-
-text(ax, text_x_norm, text_y_norm, label_str, ...
-    'Units', 'normalized', ... 
-    'FontName', panel_font_name, ...
-    'FontSize', label_fs, ...
-    'FontWeight', pl_params.font_weight, ...
-    'Color', panel_text_color, ...
-    'HorizontalAlignment', horz_align, ...
-    'VerticalAlignment', vert_align, ...
-    'PickableParts', 'none', 'HandleVisibility', 'off', 'Tag', 'BeautifyFig_PanelLabel'); 
-
-safe_set(params, ax, 'Units', original_axes_units);
 end
 
 % --- Helper Function: Apply Stats Overlay ---
