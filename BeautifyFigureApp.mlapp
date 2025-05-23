@@ -695,26 +695,38 @@
                 disp(['Error message: ', ME.message]);
                 % availableFonts remains defaultFonts as set initially
             end
+
+            % Additional check for availableFonts
+            if ~iscell(availableFonts) || isempty(availableFonts)
+                disp('Critical Warning: No fonts available for FontNameDropDown even after fallbacks. Using a placeholder.');
+                availableFonts = {'Error - No Fonts Available'};
+            end
             
             app.FontNameDropDown.Items = availableFonts; % Set the items for the dropdown
+
+            % Before setting the value, check if Items is empty
+            if isempty(app.FontNameDropDown.Items)
+                app.FontNameDropDown.Items = {'Error - No Fonts'};
+                app.FontNameDropDown.Value = 'Error - No Fonts';
+                disp('Critical Error: FontNameDropDown.Items was empty. Set to error placeholder.');
+                return; % Exit early if in this critical state
+            end
             
             % Preserve current value if already set (e.g., by a loaded preset) and valid,
             % otherwise, set a preferred default font.
             current_value = app.FontNameDropDown.Value; 
-            if ~ismember(current_value, availableFonts)
-                if ismember('Helvetica', availableFonts)
+            
+            % Check if current_value is part of the (potentially error-state) Items
+            if ~ismember(current_value, app.FontNameDropDown.Items)
+                if ismember('Helvetica', app.FontNameDropDown.Items)
                     app.FontNameDropDown.Value = 'Helvetica';
-                elseif ismember('Arial', availableFonts)
+                elseif ismember('Arial', app.FontNameDropDown.Items)
                     app.FontNameDropDown.Value = 'Arial';
-                elseif ~isempty(availableFonts)
-                    app.FontNameDropDown.Value = availableFonts{1}; % Fallback to the first available font
-                else
-                    % This case should ideally not be reached if defaultFonts is not empty
-                    app.FontNameDropDown.Items = {'Error - No Fonts'};
-                    app.FontNameDropDown.Value = 'Error - No Fonts';
-                    disp('Critical error: No fonts available for FontNameDropDown, not even defaults.');
+                elseif ~isempty(app.FontNameDropDown.Items) % This will handle the 'Error - No Fonts Available' case
+                    app.FontNameDropDown.Value = app.FontNameDropDown.Items{1}; 
+                % No else needed here, as the isempty(app.FontNameDropDown.Items) check above handles the ultimate fallback
                 end
-            % If current_value is valid and in availableFonts, it's preserved.
+            % If current_value is valid and in app.FontNameDropDown.Items, it's preserved.
             end
           ]]>
         </body>
@@ -940,118 +952,152 @@
           <![CDATA[
             % applyUISettings: Applies a given settings struct to all UI components.
             % Also ensures that conditional UI sections are updated based on loaded values.
+            missing_fields_warnings = {}; % Initialize cell array for warnings
             try
                 % General Settings
-                app.StylePresetDropDown.Value = settings.style_preset;
-                app.ThemeDropDown.Value = settings.theme;
-                % Font Name - ensure the loaded font is in the list, if not, add it (dropdown is editable)
-                if isfield(settings, 'font_name') && ~ismember(settings.font_name, app.FontNameDropDown.Items)
-                    app.FontNameDropDown.Items = unique([app.FontNameDropDown.Items(:); {settings.font_name}],'stable');
+                if isfield(settings, 'style_preset'); app.StylePresetDropDown.Value = settings.style_preset; else; missing_fields_warnings{end+1} = 'style_preset'; end
+                if isfield(settings, 'theme'); app.ThemeDropDown.Value = settings.theme; else; missing_fields_warnings{end+1} = 'theme'; end
+                
+                if isfield(settings, 'font_name')
+                    if ~ismember(settings.font_name, app.FontNameDropDown.Items)
+                        app.FontNameDropDown.Items = unique([app.FontNameDropDown.Items(:); {settings.font_name}],'stable');
+                    end
+                    app.FontNameDropDown.Value = settings.font_name;
+                else
+                    missing_fields_warnings{end+1} = 'font_name';
                 end
-                app.FontNameDropDown.Value = settings.font_name;
-                app.BaseFontSizeSpinner.Value = settings.base_font_size;
-                app.GlobalFontScaleFactorSpinner.Value = settings.global_font_scale_factor;
+                
+                if isfield(settings, 'base_font_size'); app.BaseFontSizeSpinner.Value = settings.base_font_size; else; missing_fields_warnings{end+1} = 'base_font_size'; end
+                if isfield(settings, 'global_font_scale_factor'); app.GlobalFontScaleFactorSpinner.Value = settings.global_font_scale_factor; else; missing_fields_warnings{end+1} = 'global_font_scale_factor'; end
+                
                 if isfield(settings, 'log_level') && isnumeric(settings.log_level)
                     log_level_str_to_set = sprintf('%d (', settings.log_level);
+                    found_log_level = false;
                     for item_idx = 1:length(app.LogLevelDropDown.Items)
                         if startsWith(app.LogLevelDropDown.Items{item_idx}, log_level_str_to_set)
                             app.LogLevelDropDown.Value = app.LogLevelDropDown.Items{item_idx};
+                            found_log_level = true;
                             break;
                         end
                     end
+                    if ~found_log_level; missing_fields_warnings{end+1} = 'log_level (value not in dropdown)'; end
+                else
+                    missing_fields_warnings{end+1} = 'log_level';
                 end
 
                 % Plot Appearance
-                app.PlotLineWidthSpinner.Value = settings.plot_line_width;
-                app.MarkerSizeSpinner.Value = settings.marker_size;
-                app.ColorPaletteDropDown.Value = settings.color_palette;
-                if strcmp(settings.color_palette, 'custom')
-                    if isnumeric(settings.custom_color_palette)
-                        app.CustomColorPaletteEditField.Value = mat2str(settings.custom_color_palette);
-                    elseif iscell(settings.custom_color_palette) % Handle cell array of colors
-                         str_val = '{';
-                         for i = 1:length(settings.custom_color_palette)
-                             if isnumeric(settings.custom_color_palette{i})
-                                 str_val = [str_val, mat2str(settings.custom_color_palette{i})]; %#ok<AGROW>
-                             elseif ischar(settings.custom_color_palette{i})
-                                 str_val = [str_val, '''' , settings.custom_color_palette{i}, '''']; %#ok<AGROW>
-                             end
-                             if i < length(settings.custom_color_palette)
-                                 str_val = [str_val, '; ']; %#ok<AGROW>
-                             end
-                         end
-                         str_val = [str_val, '}'];
-                         app.CustomColorPaletteEditField.Value = str_val;
-                    elseif ischar(settings.custom_color_palette) % Already a string
-                        app.CustomColorPaletteEditField.Value = settings.custom_color_palette;
-                    else
-                        app.CustomColorPaletteEditField.Value = ''; % Default or error representation
+                if isfield(settings, 'plot_line_width'); app.PlotLineWidthSpinner.Value = settings.plot_line_width; else; missing_fields_warnings{end+1} = 'plot_line_width'; end
+                if isfield(settings, 'marker_size'); app.MarkerSizeSpinner.Value = settings.marker_size; else; missing_fields_warnings{end+1} = 'marker_size'; end
+                
+                if isfield(settings, 'color_palette')
+                    app.ColorPaletteDropDown.Value = settings.color_palette;
+                    if strcmp(settings.color_palette, 'custom')
+                        if isfield(settings, 'custom_color_palette')
+                            if isnumeric(settings.custom_color_palette)
+                                app.CustomColorPaletteEditField.Value = mat2str(settings.custom_color_palette);
+                            elseif iscell(settings.custom_color_palette)
+                                 str_val = '{';
+                                 for i_color = 1:length(settings.custom_color_palette) % Renamed loop var
+                                     if isnumeric(settings.custom_color_palette{i_color})
+                                         str_val = [str_val, mat2str(settings.custom_color_palette{i_color})]; %#ok<AGROW>
+                                     elseif ischar(settings.custom_color_palette{i_color})
+                                         str_val = [str_val, '''' , settings.custom_color_palette{i_color}, '''']; %#ok<AGROW>
+                                     end
+                                     if i_color < length(settings.custom_color_palette)
+                                         str_val = [str_val, '; ']; %#ok<AGROW>
+                                     end
+                                 end
+                                 str_val = [str_val, '}'];
+                                 app.CustomColorPaletteEditField.Value = str_val;
+                            elseif ischar(settings.custom_color_palette)
+                                app.CustomColorPaletteEditField.Value = settings.custom_color_palette;
+                            else
+                                app.CustomColorPaletteEditField.Value = ''; 
+                                missing_fields_warnings{end+1} = 'custom_color_palette (invalid format)';
+                            end
+                        else
+                            missing_fields_warnings{end+1} = 'custom_color_palette (expected but missing)';
+                            app.CustomColorPaletteEditField.Value = '[[1 0 0]; [0 1 0]]'; % Default if missing
+                        end
                     end
+                else
+                    missing_fields_warnings{end+1} = 'color_palette';
                 end
-                app.updateCustomColorPaletteFieldEnable(); % Update enable state for custom palette field
+                app.updateCustomColorPaletteFieldEnable();
 
                 % Axes Configuration
-                app.GridDensityDropDown.Value = settings.grid_density;
-                app.AxisBoxStyleDropDown.Value = settings.axis_box_style;
-                app.AxesLayerDropDown.Value = settings.axes_layer;
-                if isfield(settings, 'axis_limit_mode')
-                    app.AxisLimitModeDropDown.Value = settings.axis_limit_mode;
-                end
-                if isfield(settings, 'expand_axis_limits_factor')
-                    app.ExpandLimitsFactorSpinner.Value = settings.expand_axis_limits_factor;
-                end
-                app.updateExpandLimitsFactorEnable(); % Call after setting mode
+                if isfield(settings, 'grid_density'); app.GridDensityDropDown.Value = settings.grid_density; else; missing_fields_warnings{end+1} = 'grid_density'; end
+                if isfield(settings, 'axis_box_style'); app.AxisBoxStyleDropDown.Value = settings.axis_box_style; else; missing_fields_warnings{end+1} = 'axis_box_style'; end
+                if isfield(settings, 'axes_layer'); app.AxesLayerDropDown.Value = settings.axes_layer; else; missing_fields_warnings{end+1} = 'axes_layer'; end
+                if isfield(settings, 'axis_limit_mode'); app.AxisLimitModeDropDown.Value = settings.axis_limit_mode; else; missing_fields_warnings{end+1} = 'axis_limit_mode'; end
+                if isfield(settings, 'expand_axis_limits_factor'); app.ExpandLimitsFactorSpinner.Value = settings.expand_axis_limits_factor; else; missing_fields_warnings{end+1} = 'expand_axis_limits_factor'; end
+                app.updateExpandLimitsFactorEnable(); 
 
                 % Legend Settings
-                app.LegendLocationDropDown.Value = settings.legend_location;
-                app.SmartLegendDisplayCheckBox.Value = settings.smart_legend_display;
-                app.InteractiveLegendCheckBox.Value = settings.interactive_legend;
+                if isfield(settings, 'legend_location'); app.LegendLocationDropDown.Value = settings.legend_location; else; missing_fields_warnings{end+1} = 'legend_location'; end
+                if isfield(settings, 'smart_legend_display'); app.SmartLegendDisplayCheckBox.Value = settings.smart_legend_display; else; missing_fields_warnings{end+1} = 'smart_legend_display'; end
+                if isfield(settings, 'interactive_legend'); app.InteractiveLegendCheckBox.Value = settings.interactive_legend; else; missing_fields_warnings{end+1} = 'interactive_legend'; end
 
                 % Panel Labeling
                 if isfield(settings, 'panel_labeling') && isstruct(settings.panel_labeling)
-                    app.EnablePanelLabelingCheckBox.Value = settings.panel_labeling.enabled;
-                    app.PanelLabelingStyleDropDown.Value = settings.panel_labeling.style;
-                    app.PanelLabelingPositionDropDown.Value = settings.panel_labeling.position;
-                    app.PanelLabelingFontScaleFactorSpinner.Value = settings.panel_labeling.font_scale_factor;
-                    app.PanelLabelingFontWeightDropDown.Value = settings.panel_labeling.font_weight;
+                    if isfield(settings.panel_labeling, 'enabled'); app.EnablePanelLabelingCheckBox.Value = settings.panel_labeling.enabled; else; missing_fields_warnings{end+1} = 'panel_labeling.enabled'; end
+                    if isfield(settings.panel_labeling, 'style'); app.PanelLabelingStyleDropDown.Value = settings.panel_labeling.style; else; missing_fields_warnings{end+1} = 'panel_labeling.style'; end
+                    if isfield(settings.panel_labeling, 'position'); app.PanelLabelingPositionDropDown.Value = settings.panel_labeling.position; else; missing_fields_warnings{end+1} = 'panel_labeling.position'; end
+                    if isfield(settings.panel_labeling, 'font_scale_factor'); app.PanelLabelingFontScaleFactorSpinner.Value = settings.panel_labeling.font_scale_factor; else; missing_fields_warnings{end+1} = 'panel_labeling.font_scale_factor'; end
+                    if isfield(settings.panel_labeling, 'font_weight'); app.PanelLabelingFontWeightDropDown.Value = settings.panel_labeling.font_weight; else; missing_fields_warnings{end+1} = 'panel_labeling.font_weight'; end
+                else
+                    missing_fields_warnings{end+1} = 'panel_labeling (entire section)';
                 end
-                app.updatePanelLabelingControlsEnable(); % Update enable state for panel labeling section
+                app.updatePanelLabelingControlsEnable(); 
 
                 % Stats Overlay
                 if isfield(settings, 'stats_overlay') && isstruct(settings.stats_overlay)
-                    app.EnableStatsOverlayCheckBox.Value = settings.stats_overlay.enabled;
-                    if iscell(settings.stats_overlay.statistics)
-                        % Convert cell array of strings to a string representation like {'mean', 'std'}
-                        app.StatisticsEditField.Value = ['{''' strjoin(settings.stats_overlay.statistics, ''', ''') '''}'];
-                    elseif ischar(settings.stats_overlay.statistics) % Already a string
-                        app.StatisticsEditField.Value = settings.stats_overlay.statistics;
+                    if isfield(settings.stats_overlay, 'enabled'); app.EnableStatsOverlayCheckBox.Value = settings.stats_overlay.enabled; else; missing_fields_warnings{end+1} = 'stats_overlay.enabled'; end
+                    if isfield(settings.stats_overlay, 'statistics')
+                        if iscell(settings.stats_overlay.statistics)
+                            app.StatisticsEditField.Value = ['{''' strjoin(settings.stats_overlay.statistics, ''', ''') '''}'];
+                        elseif ischar(settings.stats_overlay.statistics) 
+                            app.StatisticsEditField.Value = settings.stats_overlay.statistics;
+                        else
+                            app.StatisticsEditField.Value = ''; 
+                            missing_fields_warnings{end+1} = 'stats_overlay.statistics (invalid format)';
+                        end
                     else
-                        app.StatisticsEditField.Value = ''; % Default or error representation
+                         missing_fields_warnings{end+1} = 'stats_overlay.statistics';
                     end
-                    app.StatsOverlayPositionDropDown.Value = settings.stats_overlay.position;
-                    app.StatsOverlayPrecisionSpinner.Value = settings.stats_overlay.precision;
+                    if isfield(settings.stats_overlay, 'position'); app.StatsOverlayPositionDropDown.Value = settings.stats_overlay.position; else; missing_fields_warnings{end+1} = 'stats_overlay.position'; end
+                    if isfield(settings.stats_overlay, 'precision'); app.StatsOverlayPrecisionSpinner.Value = settings.stats_overlay.precision; else; missing_fields_warnings{end+1} = 'stats_overlay.precision'; end
+                else
+                    missing_fields_warnings{end+1} = 'stats_overlay (entire section)';
                 end
-                app.updateStatsOverlayControlsEnable(); % Update enable state for stats overlay section
+                app.updateStatsOverlayControlsEnable(); 
 
                 % Export Settings
                 if isfield(settings, 'export_settings') && isstruct(settings.export_settings)
-                    app.EnableExportCheckBox.Value = settings.export_settings.enabled;
-                    app.FilenameEditField.Value = settings.export_settings.filename;
-                    app.FormatDropDown.Value = settings.export_settings.format;
-                    if isfield(settings.export_settings, 'resolution') % Check for new field name
+                    if isfield(settings.export_settings, 'enabled'); app.EnableExportCheckBox.Value = settings.export_settings.enabled; else; missing_fields_warnings{end+1} = 'export_settings.enabled'; end
+                    if isfield(settings.export_settings, 'filename'); app.FilenameEditField.Value = settings.export_settings.filename; else; missing_fields_warnings{end+1} = 'export_settings.filename'; end
+                    if isfield(settings.export_settings, 'format'); app.FormatDropDown.Value = settings.export_settings.format; else; missing_fields_warnings{end+1} = 'export_settings.format'; end
+                    
+                    if isfield(settings.export_settings, 'resolution') 
                         app.ResolutionSpinner.Value = settings.export_settings.resolution;
-                    elseif isfield(settings.export_settings, 'resolution_dpi') % Fallback for old field name
+                    elseif isfield(settings.export_settings, 'resolution_dpi') 
                         app.ResolutionSpinner.Value = settings.export_settings.resolution_dpi;
-                    end
-                    if isfield(settings.export_settings, 'open_exported_file')
-                        app.OpenExportedFileCheckBox.Value = settings.export_settings.open_exported_file;
                     else
-                        app.OpenExportedFileCheckBox.Value = false; % Default if not in preset
+                        missing_fields_warnings{end+1} = 'export_settings.resolution (or resolution_dpi)';
                     end
+                    
+                    if isfield(settings.export_settings, 'open_exported_file'); app.OpenExportedFileCheckBox.Value = settings.export_settings.open_exported_file; else; missing_fields_warnings{end+1} = 'export_settings.open_exported_file'; end
+                else
+                    missing_fields_warnings{end+1} = 'export_settings (entire section)';
                 end
-                app.updateExportSettingsControlsEnable(); % Update enable state for export settings section
+                app.updateExportSettingsControlsEnable(); 
                 
-                uialert(app.UIFigure, 'Preset settings applied successfully.', 'Preset Loaded');
+                if ~isempty(missing_fields_warnings)
+                    warning_msg = ['Preset loaded, but the following settings were missing and default values were used or settings skipped: ' strjoin(missing_fields_warnings, ', ')];
+                    uialert(app.UIFigure, warning_msg, 'Preset Load Warning');
+                else
+                    uialert(app.UIFigure, 'Preset settings applied successfully.', 'Preset Loaded');
+                end
 
             catch ME
                 uialert(app.UIFigure, ['Error applying preset: ' ME.message], 'Error Loading Preset');
@@ -1137,12 +1183,20 @@
             settings.color_palette = app.ColorPaletteDropDown.Value;
             if strcmp(settings.color_palette, 'custom')
                 custom_palette_str = app.CustomColorPaletteEditField.Value;
-                parsed_palette = str2num(custom_palette_str); %#ok<ST2NM> Keep for potential string output if str2num fails
-                if isnumeric(parsed_palette) && size(parsed_palette, 2) == 3 && size(parsed_palette, 1) > 0
+                try
+                    parsed_palette = str2num(custom_palette_str); %#ok<ST2NM>
+                catch ME_str2num_palette
+                    % Handle cases where str2num itself errors (e.g., too complex, invalid syntax)
+                    parsed_palette = []; % Ensure it's not numeric for the check below
+                    log_message(app, sprintf('str2num failed for custom_color_palette: %s', ME_str2num_palette.message),1,'Warning');
+                end
+                
+                if isnumeric(parsed_palette) && ndims(parsed_palette) == 2 && size(parsed_palette, 2) == 3 && size(parsed_palette, 1) > 0
                     settings.custom_color_palette = parsed_palette;
                 else
                     settings.custom_color_palette = custom_palette_str; % Store original string
-                    disp('Warning: Custom color palette input could not be parsed as a valid Nx3 numeric matrix. Storing as string.');
+                    uialert(app.UIFigure, 'Invalid Custom Color Palette input. It should be a MATLAB-style matrix string (e.g., "[[1 0 0]; [0 1 0]]"). Using the raw string value. Please correct it for proper functionality.', 'Input Warning');
+                    disp('Warning: Custom color palette input could not be parsed as a valid Nx3 numeric matrix. Storing as raw string.');
                 end
             else
                 settings.custom_color_palette = []; 
@@ -1191,6 +1245,9 @@
                 end
             end
             settings.stats_overlay.statistics = cleaned_stats;
+            if isempty(cleaned_stats) && ~isempty(stats_str)
+                uialert(app.UIFigure, 'Statistics input seems malformed or resulted in no valid statistics. Please ensure it is a comma or space-separated list of statistic names, e.g., "{''mean'', ''std''}" or "mean, std". Using an empty list.', 'Input Warning');
+            end
             settings.stats_overlay.position = app.StatsOverlayPositionDropDown.Value;
             settings.stats_overlay.precision = app.StatsOverlayPrecisionSpinner.Value;
 
