@@ -1,18 +1,17 @@
-function beautify_figure(user_params_or_axes_handle, user_params_for_specific_axes)
-% BEAUTIFY_FIGURE Enhances the aesthetics of the current MATLAB figure or specified axes.
+function beautify_figure(params_or_fig_handle)
+% BEAUTIFY_FIGURE Enhances the aesthetics of the current MATLAB figure.
 %
 % SYNTAX:
 %   beautify_figure()
 %       Applies default beautification settings to the current figure (gcf).
 %
-%   beautify_figure(params_struct)
-%       Applies beautification with custom settings defined in params_struct to gcf.
-%
-%   beautify_figure(axes_handle_array)
-%       Applies default beautification settings to the specified axes handle(s).
-%
-%   beautify_figure(axes_handle_array, params_struct)
-%       Applies custom settings to the specified axes handle(s).
+%   beautify_figure(params_struct_or_fig_handle)
+%       If params_struct_or_fig_handle is a structure (params_struct):
+%           Applies beautification with custom settings defined in params_struct.
+%           If params_struct contains a valid 'figure_handle' field, that figure is targeted.
+%           Otherwise, the current figure (gcf) is targeted.
+%       If params_struct_or_fig_handle is a figure handle:
+%           Applies default beautification settings to the specified figure.
 %
 % DESCRIPTION:
 %   This function systematically modifies various properties of a MATLAB figure
@@ -58,16 +57,6 @@ function beautify_figure(user_params_or_axes_handle, user_params_for_specific_ax
 %     - open_exported_file: (false) If true, attempts to open the file after export.
 %     - renderer: ('painters') Renderer to use. For `print`: 'painters', 'opengl', 'vector'. `exportgraphics` usually manages this automatically or via content type.
 %     - ui: (false) If true and `exportgraphics` is available (R2020a+), it's preferred. Otherwise, `print` is used. Set to false to force `print -noui`.
-%   - panel_labeling: (struct) Settings for automated panel labeling.
-%     - enabled: (false) Set to true to enable panel labels.
-%     - style: ('A') Label style: 'A','a','a)','I','i','1'.
-%     - position: ('northwest_inset') e.g., 'northwest_inset', 'northeast_inset', 'southwest_inset', 'southeast_inset'.
-%     - font_scale_factor: (1.0) Font size scale factor relative to title font size.
-%     - font_weight: ('bold') Font weight for panel labels.
-%     - x_offset: (0.02) Normalized X offset for label position.
-%     - y_offset: (0.02) Normalized Y offset for label position.
-%     - text_color: ([]) Label text color (inherits from global text_color if empty).
-%     - font_name: ([]) Label font name (inherits from global font_name if empty).
 %   - stats_overlay: (struct) Settings for statistical data overlay.
 %     - enabled: (false) Set to true to enable statistical overlay.
 %     - statistics: ({'mean', 'std'}) Cell array of stats to display, e.g., 'min', 'max', 'N', 'median', 'sum'.
@@ -174,17 +163,6 @@ default_params.export_settings.ui = false; % If true, tries to use exportgraphic
 
 default_params.style_preset = 'default';
 
-% Panel Labeling (as described in help, though not fully implemented in processing loop)
-default_params.panel_labeling.enabled = false;
-default_params.panel_labeling.style = 'A';
-default_params.panel_labeling.position = 'northwest_inset';
-default_params.panel_labeling.font_scale_factor = 1.0;
-default_params.panel_labeling.font_weight = 'bold';
-default_params.panel_labeling.x_offset = 0.02;
-default_params.panel_labeling.y_offset = 0.02;
-default_params.panel_labeling.text_color = [];
-default_params.panel_labeling.font_name = [];
-
 % Basic Statistical Overlay
 default_params.stats_overlay.enabled = false;
 default_params.stats_overlay.statistics = {'mean', 'std'}; % Cell array: 'mean', 'std', 'min', 'max', 'N', 'median', 'sum'
@@ -202,60 +180,59 @@ default_params.view_preset_3d = 'none'; % Options: 'none', 'iso', 'top', 'front'
 % --- Parameter Parsing and Initialization ---
 base_defaults = default_params; % Store original defaults
 params = base_defaults; % Initialize params
-target_axes = [];
 user_provided_params_struct = struct();
 fig_handle_internal = []; % Internal variable for figure handle
 
 if nargin == 0
     fig_handle_internal = gcf;
+    % user_provided_params_struct remains empty, so base_defaults will be used.
 elseif nargin == 1
-    arg1 = user_params_or_axes_handle;
-    if is_valid_axes_handle_array(arg1)
-        target_axes = arg1;
-        if ~isempty(target_axes) && isvalid(target_axes(1))
-            fig_handle_internal = ancestor(target_axes(1), 'figure');
-        else
-            % Use base_defaults for logging as params might not be fully set or valid yet
-            log_message(base_defaults, 'Provided axes handles are invalid or empty.', 0, 'Error'); return;
-        end
-    elseif isstruct(arg1)
+    arg1 = params_or_fig_handle; % Rename for clarity
+    if isstruct(arg1)
         user_provided_params_struct = arg1;
-        fig_handle_internal = gcf;
-    elseif isgraphics(arg1, 'figure') % Syntax: beautify_current_figure(fig_handle)
-        fig_handle_internal = arg1;
-    else
-        log_message(base_defaults, 'Invalid first argument. Expected figure handle, axes handle(s), or a parameter struct.', 0, 'Error'); return;
-    end
-elseif nargin == 2
-    arg1 = user_params_or_axes_handle;
-    arg2 = user_params_for_specific_axes;
-    if is_valid_axes_handle_array(arg1)
-        if ~isstruct(arg2)
-            log_message(base_defaults, 'Invalid second argument when first is axes. Expected a parameter struct.', 0, 'Error'); return;
-        end
-        target_axes = arg1;
-        user_provided_params_struct = arg2;
-        if ~isempty(target_axes) && isvalid(target_axes(1))
-            fig_handle_internal = ancestor(target_axes(1), 'figure');
+        % Check for figure_handle within the struct
+        if isfield(user_provided_params_struct, 'figure_handle')
+            fh_from_struct = user_provided_params_struct.figure_handle;
+            if ishghandle(fh_from_struct) && isgraphics(fh_from_struct, 'figure') && isvalid(fh_from_struct)
+                fig_handle_internal = fh_from_struct;
+                % Remove figure_handle from struct to avoid unknown parameter warning
+                user_provided_params_struct = rmfield(user_provided_params_struct, 'figure_handle');
+                log_message(base_defaults, 'Using figure handle provided within params_struct.', 2, 'Info');
+            else
+                % Log warning if figure_handle is present but invalid
+                if isfield(user_provided_params_struct, 'figure_handle') % Only log if it was actually there
+                    log_message(base_defaults, 'Invalid or non-figure handle provided in params_struct.figure_handle. Defaulting to gcf.', 1, 'Warning');
+                end
+                fig_handle_internal = gcf; % Default to gcf if handle in struct is invalid
+            end
         else
-            log_message(base_defaults, 'Provided axes handles are invalid or empty for two-argument syntax.', 0, 'Error'); return;
+            % No figure_handle in struct, default to gcf
+            fig_handle_internal = gcf;
         end
-    elseif isgraphics(arg1, 'figure') % Syntax: beautify_current_figure(fig_handle, params_struct)
-        if ~isstruct(arg2)
-            log_message(base_defaults, 'Invalid second argument when first is figure. Expected a parameter struct.', 0, 'Error'); return;
-        end
+    elseif ishghandle(arg1) && isgraphics(arg1, 'figure') && isvalid(arg1) % Check if it's a valid figure handle
         fig_handle_internal = arg1;
-        user_provided_params_struct = arg2;
+        % user_provided_params_struct remains empty, so base_defaults will be used for this figure.
     else
-        log_message(base_defaults, 'Invalid first argument for two-argument syntax. Expected figure handle or axes handle(s).', 0, 'Error'); return;
+        log_message(base_defaults, 'Invalid argument. Expected a parameter struct or a valid figure handle.', 0, 'Error'); 
+        return;
     end
-else % nargin > 2
-    log_message(base_defaults, 'Too many input arguments.', 0, 'Error'); return;
+else % nargin > 1
+    log_message(base_defaults, 'Too many input arguments. Expected 0 or 1 argument (params_struct or figure_handle).', 0, 'Error'); 
+    return;
 end
 
 % Validate fig_handle_internal and assign to 'fig'
-if isempty(fig_handle_internal) || ~isvalid(fig_handle_internal)
-    log_message(base_defaults, 'No valid figure found or specified to beautify.', 0, 'Error'); return;
+if isempty(fig_handle_internal) 
+    % This case should ideally be caught by gcf errors if no figures exist,
+    % or by the validation of a provided handle. Adding a fallback check.
+    log_message(base_defaults, 'No figure found or specified. Attempting gcf one last time or erroring.', 1, 'Warning');
+    fig_handle_internal = gcf; % Try gcf again
+    if isempty(fig_handle_internal)
+        log_message(base_defaults, 'No valid figure available (gcf is empty). Cannot proceed.', 0, 'Error'); return;
+    end
+end
+if ~isvalid(fig_handle_internal) % Check validity one last time
+     log_message(base_defaults, 'The determined figure handle is invalid. Cannot proceed.', 0, 'Error'); return;
 end
 fig = fig_handle_internal; % Use 'fig' consistently hereafter
 
@@ -585,7 +562,7 @@ function params = validate_cell_array_of_strings_field(params, base_defaults, st
 end
 
 % Validate top-level structure types first
-sub_struct_names = {'export_settings', 'stats_overlay', 'panel_labeling'};
+sub_struct_names = {'export_settings', 'stats_overlay'}; % panel_labeling removed
 for i = 1:length(sub_struct_names)
     ss_name = sub_struct_names{i};
     if isfield(params, ss_name) % It should be, from base_defaults
@@ -619,18 +596,7 @@ if isfield(user_provided_params_struct, 'stats_overlay') && isstruct(user_provid
        end
    end
 end
-% Similar merge for panel_labeling
-if isfield(user_provided_params_struct, 'panel_labeling') && isstruct(user_provided_params_struct.panel_labeling)
-   user_pl_fields = fieldnames(user_provided_params_struct.panel_labeling);
-   for k_pl = 1:length(user_pl_fields)
-       field_to_merge = user_pl_fields{k_pl};
-       if isfield(base_defaults.panel_labeling, field_to_merge)
-           params.panel_labeling.(field_to_merge) = user_provided_params_struct.panel_labeling.(field_to_merge);
-       else
-           log_message(params, sprintf('Unknown field in user-provided panel_labeling: "%s". This field will be ignored.', field_to_merge), 1, 'Warning');
-       end
-   end
-end
+% panel_labeling merge block removed
 log_message(params, 'Sub-struct field merging complete.', 2, 'Info');
 
 
@@ -701,38 +667,7 @@ else
     if isfield(base_defaults, 'stats_overlay'); params.stats_overlay = base_defaults.stats_overlay; end
 end
 
-% panel_labeling validation (similar to stats_overlay)
-if isstruct(params.panel_labeling)
-    default_pl_fields = fieldnames(base_defaults.panel_labeling);
-    for k_plf = 1:length(default_pl_fields)
-        fn = default_pl_fields{k_plf};
-        switch fn
-            case {'font_scale_factor', 'x_offset', 'y_offset'}
-                params = validate_numeric_scalar_field(params, base_defaults, 'panel_labeling', fn, false, false, false); % Allow any scalar
-            case 'enabled'; params = validate_logical_field(params, base_defaults, 'panel_labeling', fn);
-            case {'style', 'position', 'font_weight'} % String fields
-                if ~isfield(params.panel_labeling, fn) || ~ischar(params.panel_labeling.(fn))
-                    log_message(params, sprintf('Field panel_labeling.%s is missing or not a string. Resetting to default (%s).', fn, format_param_value_for_log(base_defaults.panel_labeling.(fn))),1,'Warning');
-                    params.panel_labeling.(fn) = base_defaults.panel_labeling.(fn);
-                end
-            case {'text_color', 'font_name'} % Color/font name (can be empty)
-                 if ~isfield(params.panel_labeling, fn)
-                     params.panel_labeling.(fn) = base_defaults.panel_labeling.(fn);
-                 end
-            otherwise
-                 log_message(params, sprintf('Unhandled default field in panel_labeling: %s', fn), 1, 'Warning');
-        end
-    end
-    current_pl_fields = fieldnames(params.panel_labeling);
-    extra_pl_fields = setdiff(current_pl_fields, default_pl_fields);
-    for k_ex = 1:length(extra_pl_fields)
-        log_message(params, sprintf('Unknown field in params.panel_labeling: "%s". Ignored.', extra_pl_fields{k_ex}), 1, 'Warning');
-    end
-else
-    log_message(params, '''params.panel_labeling'' is unexpectedly not a struct before detailed field validation.', 0, 'Error');
-    if isfield(base_defaults, 'panel_labeling'); params.panel_labeling = base_defaults.panel_labeling; end
-end
-
+% panel_labeling validation block removed
 
 log_message(params, 'Detailed sub-struct FIELD validation complete.', 2, 'Info');
 % --- END Sub-Struct Type and Field Validation ---
@@ -786,8 +721,9 @@ end
 params.axis_line_width = params.plot_line_width * params.axis_to_plot_linewidth_ratio;
 params.base_font_size = params.base_font_size * params.global_font_scale_factor; % Effective base font size
 
-% --- Figure-Level Adjustments (only if processing whole figure) ---
-if isempty(target_axes) && ~isempty(params.figure_background_color)
+% --- Figure-Level Adjustments ---
+% This section now always applies as we are always processing a whole figure.
+if ~isempty(params.figure_background_color)
     try
         current_fig_color = get(fig, 'Color');
         if ~isequal(current_fig_color, params.figure_background_color)
@@ -809,42 +745,31 @@ catch ME_palette
 end
 
 % --- Main Processing Logic ---
-if ~isempty(target_axes)
-    log_message(params, sprintf('Processing %d specified axes...', numel(target_axes)), 1, 'Info');
-    for i = 1:numel(target_axes)
-        ax = target_axes(i);
-        if isvalid(ax)
-            parent_layout = ancestor(ax, 'matlab.graphics.layout.TiledChartLayout');
-            num_to_scale_by = get_scale_basis_for_axes(ax, parent_layout, params);
-            scale_factor = get_scale_factor(num_to_scale_by, params.scaling_map, params.min_scale_factor, params.max_scale_factor);
-            log_message(params, sprintf('  Processing Axes (Tag: %s, Type: %s). Scale: %.2f', ax.Tag, class(ax), scale_factor), 2, 'Info');
-            beautify_single_axes(ax, params, scale_factor, i);
-        else
-            log_message(params, sprintf('  Skipping invalid axes handle at index %d.', i), 1, 'Warning');
-        end
-    end
-else % Process whole figure
-    % Handle tabs if present
-    tab_groups = findobj(fig, 'Type', 'uitabgroup', '-depth', 1);
-    if isempty(tab_groups)
-        log_message(params, 'Processing figure (no tabs found)...', 1, 'Info');
-        process_container(fig, params);
-    else
-        for tg_idx = 1:length(tab_groups)
-            current_tab_group = tab_groups(tg_idx);
-            if ~isvalid(current_tab_group); continue; end
-            tabs = current_tab_group.Children;
-            for t_idx = 1:length(tabs)
-                current_tab = tabs(t_idx);
-                if ~isvalid(current_tab) || ~isprop(current_tab, 'Title'); continue; end
-                tab_title_for_disp = ['Tab ' num2str(t_idx)];
-                if ~isempty(current_tab.Title); tab_title_for_disp = current_tab.Title; end
-                log_message(params, sprintf('Processing %s...', tab_title_for_disp), 1, 'Info');
-                process_container(current_tab, params);
-            end
+% The logic now always processes the whole figure 'fig'.
+% The distinction for target_axes is removed.
+
+% Handle tabs if present within the figure 'fig'
+tab_groups = findobj(fig, 'Type', 'uitabgroup', '-depth', 1);
+if isempty(tab_groups)
+    log_message(params, 'Processing figure (no tabs found)...', 1, 'Info');
+    process_container(fig, params);
+else
+    for tg_idx = 1:length(tab_groups)
+        current_tab_group = tab_groups(tg_idx);
+        if ~isvalid(current_tab_group); continue; end
+        tabs = current_tab_group.Children;
+        for t_idx = 1:length(tabs)
+            current_tab = tabs(t_idx);
+            if ~isvalid(current_tab) || ~isprop(current_tab, 'Title'); continue; end
+            tab_title_for_disp = ['Tab ' num2str(t_idx)];
+            if ~isempty(current_tab.Title); tab_title_for_disp = current_tab.Title; end
+            log_message(params, sprintf('Processing %s...', tab_title_for_disp), 1, 'Info');
+            process_container(current_tab, params);
         end
     end
 end
+% Note: The 'else % Process whole figure' that previously wrapped this block
+% has been removed, as the function now always processes a whole figure.
 
 % --- Export Figure (if enabled) ---
 if params.export_settings.enabled
@@ -975,32 +900,8 @@ drawnow; % Ensure all changes are rendered
 end
 
 % --- Helper Function: Validate Axes Handle Array ---
-function tf = is_valid_axes_handle_array(h_array)
-if isempty(h_array)
-    tf = true; 
-    return;
-end
-
-% Check if all elements are graphics handles
-if ~all(ishghandle(h_array)) % ishghandle is more robust for graphics
-    tf = false;
-    return;
-end
-
-% Check if all handles are valid (not deleted)
-if ~all(isvalid(h_array))
-    tf = false;
-    return;
-end
-
-% Check if all valid handles are of the correct type (Axes or PolarAxes)
-is_correct_type = arrayfun(@(h) isa(h, 'matlab.graphics.axis.Axes') || isa(h, 'matlab.graphics.axis.PolarAxes'), h_array);
-if ~all(is_correct_type)
-    tf = false;
-    return;
-end
-tf = true;
-end
+% This function is no longer needed as direct axes array input is removed.
+% function tf = is_valid_axes_handle_array(h_array) ... (entire function removed)
 
 % --- Helper Function: Get Scale Basis for an Axes ---
 function num_to_scale_by = get_scale_basis_for_axes(ax_ref, parent_layout, params)
