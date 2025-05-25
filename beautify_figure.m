@@ -347,7 +347,7 @@ end
 log_message(params, 'Performing critical parameter validation...', 2, 'Info');
 
 % Helper function to format value for logging
-function val_str = format_param_value_for_log(val)
+function val_str = beautify_fig_format_param_value_for_log(val)
     if isnumeric(val)
         if isscalar(val)
             val_str = num2str(val);
@@ -370,7 +370,7 @@ function val_str = format_param_value_for_log(val)
     elseif iscell(val)
         val_str = '{';
         for k_cell = 1:min(5,numel(val)) % Show first few elements
-            val_str = [val_str format_param_value_for_log(val{k_cell})];
+            val_str = [val_str beautify_fig_format_param_value_for_log(val{k_cell})];
             if k_cell < min(5,numel(val)); val_str = [val_str ', ']; end
         end
         if numel(val) > 5; val_str = [val_str, '...']; end
@@ -396,11 +396,21 @@ for k_nsp = 1:length(numeric_scalar_params_to_validate)
     param_name = numeric_scalar_params_to_validate{k_nsp};
     current_val = params.(param_name);
     if ~isnumeric(current_val) || ~isscalar(current_val) || ~isreal(current_val) || isnan(current_val)
-        val_str = format_param_value_for_log(current_val);
+        val_str = beautify_fig_format_param_value_for_log(current_val);
         log_message(params, sprintf('Invalid value for %s: %s. Must be a real numeric scalar. Resetting to default (%s).', ...
-            param_name, val_str, format_param_value_for_log(base_defaults.(param_name))), 1, 'Warning');
+            param_name, val_str, beautify_fig_format_param_value_for_log(base_defaults.(param_name))), 1, 'Warning');
         params.(param_name) = base_defaults.(param_name);
     end
+end
+
+% font_name validation
+current_font_name_val = params.font_name;
+if ~(ischar(current_font_name_val) && (isvector(current_font_name_val) || isempty(current_font_name_val))) && ...
+   ~(isstring(current_font_name_val) && isscalar(current_font_name_val))
+    val_str = beautify_fig_format_param_value_for_log(current_font_name_val); % Uses existing helper
+    log_message(params, sprintf('Invalid type for font_name: %s. Must be a character string or string scalar. Resetting to default (%s).', ...
+        val_str, beautify_fig_format_param_value_for_log(base_defaults.font_name)), 1, 'Warning');
+    params.font_name = base_defaults.font_name;
 end
 
 % String enumerated parameters to validate
@@ -408,16 +418,16 @@ end
 current_theme_val = params.theme;
 valid_themes = {'light', 'dark'};
 if ~ischar(current_theme_val) || ~isvector(current_theme_val) || isempty(current_theme_val)
-    val_str = format_param_value_for_log(current_theme_val);
+    val_str = beautify_fig_format_param_value_for_log(current_theme_val);
     log_message(params, sprintf('Invalid type for theme: %s. Must be a character string. Resetting to default (%s).', ...
-        val_str, format_param_value_for_log(base_defaults.theme)), 1, 'Warning');
+        val_str, beautify_fig_format_param_value_for_log(base_defaults.theme)), 1, 'Warning');
     params.theme = base_defaults.theme;
 else
     match_idx_theme = find(strcmpi(current_theme_val, valid_themes), 1);
     if isempty(match_idx_theme)
-        val_str = format_param_value_for_log(current_theme_val);
+        val_str = beautify_fig_format_param_value_for_log(current_theme_val);
         log_message(params, sprintf('Invalid value for theme: %s. Allowed: %s. Resetting to default (%s).', ...
-            val_str, strjoin(valid_themes, ', '), format_param_value_for_log(base_defaults.theme)), 1, 'Warning');
+            val_str, strjoin(valid_themes, ', '), beautify_fig_format_param_value_for_log(base_defaults.theme)), 1, 'Warning');
         params.theme = base_defaults.theme;
     else
         params.theme = valid_themes{match_idx_theme}; % Ensure canonical (lowercase) form
@@ -428,16 +438,16 @@ end
 current_grid_density_val = params.grid_density;
 valid_grid_densities = {'normal', 'major_only', 'none'};
 if ~ischar(current_grid_density_val) || ~isvector(current_grid_density_val) || isempty(current_grid_density_val)
-    val_str = format_param_value_for_log(current_grid_density_val);
+    val_str = beautify_fig_format_param_value_for_log(current_grid_density_val);
     log_message(params, sprintf('Invalid type for grid_density: %s. Must be a character string. Resetting to default (%s).', ...
-        val_str, format_param_value_for_log(base_defaults.grid_density)), 1, 'Warning');
+        val_str, beautify_fig_format_param_value_for_log(base_defaults.grid_density)), 1, 'Warning');
     params.grid_density = base_defaults.grid_density;
 else
     match_idx_grid = find(strcmpi(current_grid_density_val, valid_grid_densities), 1);
     if isempty(match_idx_grid)
-        val_str = format_param_value_for_log(current_grid_density_val);
+        val_str = beautify_fig_format_param_value_for_log(current_grid_density_val);
         log_message(params, sprintf('Invalid value for grid_density: %s. Allowed: %s. Resetting to default (%s).', ...
-            val_str, strjoin(valid_grid_densities, ', '), format_param_value_for_log(base_defaults.grid_density)), 1, 'Warning');
+            val_str, strjoin(valid_grid_densities, ', '), beautify_fig_format_param_value_for_log(base_defaults.grid_density)), 1, 'Warning');
         params.grid_density = base_defaults.grid_density;
     else
         params.grid_density = valid_grid_densities{match_idx_grid}; % Ensure canonical form
@@ -448,16 +458,16 @@ end
 current_axis_box_style_val = params.axis_box_style;
 valid_axis_box_styles = {'on', 'off', 'left-bottom'};
 if ~ischar(current_axis_box_style_val) || ~isvector(current_axis_box_style_val) || isempty(current_axis_box_style_val)
-    val_str = format_param_value_for_log(current_axis_box_style_val);
+    val_str = beautify_fig_format_param_value_for_log(current_axis_box_style_val);
     log_message(params, sprintf('Invalid type for axis_box_style: %s. Must be a character string. Resetting to default (%s).', ...
-        val_str, format_param_value_for_log(base_defaults.axis_box_style)), 1, 'Warning');
+        val_str, beautify_fig_format_param_value_for_log(base_defaults.axis_box_style)), 1, 'Warning');
     params.axis_box_style = base_defaults.axis_box_style;
 else
     match_idx_box = find(strcmpi(current_axis_box_style_val, valid_axis_box_styles), 1);
     if isempty(match_idx_box)
-        val_str = format_param_value_for_log(current_axis_box_style_val);
+        val_str = beautify_fig_format_param_value_for_log(current_axis_box_style_val);
         log_message(params, sprintf('Invalid value for axis_box_style: %s. Allowed: %s. Resetting to default (%s).', ...
-            val_str, strjoin(valid_axis_box_styles, ', '), format_param_value_for_log(base_defaults.axis_box_style)), 1, 'Warning');
+            val_str, strjoin(valid_axis_box_styles, ', '), beautify_fig_format_param_value_for_log(base_defaults.axis_box_style)), 1, 'Warning');
         params.axis_box_style = base_defaults.axis_box_style;
     else
         params.axis_box_style = valid_axis_box_styles{match_idx_box}; % Ensure canonical form
@@ -475,7 +485,7 @@ function params = validate_numeric_scalar_field(params, base_defaults, struct_na
     % Check if field exists in current params, if not, it means user struct didn't have it, so use default
     if ~isfield(params.(struct_name), field_name)
         log_message(params, sprintf('Field %s.%s not found in user/preset parameters. Using default value (%s).', ...
-            struct_name, field_name, format_param_value_for_log(default_value)), 2, 'Info');
+            struct_name, field_name, beautify_fig_format_param_value_for_log(default_value)), 2, 'Info');
         params.(struct_name).(field_name) = default_value;
         current_value = default_value; % proceed with validation of default
     else
@@ -494,13 +504,13 @@ function params = validate_numeric_scalar_field(params, base_defaults, struct_na
     end
 
     if ~valid
-        val_str = format_param_value_for_log(current_value);
+        val_str = beautify_fig_format_param_value_for_log(current_value);
         criteria_str = 'real numeric scalar';
         if require_integer; criteria_str = [criteria_str ', integer']; end
         if allow_non_negative; criteria_str = [criteria_str ', non-negative']; end
         if allow_positive; criteria_str = [criteria_str ', positive']; end
         log_message(params, sprintf('Invalid value for %s.%s: %s. Must be a %s. Resetting to default (%s).', ...
-            struct_name, field_name, val_str, criteria_str, format_param_value_for_log(default_value)), 1, 'Warning');
+            struct_name, field_name, val_str, criteria_str, beautify_fig_format_param_value_for_log(default_value)), 1, 'Warning');
         params.(struct_name).(field_name) = default_value;
     end
 end
@@ -510,7 +520,7 @@ function params = validate_logical_field(params, base_defaults, struct_name, fie
     default_value = base_defaults.(struct_name).(field_name);
     if ~isfield(params.(struct_name), field_name)
         log_message(params, sprintf('Field %s.%s not found in user/preset parameters. Using default value (%s).', ...
-            struct_name, field_name, format_param_value_for_log(default_value)), 2, 'Info');
+            struct_name, field_name, beautify_fig_format_param_value_for_log(default_value)), 2, 'Info');
         params.(struct_name).(field_name) = default_value;
         current_value = default_value;
     else
@@ -522,9 +532,9 @@ function params = validate_logical_field(params, base_defaults, struct_name, fie
     elseif isnumeric(current_value) && isscalar(current_value) && (current_value == 0 || current_value == 1)
         params.(struct_name).(field_name) = logical(current_value); % Cast to logical
     else
-        val_str = format_param_value_for_log(current_value);
+        val_str = beautify_fig_format_param_value_for_log(current_value);
         log_message(params, sprintf('Invalid value for %s.%s: %s. Must be logical (true/false) or numeric (0/1). Resetting to default (%s).', ...
-            struct_name, field_name, val_str, format_param_value_for_log(default_value)), 1, 'Warning');
+            struct_name, field_name, val_str, beautify_fig_format_param_value_for_log(default_value)), 1, 'Warning');
         params.(struct_name).(field_name) = default_value;
     end
 end
@@ -534,7 +544,7 @@ function params = validate_cell_array_of_strings_field(params, base_defaults, st
     default_value = base_defaults.(struct_name).(field_name);
     if ~isfield(params.(struct_name), field_name)
         log_message(params, sprintf('Field %s.%s not found in user/preset parameters. Using default value (%s).', ...
-            struct_name, field_name, format_param_value_for_log(default_value)), 2, 'Info');
+            struct_name, field_name, beautify_fig_format_param_value_for_log(default_value)), 2, 'Info');
         params.(struct_name).(field_name) = default_value;
         current_value = default_value;
     else
@@ -554,9 +564,9 @@ function params = validate_cell_array_of_strings_field(params, base_defaults, st
     end
 
     if ~valid
-        val_str = format_param_value_for_log(current_value);
+        val_str = beautify_fig_format_param_value_for_log(current_value);
         log_message(params, sprintf('Invalid value for %s.%s: %s. Must be a cell array of character row vectors. Resetting to default (%s).', ...
-            struct_name, field_name, val_str, format_param_value_for_log(default_value)), 1, 'Warning');
+            struct_name, field_name, val_str, beautify_fig_format_param_value_for_log(default_value)), 1, 'Warning');
         params.(struct_name).(field_name) = default_value;
     end
 end
@@ -567,7 +577,7 @@ for i = 1:length(sub_struct_names)
     ss_name = sub_struct_names{i};
     if isfield(params, ss_name) % It should be, from base_defaults
         if ~isstruct(params.(ss_name)) % If user overwrote with non-struct, or preset was bad
-            val_str = format_param_value_for_log(params.(ss_name));
+            val_str = beautify_fig_format_param_value_for_log(params.(ss_name));
             log_message(params, sprintf('Parameter ''%s'' is not a struct (type: %s). Reverting to default %s settings.', ...
                 ss_name, val_str, ss_name), 1, 'Warning');
             params.(ss_name) = base_defaults.(ss_name);
@@ -615,7 +625,7 @@ if isstruct(params.export_settings) % Should be true due to earlier type check
             case {'enabled', 'open_exported_file', 'ui'}; params = validate_logical_field(params, base_defaults, 'export_settings', fn);
             case {'filename', 'format', 'renderer'} % String fields, specific validation if needed
                 if ~isfield(params.export_settings, fn) || ~ischar(params.export_settings.(fn))
-                    log_message(params, sprintf('Field export_settings.%s is missing or not a string. Resetting to default (%s).', fn, format_param_value_for_log(base_defaults.export_settings.(fn))), 1, 'Warning');
+                    log_message(params, sprintf('Field export_settings.%s is missing or not a string. Resetting to default (%s).', fn, beautify_fig_format_param_value_for_log(base_defaults.export_settings.(fn))), 1, 'Warning');
                     params.export_settings.(fn) = base_defaults.export_settings.(fn);
                 end
             otherwise % Unknown field in defaults, internal issue
@@ -645,14 +655,36 @@ if isstruct(params.stats_overlay)
             case 'statistics'; params = validate_cell_array_of_strings_field(params, base_defaults, 'stats_overlay', fn);
             case {'position', 'target_plot_handle_tag'} % String fields
                 if ~isfield(params.stats_overlay, fn) || ~ischar(params.stats_overlay.(fn))
-                    log_message(params, sprintf('Field stats_overlay.%s is missing or not a string. Resetting to default (%s).', fn, format_param_value_for_log(base_defaults.stats_overlay.(fn))), 1, 'Warning');
+                    log_message(params, sprintf('Field stats_overlay.%s is missing or not a string. Resetting to default (%s).', fn, beautify_fig_format_param_value_for_log(base_defaults.stats_overlay.(fn))), 1, 'Warning');
                     params.stats_overlay.(fn) = base_defaults.stats_overlay.(fn);
                 end
-            case {'text_color', 'font_name', 'background_color', 'edge_color'} % Color/font name (can be empty)
+            case 'font_name' % Specifically for stats_overlay.font_name
+                if ~isfield(params.stats_overlay, fn)
+                    params.stats_overlay.(fn) = base_defaults.stats_overlay.(fn); % Add if missing
+                else % Field is present, validate it
+                    val = params.stats_overlay.(fn);
+                    if ~isempty(val) && ~(ischar(val) && (isvector(val) || isempty(val))) && ...
+                       ~(isstring(val) && isscalar(val))
+                        log_message(params, sprintf('Invalid type for stats_overlay.font_name: %s. Must be char/string or empty. Resetting to default empty value.', beautify_fig_format_param_value_for_log(val)), 1, 'Warning');
+                        params.stats_overlay.(fn) = base_defaults.stats_overlay.(fn); % Reset to default (which is [])
+                    end
+                end
+            case {'text_color', 'background_color', 'edge_color'} % Color specs (can be empty, char, or numeric RGB)
                 if ~isfield(params.stats_overlay, fn)
                      params.stats_overlay.(fn) = base_defaults.stats_overlay.(fn); % Add if missing
+                else % Field is present, validate it
+                    val = params.stats_overlay.(fn);
+                    is_valid_color_spec = false;
+                    if isempty(val); is_valid_color_spec = true; end % [] is valid, means inherit or 'none'
+                    if (ischar(val) && (isvector(val) || isempty(val))); is_valid_color_spec = true; end % 'red', 'none', 'figure', 'axes'
+                    if (isstring(val) && isscalar(val)); is_valid_color_spec = true; end % "red", "none", etc.
+                    if isnumeric(val) && (isempty(val) || (isvector(val) && length(val) == 3 && all(val >= 0 & val <= 1))); is_valid_color_spec = true; end % RGB triplet [0-1] or []
+
+                    if ~is_valid_color_spec
+                        log_message(params, sprintf('Invalid type/value for stats_overlay.%s: %s. Must be valid color spec (char, string, 1x3 RGB [0-1], or empty). Resetting to default empty value.', fn, beautify_fig_format_param_value_for_log(val)), 1, 'Warning');
+                        params.stats_overlay.(fn) = base_defaults.stats_overlay.(fn); % Reset to default (which is [])
+                    end
                 end
-                % Further validation for color specs could be added if complex
             otherwise
                 log_message(params, sprintf('Unhandled default field in stats_overlay: %s', fn), 1, 'Warning');
         end
@@ -1703,7 +1735,10 @@ try
                 safe_set(params, leg_handle_to_use.Title, 'String', '', 'Visible', 'off'); 
             end
         end
-        safe_set(params, leg_handle_to_use, leg_props);
+        
+        % Convert struct to name-value pairs for safe_set
+        nv_pairs_for_legend = local_struct_to_nv_pairs(leg_props);
+        safe_set(params, leg_handle_to_use, nv_pairs_for_legend{:});
 
         if params.interactive_legend && isprop(leg_handle_to_use, 'ItemHitFcn') && verLessThan('matlab','9.7') == 0 % R2019b+
             try
@@ -1734,6 +1769,16 @@ try
 catch ME_legend
     log_message(params, sprintf('Error processing legend for Axes (Tag: %s): %s (Line: %d)', ax.Tag, ME_legend.message, ME_legend.stack(1).line), 1, 'Warning');
 end
+end
+
+% --- Local Helper Function: Convert struct to name-value pairs ---
+function nv_pairs = local_struct_to_nv_pairs(s)
+    fields = fieldnames(s);
+    nv_pairs = cell(1, 2 * numel(fields));
+    for i_local_struct = 1:numel(fields) % Renamed loop variable
+        nv_pairs{2*i_local_struct-1} = fields{i_local_struct};
+        nv_pairs{2*i_local_struct} = s.(fields{i_local_struct});
+    end
 end
 
 % --- Helper Function: Beautify Colorbar ---
@@ -2273,7 +2318,10 @@ function apply_stats_overlay(ax, params, scale_factor)
     full_stats_str = strjoin(stats_str_lines, '\newline');
 
     stats_font_name = so_params.font_name; if isempty(stats_font_name); stats_font_name = params.font_name; end
-    stats_text_color = so_params.text_color; if isempty(stats_text_color); stats_text_color = params.text_color; end
+    stats_text_color = so_params.text_color; 
+    if isempty(stats_text_color) || (ischar(stats_text_color) && isempty(strtrim(stats_text_color))) % Also treat blank string as empty for color
+        stats_text_color = params.text_color; 
+    end
 
     % Base font size for stats is derived from scaled label font size
     base_axes_lfs = round(params.base_font_size * params.label_scale * scale_factor);
@@ -2309,22 +2357,24 @@ function apply_stats_overlay(ax, params, scale_factor)
     bg_color_final = 'none'; 
     edge_color_final = 'none';
 
-    if ~isempty(so_params.background_color)
+    if ~isempty(so_params.background_color) && ~(ischar(so_params.background_color) && isempty(strtrim(so_params.background_color)))
         bg_color_val = so_params.background_color;
         if ischar(bg_color_val) && strcmpi(bg_color_val, 'figure')
             fig_h = ancestor(ax,'figure');
             if ~isempty(fig_h) && isvalid(fig_h); bg_color_final = get(fig_h,'Color'); end
-        elseif isnumeric(bg_color_val) || (ischar(bg_color_val) && ~strcmpi(bg_color_val,'none'))
+        elseif isnumeric(bg_color_val) || (ischar(bg_color_val) && ~strcmpi(bg_color_val,'none')) % Check it's not 'none' before assigning
             bg_color_final = bg_color_val;
+        % If bg_color_val was '' (and not just spaces), bg_color_final remains 'none'
         end
     end
     
-    if ~isempty(so_params.edge_color)
+    if ~isempty(so_params.edge_color) && ~(ischar(so_params.edge_color) && isempty(strtrim(so_params.edge_color)))
         edge_color_val = so_params.edge_color;
         if ischar(edge_color_val) && strcmpi(edge_color_val, 'axes')
             edge_color_final = params.axis_color; % Use the themed axis color
-        elseif isnumeric(edge_color_val) || (ischar(edge_color_val) && ~strcmpi(edge_color_val,'none'))
+        elseif isnumeric(edge_color_val) || (ischar(edge_color_val) && ~strcmpi(edge_color_val,'none')) % Check it's not 'none'
             edge_color_final = edge_color_val;
+        % If edge_color_val was '' (and not just spaces), edge_color_final remains 'none'
         end
     end
 
@@ -2341,6 +2391,36 @@ function apply_stats_overlay(ax, params, scale_factor)
     % Remove any pre-existing stats overlay from this function for this axes
     old_stats_text = findobj(ax, 'Type', 'text', 'Tag', 'BeautifyFig_StatsOverlay');
     if ~isempty(old_stats_text); delete(old_stats_text); end
+
+    % --- Start Debugging Logs for text_props ---
+    log_message(params, sprintf('Stats Overlay Debug: full_stats_str class: %s, value: "%s"', class(full_stats_str), strrep(full_stats_str,newline,'\n')), 2, 'Debug');
+    log_message(params, sprintf('Stats Overlay Debug: stats_font_name class: %s, value: "%s"', class(stats_font_name), stats_font_name), 2, 'Debug');
+    log_message(params, sprintf('Stats Overlay Debug: stats_fs class: %s, value: %s', class(stats_fs), beautify_fig_format_param_value_for_log(stats_fs)), 2, 'Debug');
+    log_message(params, sprintf('Stats Overlay Debug: stats_text_color class: %s, value: %s', class(stats_text_color), beautify_fig_format_param_value_for_log(stats_text_color)), 2, 'Debug');
+    log_message(params, sprintf('Stats Overlay Debug: horz_align class: %s, value: "%s"', class(horz_align), horz_align), 2, 'Debug');
+    log_message(params, sprintf('Stats Overlay Debug: vert_align class: %s, value: "%s"', class(vert_align), vert_align), 2, 'Debug');
+
+    if exist('has_background','var') && has_background
+        log_message(params, sprintf('Stats Overlay Debug: bg_color_final class: %s, value: %s', class(bg_color_final), beautify_fig_format_param_value_for_log(bg_color_final)), 2, 'Debug');
+    else
+        log_message(params, 'Stats Overlay Debug: No BackgroundColor being set or bg_color_final is ''none''.', 2, 'Debug');
+    end
+
+    if exist('has_edge','var') && has_edge
+        log_message(params, sprintf('Stats Overlay Debug: edge_color_final class: %s, value: %s', class(edge_color_final), beautify_fig_format_param_value_for_log(edge_color_final)), 2, 'Debug');
+    else
+        log_message(params, 'Stats Overlay Debug: No EdgeColor being set or edge_color_final is ''none''.', 2, 'Debug');
+    end
+
+    if exist('has_background','var') && exist('has_edge','var') && (has_background || has_edge)
+        margin_val = stats_fs*0.3; % This is how it's calculated for text_props
+        log_message(params, sprintf('Stats Overlay Debug: Margin class: %s, value: %s', class(margin_val), beautify_fig_format_param_value_for_log(margin_val)), 2, 'Debug');
+    else
+        log_message(params, 'Stats Overlay Debug: No Margin being set.', 2, 'Debug');
+    end
+    
+    log_message(params, sprintf('Stats Overlay Debug: text_props contents before call: %s', beautify_fig_format_param_value_for_log(text_props)), 2, 'Debug');
+    % --- End Debugging Logs for text_props ---
 
     text(ax, text_x_norm, text_y_norm, 0, text_props{:}); % Add Z=0 for 2D text
 
