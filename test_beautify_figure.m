@@ -1,21 +1,22 @@
 % Test script for beautify_figure.m
 % This script will test various functionalities of beautify_figure.m
-% and allow for visual comparison of figures before and after beautification.
+% focusing on new and previously untested scenarios.
 % -------------------------------------------------------------------------
 % USER INSTRUCTIONS:
 %
 % Purpose:
-%   This script tests the functionalities of `beautify_figure.m`.
-%   It generates various plots, applies different beautification settings,
+%   This script tests functionalities of `beautify_figure.m` that were
+%   not covered by the original test script. It generates various plots,
+%   applies specific beautification settings relevant to the test case,
 %   and saves 'original' and 'beautified' versions of these plots as PNG
 %   images for visual comparison.
 %
 % Prerequisites:
 %   1. Ensure `beautify_figure.m` is on the MATLAB path or in the same
-%      directory as this test script. If not, you may need to use `addpath`.
-%   2. If you have the 'cbrewer' package for color palettes, some tests
-%      might implicitly use it if `beautify_figure` is configured to do so,
-%      but it's not a hard requirement for this test script itself to run.
+%      directory as this test script.
+%   2. Ensure `old_test_beautify_figure.m` (the renamed original test script)
+%      is also available if any reference is needed, though this script
+%      is designed to be self-contained with new tests.
 %
 % How to Run:
 %   1. Open this file (`test_beautify_figure.m`) in the MATLAB Editor.
@@ -23,792 +24,1167 @@
 %      MATLAB Command Window and press Enter.
 %
 % What to Expect:
-%   - The script will execute a series of test cases. Console messages
-%     will indicate the progress and which test case is running.
-%   - For the Log Level Control test case (now Test Case 6), you will be prompted to press Enter
-%     to continue. Observe the MATLAB Command Window for differences in
-%     output verbosity from `beautify_figure.m` during this test.
-%   - "Original" and "Beautified" figures for each test case (or sub-case)
-%     will be saved as PNG images in a subdirectory named 'test_beautify_output'
-%     (created in the same directory where this script is run).
-%   - At the end, a "Test Script Complete" message will be displayed. You can
-%     then inspect the generated images in the 'test_beautify_output' folder.
-%   - Figures generated during the tests are closed automatically after each
-%     test case or sub-case to avoid clutter.
+%   - The script will execute a series of new test cases. Console messages
+%     will indicate the progress.
+%   - "Original" and "Beautified" figures for each test case will be
+%     saved as PNG images in a subdirectory named 'test_beautify_output_new'.
+%   - At the end, a "New Test Script Complete" message will be displayed.
 %
 % Interpreting Results:
 %   - Visually compare the 'original' and 'beautified' PNG images for each
-%     test case in the 'test_beautify_output' directory.
+%     test case in the 'test_beautify_output_new' directory.
 %   - Check for any error messages in the MATLAB Command Window.
-%   - For the Export Functionality test case (now Test Case 4), verify that additional .png
-%     and .pdf files (e.g., 'exported_figure_case_04.png', 
-%     'exported_figure_case_04.pdf') are created in the output directory.
 %
 % -------------------------------------------------------------------------
 
 %% Setup
 % Add necessary paths (if beautify_figure.m is not in the current path)
 % curr_dir = fileparts(mfilename('fullpath'));
-% addpath(curr_dir); % Assuming beautify_figure.m is in the same directory as the test script
+% addpath(curr_dir); % Assuming beautify_figure.m is in the same directory
 
 % Create an output directory for saved figures
-output_dir = 'test_beautify_output';
-if ~exist(output_dir, 'dir')
-    mkdir(output_dir);
+output_dir_new = 'test_beautify_output_new';
+if ~exist(output_dir_new, 'dir')
+    mkdir(output_dir_new);
 end
-fprintf('Test figures will be saved in: %s\n', fullfile(pwd, output_dir));
+fprintf('New test figures will be saved in: %s\n', fullfile(pwd, output_dir_new));
 
 % Initialize test case counter
-test_case_idx = 1;
+test_case_num = 1;
 
 %% Helper Functions
-function save_comparison_figure(fig_handle, test_name, stage, output_dir_local)
-    % stage can be 'original' or 'beautified'
-    
+function save_comparison_figure_new(fig_handle, test_name_str, stage_str, out_dir_str)
+    % stage_str can be 'original' or 'beautified'
     if ~ishandle(fig_handle) || ~strcmp(get(fig_handle, 'Type'), 'figure')
-        fprintf('ERROR: Invalid figure handle provided to save_comparison_figure for test: %s, stage: %s.\n', test_name, stage);
+        fprintf('ERROR (save_comparison_figure_new): Invalid figure handle for test: %s, stage: %s.\n', test_name_str, stage_str);
         return;
     end
     
-    filename = fullfile(output_dir_local, sprintf('%s_%s.png', test_name, stage));
+    filename_str = fullfile(out_dir_str, sprintf('%s_%s.png', test_name_str, stage_str));
     try
         drawnow; 
-        original_visibility = get(fig_handle, 'Visible');
-        if strcmp(original_visibility, 'off')
+        original_visibility_str = get(fig_handle, 'Visible');
+        if strcmp(original_visibility_str, 'off')
             set(fig_handle, 'Visible', 'on');
-            drawnow;
+            drawnow; % Allow figure to render if it was off
         end
-        saveas(fig_handle, filename);
-        fprintf('Saved: %s\n', filename);
-        if strcmp(original_visibility, 'off')
+        saveas(fig_handle, filename_str);
+        fprintf('Saved: %s\n', filename_str);
+        if strcmp(original_visibility_str, 'off') % Restore visibility if changed
             set(fig_handle, 'Visible', 'off');
         end
-    catch ME
-        fprintf('ERROR saving figure %s: %s\n', filename, ME.message);
+    catch ME_save
+        fprintf('ERROR (save_comparison_figure_new) saving figure %s: %s\n', filename_str, ME_save.message);
     end
 end
 
-%% Test Cases
+%% --- Test Case Placeholders ---
+% New test cases will be added here sequentially.
 
-% --- Test Case 1: Default Beautification ---
-fprintf('\n--- Running Test Case %d: Default Beautification ---\n', test_case_idx);
-test_name_case1 = sprintf('test_case_%02d_default_beautification', test_case_idx);
+% Example Structure for a new test case:
+% fprintf('\n--- Running New Test Case %d: [Test Case Name] ---\n', test_case_num);
+% test_name_current = sprintf('new_test_%02d_[short_name]', test_case_num);
+% fig_current = figure('Visible', 'off');
+% % ... (plotting commands for original figure) ...
+% title([test_name_current ' Original'], 'Interpreter', 'none');
+% save_comparison_figure_new(fig_current, test_name_current, 'original', output_dir_new);
+%
+% params_current = struct();
+% % ... (define specific params for beautify_figure for this test) ...
+% try
+%     params_current.figure_handle = fig_current; % Or beautify_figure(fig_current, params_current)
+%     beautify_figure(params_current); 
+%     title([test_name_current ' Beautified'], 'Interpreter', 'none');
+%     save_comparison_figure_new(fig_current, test_name_current, 'beautified', output_dir_new);
+%     fprintf('  Applied beautify_figure for %s.\n', test_name_current);
+% catch ME_test
+%     fprintf('  ERROR during New Test Case %d (%s): %s\n', test_case_num, test_name_current, ME_test.message);
+% end
+% if ishandle(fig_current); close(fig_current); end
+% test_case_num = test_case_num + 1;
 
-fig1 = figure('Visible', 'off');
-plot(1:10, rand(1,10).* (1:10));
-title([test_name_case1 ' Original'], 'Interpreter', 'none');
-xlabel('X-axis');
-ylabel('Y-axis');
-save_comparison_figure(fig1, test_name_case1, 'original', output_dir);
+%% --- Test Case: `view_preset_3d` Options ---
+fprintf('\n--- Running New Test Case %d: `view_preset_3d` Options ---\n', test_case_num);
+view_presets_to_test = {'none', 'iso', 'top', 'front', 'side_left', 'side_right'};
+[X_peaks, Y_peaks, Z_peaks] = peaks(25); % Generate sample 3D data
 
-try
-    beautify_figure(fig1); 
-    title([test_name_case1 ' Beautified'], 'Interpreter', 'none'); 
-    fprintf('Applied beautify_figure() with default settings.\n');
-    save_comparison_figure(fig1, test_name_case1, 'beautified', output_dir);
-catch ME
-    fprintf('ERROR during Test Case 1 (Default Beautification): %s\n', ME.message);
-end
-if ishandle(fig1); close(fig1); end
-test_case_idx = test_case_idx + 1;
+for v_idx = 1:length(view_presets_to_test)
+    current_view_preset = view_presets_to_test{v_idx};
+    test_name_current = sprintf('new_test_%02d_view_preset_%s', test_case_num, current_view_preset);
+    
+    fig_current = figure('Visible', 'off', 'Position', [100, 100, 600, 450]);
+    surf(X_peaks, Y_peaks, Z_peaks);
+    colormap(fig_current, 'jet'); % Apply a colormap
+    title([test_name_current ' Original (View: default)'], 'Interpreter', 'none');
+    xlabel('X-axis'); ylabel('Y-axis'); zlabel('Z-axis');
+    axis tight;
+    save_comparison_figure_new(fig_current, test_name_current, 'original', output_dir_new);
+    
+    params_current = struct();
+    params_current.view_preset_3d = current_view_preset;
+    % Use a preset that works well with 3D views, e.g., 'default' or 'presentation_light'
+    params_current.style_preset = 'default'; 
+    % Ensure logs don't clutter this specific test too much unless debugging
+    params_current.log_level = 0; 
 
-% --- Test Case 2: Style Presets ---
-fprintf('\n--- Running Test Case %d: Style Presets ---\n', test_case_idx);
-style_presets = {'default', 'publication', 'presentation_dark', 'presentation_light', 'minimalist'};
-params_preset = struct();
-
-for i = 1:length(style_presets)
-    current_preset = style_presets{i};
-    test_name_case2 = sprintf('test_case_%02d_preset_%s', test_case_idx, current_preset);
-    fprintf('  Testing preset: %s\n', current_preset);
-
-    fig2 = figure('Visible', 'off');
-    subplot(1,2,1);
-    plot(1:10, sin(1:10));
-    title('Sine Wave'); xlabel('X1'); ylabel('Y1');
-    subplot(1,2,2);
-    scatter(rand(20,1), rand(20,1)*5, 'filled');
-    title('Scatter Plot'); xlabel('X2'); ylabel('Y2');
-    sgtitle([test_name_case2 ' Original'], 'Interpreter', 'none');
-    save_comparison_figure(fig2, test_name_case2, 'original', output_dir);
-
+    fprintf('  Testing view_preset_3d: ''%s''\n', current_view_preset);
     try
-        params_preset.style_preset = current_preset;
-        params_preset.figure_handle = fig2;
-        beautify_figure(params_preset); 
-        sgtitle([test_name_case2 ' Beautified (' current_preset ')'], 'Interpreter', 'none'); 
-        fprintf('  Applied beautify_figure() with preset: %s\n', current_preset);
-        save_comparison_figure(fig2, test_name_case2, 'beautified', output_dir);
-    catch ME
-        fprintf('  ERROR during Test Case 2 (Preset: %s): %s\n', current_preset, ME.message);
+        params_current.figure_handle = fig_current;
+        beautify_figure(params_current); 
+        title([test_name_current ' Beautified (View: ' current_view_preset ')'], 'Interpreter', 'none');
+        % Add a pause to allow visual inspection if figures were visible
+        % if strcmp(get(fig_current,'Visible'),'on'); pause(1); end
+        save_comparison_figure_new(fig_current, test_name_current, 'beautified', output_dir_new);
+        fprintf('  Applied beautify_figure for view_preset_3d: ''%s''.\n', current_view_preset);
+    catch ME_test
+        fprintf('  ERROR during New Test Case %d (%s) with view_preset_3d ''%s'': %s\n', test_case_num, test_name_current, current_view_preset, ME_test.message);
     end
-    if ishandle(fig2); close(fig2); end
+    if ishandle(fig_current); close(fig_current); end
 end
-test_case_idx = test_case_idx + 1;
+test_case_num = test_case_num + 1;
 
-% --- Test Case 3: Specific Parameter Customization ---
-fprintf('\n--- Running Test Case %d: Specific Parameter Customization ---\n', test_case_idx);
-test_name_case3 = sprintf('test_case_%02d_custom_params', test_case_idx);
+%% --- Test Case: `apply_to_colorbars = false` ---
+fprintf('\n--- Running New Test Case %d: `apply_to_colorbars = false` ---\n', test_case_num);
+test_name_current = sprintf('new_test_%02d_apply_to_colorbars_false', test_case_num);
 
-fig3 = figure('Visible', 'off');
-bar(rand(1,5)*10);
-title([test_name_case3 ' Original'], 'Interpreter', 'none');
-xlabel('Category'); ylabel('Value');
-set(gca, 'XTickLabel', {'A', 'B', 'C', 'D', 'E'});
-save_comparison_figure(fig3, test_name_case3, 'original', output_dir);
-
-custom_params.theme = 'dark';
-custom_params.font_name = 'Arial';
-custom_params.plot_line_width = 2.5;
-custom_params.color_palette = 'viridis';
-custom_params.grid_density = 'major_only';
-fprintf('  Applying custom parameters: theme=''dark'', font_name=''Arial'', plot_line_width=2.5, color_palette=''viridis'', grid_density=''major_only''\n');
-
-try
-    custom_params.figure_handle = fig3;
-    beautify_figure(custom_params); 
-    title([test_name_case3 ' Beautified (Custom)'], 'Interpreter', 'none'); 
-    fprintf('  Applied beautify_figure() with custom parameters.\n');
-    save_comparison_figure(fig3, test_name_case3, 'beautified', output_dir);
-catch ME
-    fprintf('  ERROR during Test Case 3 (Custom Parameters): %s\n', ME.message);
+fig_current = figure('Visible', 'off', 'Position', [100, 100, 600, 450]);
+[X_contour, Y_contour] = meshgrid(-2:0.2:2);
+Z_contour = X_contour .* exp(-X_contour.^2 - Y_contour.^2);
+contourf(X_contour, Y_contour, Z_contour, 10);
+h_cb_original = colorbar;
+original_cb_fontsize = h_cb_original.FontSize;
+original_cb_fontname = h_cb_original.FontName;
+original_cb_linewidth = h_cb_original.LineWidth;
+original_cb_color = h_cb_original.Color;
+if isprop(h_cb_original, 'Label') && isvalid(h_cb_original.Label)
+    ylabel(h_cb_original, 'Original Colorbar Label');
+    original_cb_label_str = h_cb_original.Label.String;
+    original_cb_label_fontsize = h_cb_original.Label.FontSize;
+else
+    original_cb_label_str = '';
+    original_cb_label_fontsize = [];
 end
-if ishandle(fig3); close(fig3); end
-test_case_idx = test_case_idx + 1;
 
-% Test Case 4 (Original Test Case 5): Statistics Overlay
-fprintf('\n--- Running Test Case %d: Statistics Overlay ---\n', test_case_idx);
-test_name_case4_stats = sprintf('test_case_%02d_stats_overlay', test_case_idx); % Renamed from test_name_case5
+title([test_name_current ' Original'], 'Interpreter', 'none');
+xlabel('X-axis'); ylabel('Y-axis');
+save_comparison_figure_new(fig_current, test_name_current, 'original', output_dir_new);
 
-fig4_stats = figure('Visible', 'off'); % Renamed from fig5
-x_data_stats = 1:50; % Renamed from x_data
-y_data_stats = 5*sin(x_data_stats/5) + randn(1,50)*2 + 10; % Renamed from y_data
-plot(x_data_stats, y_data_stats, 'Tag', 'NoisyDataLineStats', 'LineWidth', 1); % Tag changed slightly for clarity
-title([test_name_case4_stats ' Original'], 'Interpreter', 'none');
-xlabel('Time (s)'); ylabel('Signal Strength (mV)'); grid on;
-save_comparison_figure(fig4_stats, test_name_case4_stats, 'original', output_dir);
+params_current = struct();
+params_current.apply_to_colorbars = false;
+params_current.style_preset = 'default'; % Apply some styling to the main plot
+params_current.log_level = 0;
 
-stats_params.stats_overlay.enabled = true;
-stats_params.stats_overlay.target_plot_handle_tag = 'NoisyDataLineStats';
-stats_params.stats_overlay.statistics = {'mean', 'std', 'N', 'min', 'max'};
-stats_params.stats_overlay.position = 'northeast_inset';
-stats_params.stats_overlay.precision = 3;
-stats_params.stats_overlay.font_scale_factor = 0.85;
-stats_params.stats_overlay.background_color = [0.95 0.95 0.95];
-stats_params.stats_overlay.edge_color = 'black';
-fprintf('  Enabling stats overlay: target_tag=''NoisyDataLineStats'', stats={''mean'', ''std'', ''N'', ''min'', ''max''}\n');
-
+fprintf('  Testing with apply_to_colorbars = false.\n');
 try
-    stats_params.figure_handle = fig4_stats;
-    beautify_figure(stats_params); 
-    title([test_name_case4_stats ' Beautified (Stats Overlay)'], 'Interpreter', 'none'); 
-    fprintf('  Applied beautify_figure() with statistics overlay.\n');
-    save_comparison_figure(fig4_stats, test_name_case4_stats, 'beautified', output_dir);
-catch ME
-    fprintf('  ERROR during Test Case %d (Statistics Overlay): %s\n', test_case_idx, ME.message);
-end
-if ishandle(fig4_stats); close(fig4_stats); end
-test_case_idx = test_case_idx + 1;
-
-% Test Case 5 (Original Test Case 6): Export Functionality
-fprintf('\n--- Running Test Case %d: Export Functionality ---\n', test_case_idx);
-test_name_case5_export = sprintf('test_case_%02d_export', test_case_idx); % Renamed
-export_filename_base_case5 = fullfile(output_dir, sprintf('exported_figure_case_%02d', test_case_idx)); % Renamed
-
-fig5_export = figure('Visible', 'off'); % Renamed
-[X_export, Y_export, Z_export] = peaks(25); % Renamed for clarity
-surf(X_export, Y_export, Z_export); colormap jet;
-title([test_name_case5_export ' Original'], 'Interpreter', 'none');
-xlabel('X-axis'); ylabel('Y-axis'); zlabel('Z-axis'); axis tight;
-save_comparison_figure(fig5_export, test_name_case5_export, 'original', output_dir);
-
-export_params_tc5.export_settings.enabled = true; % Renamed
-export_params_tc5.export_settings.filename = export_filename_base_case5;
-export_params_tc5.export_settings.format = 'png';
-export_params_tc5.export_settings.resolution = 150;
-export_params_tc5.export_settings.open_exported_file = false;
-
-export_params_pdf_tc5 = export_params_tc5; % Renamed
-export_params_pdf_tc5.export_settings.format = 'pdf';
-fprintf('  Configuring export: PNG and PDF to filenames starting with "%s"\n', export_filename_base_case5);
-
-try
-    fprintf('  Applying beautify_figure() with PNG export enabled.\n');
-    export_params_tc5.figure_handle = fig5_export;
-    beautify_figure(export_params_tc5); 
-    title([test_name_case5_export ' Beautified (PNG Export Attempted)'], 'Interpreter', 'none');
-    save_comparison_figure(fig5_export, test_name_case5_export, 'beautified_for_png_export_test', output_dir);
+    params_current.figure_handle = fig_current;
+    beautify_figure(params_current); 
+    title([test_name_current ' Beautified (Colorbar Unchanged)'], 'Interpreter', 'none');
     
-    expected_png_file_tc5 = [export_filename_base_case5 '.' export_params_tc5.export_settings.format]; % Renamed
-    if exist(expected_png_file_tc5, 'file')
-        fprintf('  SUCCESS: Exported PNG file found: %s\n', expected_png_file_tc5);
+    h_cb_beautified = findobj(fig_current, 'Type', 'ColorBar');
+    passed_verification = true;
+    if isempty(h_cb_beautified)
+        fprintf('  VERIFICATION FAIL: Colorbar disappeared after beautification.\n');
+        passed_verification = false;
     else
-        fprintf('  FAILURE: Exported PNG file NOT found: %s\n', expected_png_file_tc5);
+        h_cb_beautified = h_cb_beautified(1); % Take the first one if multiple (should not happen here)
+        if abs(h_cb_beautified.FontSize - original_cb_fontsize) > 0.1 % Allow for tiny numerical differences
+            fprintf('  VERIFICATION FAIL: Colorbar FontSize changed. Original: %.1f, Current: %.1f\n', original_cb_fontsize, h_cb_beautified.FontSize);
+            passed_verification = false;
+        end
+        if ~strcmp(h_cb_beautified.FontName, original_cb_fontname)
+            fprintf('  VERIFICATION FAIL: Colorbar FontName changed. Original: %s, Current: %s\n', original_cb_fontname, h_cb_beautified.FontName);
+            passed_verification = false;
+        end
+        if abs(h_cb_beautified.LineWidth - original_cb_linewidth) > 0.01
+            fprintf('  VERIFICATION FAIL: Colorbar LineWidth changed. Original: %.2f, Current: %.2f\n', original_cb_linewidth, h_cb_beautified.LineWidth);
+            passed_verification = false;
+        end
+         if ~isequal(h_cb_beautified.Color, original_cb_color)
+            fprintf('  VERIFICATION FAIL: Colorbar Color changed.\n');
+            passed_verification = false;
+        end
+        if isprop(h_cb_beautified, 'Label') && isvalid(h_cb_beautified.Label)
+            if ~strcmp(h_cb_beautified.Label.String, original_cb_label_str)
+                 fprintf('  VERIFICATION FAIL: Colorbar Label String changed.\n');
+                 passed_verification = false;
+            end
+            if ~isempty(original_cb_label_fontsize) && abs(h_cb_beautified.Label.FontSize - original_cb_label_fontsize) > 0.1
+                 fprintf('  VERIFICATION FAIL: Colorbar Label FontSize changed.\n');
+                 passed_verification = false;
+            end
+        elseif ~isempty(original_cb_label_str) % Original had a label, but beautified doesn't or it's invalid
+            fprintf('  VERIFICATION FAIL: Colorbar Label seems to have been removed or is invalid.\n');
+            passed_verification = false;
+        end
     end
-
-    fig5_pdf_test = figure('Visible', 'off'); % Renamed
-    surf(X_export,Y_export,Z_export); colormap jet; 
-    title([test_name_case5_export ' Original for PDF'], 'Interpreter', 'none'); 
-    xlabel('X-axis'); ylabel('Y-axis'); zlabel('Z-axis'); axis tight;
-    fprintf('  Applying beautify_figure() with PDF export enabled to a fresh figure.\n');
-    export_params_pdf_tc5.figure_handle = fig5_pdf_test;
-    beautify_figure(export_params_pdf_tc5);
     
-    expected_pdf_file_tc5 = [export_filename_base_case5 '.' export_params_pdf_tc5.export_settings.format]; % Renamed
-    if exist(expected_pdf_file_tc5, 'file')
-        fprintf('  SUCCESS: Exported PDF file found: %s\n', expected_pdf_file_tc5);
+    if passed_verification
+        fprintf('  VERIFICATION PASS: Colorbar properties appear unchanged as expected.\n');
     else
-        fprintf('  FAILURE: Exported PDF file NOT found: %s\n', expected_pdf_file_tc5);
+        fprintf('  VERIFICATION FAIL: Some colorbar properties changed unexpectedly.\n');
     end
-    if ishandle(fig5_pdf_test); close(fig5_pdf_test); end
-catch ME
-    fprintf('  ERROR during Test Case %d (Export Functionality): %s\n', test_case_idx, ME.message);
+    
+    save_comparison_figure_new(fig_current, test_name_current, 'beautified', output_dir_new);
+    fprintf('  Applied beautify_figure. Check that the colorbar is NOT styled, but the rest of the plot is.\n');
+catch ME_test
+    fprintf('  ERROR during New Test Case %d (%s): %s\n', test_case_num, test_name_current, ME_test.message);
 end
-if ishandle(fig5_export); close(fig5_export); end
-test_case_idx = test_case_idx + 1;
+if ishandle(fig_current); close(fig_current); end
+test_case_num = test_case_num + 1;
 
-% Test Case 6 (Original Test Case 8): Log Level Control
-fprintf('\n--- Running Test Case %d: Log Level Control ---\n', test_case_idx);
+%% --- Test Case: `apply_to_polaraxes = false` ---
+fprintf('\n--- Running New Test Case %d: `apply_to_polaraxes = false` ---\n', test_case_num);
+test_name_current = sprintf('new_test_%02d_apply_to_polaraxes_false', test_case_num);
 
-test_name_case6_silent = sprintf('test_case_%02d_loglevel_0_silent', test_case_idx); % Renamed
-fprintf('  Running with log_level = 0 (Silent). Expect minimal to no output from beautify_figure.\n');
-fig6_silent = figure('Visible', 'off'); % Renamed
-plot(1:5, rand(1,5));
-title([test_name_case6_silent ' Original'], 'Interpreter', 'none');
-save_comparison_figure(fig6_silent, test_name_case6_silent, 'original', output_dir);
-log_params_silent_tc6.log_level = 0; % Renamed
+fig_current = figure('Visible', 'off', 'Position', [100, 100, 600, 450]);
+theta_polar = 0:0.01:2*pi; 
+rho_polar = abs(sin(3*theta_polar).*cos(3*theta_polar)); % A more complex polar pattern
+polarplot(theta_polar, rho_polar, 'm', 'LineWidth', 1.5); % Magenta color for original
+pax_original = gca;
+original_pax_fontsize = pax_original.FontSize;
+original_pax_fontname = pax_original.FontName;
+original_pax_linewidth = pax_original.LineWidth;
+original_pax_gridcolor = pax_original.GridColor;
+original_pax_rcolor = pax_original.RColor;
+original_pax_thetacolor = pax_original.ThetaColor;
+original_pax_title_str = 'Original Polar Title';
+title(original_pax_title_str);
+
+save_comparison_figure_new(fig_current, test_name_current, 'original', output_dir_new);
+
+params_current = struct();
+params_current.apply_to_polaraxes = false;
+params_current.style_preset = 'default'; % Apply some styling to potentially other elements if any
+params_current.font_name = 'Arial'; % A font different from MATLAB default for main fig
+params_current.base_font_size = 14; % A size different from MATLAB default
+params_current.log_level = 0;
+
+fprintf('  Testing with apply_to_polaraxes = false.\n');
 try
-    log_params_silent_tc6.figure_handle = fig6_silent;
-    beautify_figure(log_params_silent_tc6);
-    title([test_name_case6_silent ' Beautified (Log Level 0)'], 'Interpreter', 'none');
-    save_comparison_figure(fig6_silent, test_name_case6_silent, 'beautified', output_dir);
-    fprintf('  Applied beautify_figure with log_level = 0.\n');
-catch ME
-    fprintf('  ERROR during Test Case %d (Log Level 0): %s\n', test_case_idx, ME.message);
-end
-if ishandle(fig6_silent); close(fig6_silent); end
-
-input('  Press Enter to continue to Log Level 2 (Detailed) test...\n', 's');
-
-test_name_case6_detailed = sprintf('test_case_%02d_loglevel_2_detailed', test_case_idx); % Renamed
-fprintf('  Running with log_level = 2 (Detailed). Expect verbose output from beautify_figure.\n');
-fig6_detailed = figure('Visible', 'off'); % Renamed
-plot(1:5, rand(1,5)); 
-title([test_name_case6_detailed ' Original'], 'Interpreter', 'none');
-save_comparison_figure(fig6_detailed, test_name_case6_detailed, 'original', output_dir);
-log_params_detailed_tc6.log_level = 2; % Renamed
-try
-    log_params_detailed_tc6.figure_handle = fig6_detailed;
-    beautify_figure(log_params_detailed_tc6);
-    title([test_name_case6_detailed ' Beautified (Log Level 2)'], 'Interpreter', 'none');
-    save_comparison_figure(fig6_detailed, test_name_case6_detailed, 'beautified', output_dir);
-    fprintf('  Applied beautify_figure with log_level = 2.\n');
-catch ME
-    fprintf('  ERROR during Test Case %d (Log Level 2): %s\n', test_case_idx, ME.message);
-end
-if ishandle(fig6_detailed); close(fig6_detailed); end
-fprintf('  Test Case %d (Log Level Control) complete. Please review command window output for verbosity differences.\n', test_case_idx);
-test_case_idx = test_case_idx + 1;
-
-% Test Case 7 (Original Test Case 9): Different Plot Types
-fprintf('\n--- Running Test Case %d: Different Plot Types ---\n', test_case_idx);
-
-test_name_case7_errorbar = sprintf('test_case_%02d_errorbar_plot', test_case_idx); % Renamed
-fprintf('  Running Sub-case 7.1: Error Bar Plot with default beautification.\n');
-fig7_errorbar = figure('Visible', 'off'); % Renamed
-x_eb7 = 1:5; y_eb7 = [2 4 3 5 4.5]; err_eb7 = rand(1,5) * 0.5 + 0.2;
-errorbar(x_eb7, y_eb7, err_eb7, '-s', 'MarkerSize', 8, 'MarkerEdgeColor','red','MarkerFaceColor','red', 'CapSize', 8);
-title([test_name_case7_errorbar ' Original'], 'Interpreter', 'none');
-xlabel('Group'); ylabel('Measurement +/- Error'); grid on;
-save_comparison_figure(fig7_errorbar, test_name_case7_errorbar, 'original', output_dir);
-try
-    beautify_figure(fig7_errorbar);
-    title([test_name_case7_errorbar ' Beautified'], 'Interpreter', 'none');
-    save_comparison_figure(fig7_errorbar, test_name_case7_errorbar, 'beautified', output_dir);
-    fprintf('  Applied default beautify_figure to Error Bar Plot.\n');
-catch ME
-    fprintf('  ERROR during Test Case %d, Sub-case 1 (Error Bar Plot): %s\n', test_case_idx, ME.message);
-end
-if ishandle(fig7_errorbar); close(fig7_errorbar); end
-
-test_name_case7_histogram = sprintf('test_case_%02d_histogram_plot', test_case_idx); % Renamed
-fprintf('  Running Sub-case 7.2: Histogram with default beautification.\n');
-fig7_histogram = figure('Visible', 'off'); % Renamed
-data_hist7 = randn(1000,1) * 2 + 5;
-histogram(data_hist7, 20, 'FaceColor', 'm', 'EdgeColor', 'b');
-title([test_name_case7_histogram ' Original'], 'Interpreter', 'none');
-xlabel('Value Bins'); ylabel('Frequency'); grid on;
-save_comparison_figure(fig7_histogram, test_name_case7_histogram, 'original', output_dir);
-try
-    beautify_figure(fig7_histogram);
-    title([test_name_case7_histogram ' Beautified'], 'Interpreter', 'none');
-    save_comparison_figure(fig7_histogram, test_name_case7_histogram, 'beautified', output_dir);
-    fprintf('  Applied default beautify_figure to Histogram.\n');
-catch ME
-    fprintf('  ERROR during Test Case %d, Sub-case 2 (Histogram): %s\n', test_case_idx, ME.message);
-end
-if ishandle(fig7_histogram); close(fig7_histogram); end
-fprintf('  Test Case %d (Different Plot Types) complete.\n', test_case_idx);
-test_case_idx = test_case_idx + 1;
-
-% Test Case 8 (Original Test Case 10): Advanced Line Plot Features
-fprintf('\n--- Running Test Case %d: Advanced Line Plot Features ---\n', test_case_idx);
-
-test_name_case8_styles = sprintf('test_case_%02d_adv_line_styles_palette', test_case_idx); % Renamed
-fprintf('  Running Sub-case 8.1: Cycle Marker/Line Styles & Custom RGB Palette\n');
-fig8_styles = figure('Visible', 'off', 'Position', [100,100,700,500]); % Renamed
-hold on;
-plot(1:10, rand(1,10)+1, 'DisplayName', 'Series 1');
-plot(1:10, rand(1,10)+3, 'DisplayName', 'Series 2');
-plot(1:10, rand(1,10)+5, 'DisplayName', 'Series 3');
-plot(1:10, rand(1,10)+7, 'DisplayName', 'Series 4');
-hold off;
-title([test_name_case8_styles ' Original'], 'Interpreter', 'none');
-xlabel('X-axis'); ylabel('Y-axis'); grid on; legend show;
-save_comparison_figure(fig8_styles, test_name_case8_styles, 'original', output_dir);
-adv_line_params_tc8.cycle_marker_styles = true; % Renamed
-adv_line_params_tc8.cycle_line_styles = true;
-adv_line_params_tc8.custom_color_palette = [[1 0 0]; [0 1 0]; [0 0 1]; [1 0 1]];
-adv_line_params_tc8.color_palette = 'custom';
-adv_line_params_tc8.marker_cycle_threshold = 2; 
-adv_line_params_tc8.line_style_cycle_threshold = 1; 
-fprintf('  Params: cycle_marker_styles=true, cycle_line_styles=true, custom RGB palette, color_palette=''custom''\n');
-try
-    adv_line_params_tc8.figure_handle = fig8_styles;
-    beautify_figure(adv_line_params_tc8);
-    title([test_name_case8_styles ' Beautified'], 'Interpreter', 'none');
-    save_comparison_figure(fig8_styles, test_name_case8_styles, 'beautified', output_dir);
-    fprintf('  Applied beautify_figure for cycle styles & custom palette.\n');
-catch ME
-    fprintf('  ERROR during Test Case %d, Sub-case 1 (Cycle Styles): %s\n', test_case_idx, ME.message);
-end
-if ishandle(fig8_styles); close(fig8_styles); end
-
-test_name_case8_fontscale = sprintf('test_case_%02d_adv_font_scale', test_case_idx); % Renamed
-fprintf('  Running Sub-case 8.2: Global Font Scale Factor\n');
-fig8_fontscale1 = figure('Visible', 'off'); % Renamed
-plot(1:10, rand(1,10));
-title([test_name_case8_fontscale ' Original (Scale 1.0)'], 'Interpreter', 'none');
-xlabel('X-axis'); ylabel('Y-axis');
-save_comparison_figure(fig8_fontscale1, [test_name_case8_fontscale '_scale_1_0'], 'original', output_dir);
-font_scale_params1_tc8.global_font_scale_factor = 1.0; % Renamed
-try
-    font_scale_params1_tc8.figure_handle = fig8_fontscale1;
-    beautify_figure(font_scale_params1_tc8);
-    title([test_name_case8_fontscale ' Beautified (Scale 1.0)'], 'Interpreter', 'none');
-    save_comparison_figure(fig8_fontscale1, [test_name_case8_fontscale '_scale_1_0'], 'beautified', output_dir);
-    fprintf('  Applied beautify_figure with global_font_scale_factor = 1.0\n');
-catch ME
-    fprintf('  ERROR during Test Case %d, Sub-case 2 (Font Scale 1.0): %s\n', test_case_idx, ME.message);
-end
-if ishandle(fig8_fontscale1); close(fig8_fontscale1); end
-
-fig8_fontscale2 = figure('Visible', 'off'); % Renamed
-plot(1:10, rand(1,10));
-title([test_name_case8_fontscale ' Original (Scale 1.5)'], 'Interpreter', 'none');
-xlabel('X-axis'); ylabel('Y-axis');
-save_comparison_figure(fig8_fontscale2, [test_name_case8_fontscale '_scale_1_5'], 'original', output_dir);
-font_scale_params2_tc8.global_font_scale_factor = 1.5; % Renamed
-fprintf('  Params: global_font_scale_factor = 1.5\n');
-try
-    font_scale_params2_tc8.figure_handle = fig8_fontscale2;
-    beautify_figure(font_scale_params2_tc8);
-    title([test_name_case8_fontscale ' Beautified (Scale 1.5)'], 'Interpreter', 'none');
-    save_comparison_figure(fig8_fontscale2, [test_name_case8_fontscale '_scale_1_5'], 'beautified', output_dir);
-    fprintf('  Applied beautify_figure with global_font_scale_factor = 1.5\n');
-catch ME
-    fprintf('  ERROR during Test Case %d, Sub-case 2 (Font Scale 1.5): %s\n', test_case_idx, ME.message);
-end
-if ishandle(fig8_fontscale2); close(fig8_fontscale2); end
-test_case_idx = test_case_idx + 1;
-
-% Test Case 9 (Original Test Case 11): Axes Styling Options
-fprintf('\n--- Running Test Case %d: Axes Styling Options ---\n', test_case_idx);
-
-test_name_case9_box_off = sprintf('test_case_%02d_axes_box_off', test_case_idx); % Renamed
-fprintf('  Running Sub-case 9.1: axis_box_style = ''off''\n');
-fig9_box_off = figure('Visible', 'off'); % Renamed
-plot(1:10, rand(1,10));
-title([test_name_case9_box_off ' Original'], 'Interpreter', 'none');
-xlabel('X-axis'); ylabel('Y-axis'); grid on;
-save_comparison_figure(fig9_box_off, test_name_case9_box_off, 'original', output_dir);
-box_off_params_tc9.axis_box_style = 'off'; % Renamed
-fprintf('  Params: axis_box_style = ''off''\n');
-try
-    box_off_params_tc9.figure_handle = fig9_box_off;
-    beautify_figure(box_off_params_tc9);
-    title([test_name_case9_box_off ' Beautified (Box Off)'], 'Interpreter', 'none');
-    save_comparison_figure(fig9_box_off, test_name_case9_box_off, 'beautified', output_dir);
-    fprintf('  Applied beautify_figure with axis_box_style = ''off''.\n');
-catch ME
-    fprintf('  ERROR during Test Case %d, Sub-case 1 (Box Off): %s\n', test_case_idx, ME.message);
-end
-if ishandle(fig9_box_off); close(fig9_box_off); end
-
-test_name_case9_layer_bottom = sprintf('test_case_%02d_axes_layer_bottom', test_case_idx); % Renamed
-fprintf('  Running Sub-case 9.2: axes_layer = ''bottom''\n');
-fig9_layer_bottom = figure('Visible', 'off'); % Renamed
-hold on;
-plot(1:0.1:10, sin(1:0.1:10), 'b', 'LineWidth', 2);
-patch([2 4 4 2], [-0.5 -0.5 0.5 0.5], 'red', 'FaceAlpha', 0.3, 'EdgeColor', 'none');
-hold off; grid on;
-title([test_name_case9_layer_bottom ' Original'], 'Interpreter', 'none');
-xlabel('X-axis'); ylabel('Y-axis');
-legend({'Line', 'Patch'}, 'Location', 'northwest');
-save_comparison_figure(fig9_layer_bottom, test_name_case9_layer_bottom, 'original', output_dir);
-layer_bottom_params_tc9.axes_layer = 'bottom'; % Renamed
-layer_bottom_params_tc9.grid_density = 'normal'; 
-fprintf('  Params: axes_layer = ''bottom'', grid_density = ''normal''\n');
-try
-    layer_bottom_params_tc9.figure_handle = fig9_layer_bottom;
-    beautify_figure(layer_bottom_params_tc9);
-    title([test_name_case9_layer_bottom ' Beautified (Layer Bottom)'], 'Interpreter', 'none');
-    save_comparison_figure(fig9_layer_bottom, test_name_case9_layer_bottom, 'beautified', output_dir);
-    fprintf('  Applied beautify_figure with axes_layer = ''bottom''. Grid lines should be behind plot elements.\n');
-catch ME
-    fprintf('  ERROR during Test Case %d, Sub-case 2 (Layer Bottom): %s\n', test_case_idx, ME.message);
-end
-if ishandle(fig9_layer_bottom); close(fig9_layer_bottom); end
-test_case_idx = test_case_idx + 1;
-
-% Test Case 10 (Original Test Case 12): Legend Specifics
-fprintf('\n--- Running Test Case %d: Legend Specifics ---\n', test_case_idx);
-
-test_name_case10_location = sprintf('test_case_%02d_legend_location_interactive', test_case_idx); % Renamed
-fprintf('  Running Sub-case 10.1: legend_location & interactive_legend=true\n');
-fig10_loc = figure('Visible', 'off'); % Renamed
-hold on;
-plot(1:10, rand(1,10), 'DisplayName', 'Data A');
-plot(1:10, rand(1,10)+1, 'DisplayName', 'Data B');
-hold off;
-title([test_name_case10_location ' Original'], 'Interpreter', 'none');
-xlabel('X'); ylabel('Y'); grid on; legend show;
-save_comparison_figure(fig10_loc, test_name_case10_location, 'original', output_dir);
-leg_loc_params_tc10.legend_location = 'northeastoutside'; % Renamed
-leg_loc_params_tc10.interactive_legend = true;
-fprintf('  Params: legend_location=''northeastoutside'', interactive_legend=true\n');
-try
-    leg_loc_params_tc10.figure_handle = fig10_loc;
-    beautify_figure(leg_loc_params_tc10);
-    title([test_name_case10_location ' Beautified (Legend NE Outside, Interactive)'], 'Interpreter', 'none');
-    save_comparison_figure(fig10_loc, test_name_case10_location, 'beautified', output_dir);
-    fprintf('  Applied beautify_figure. Check legend position and for no errors with interactive_legend.\n');
-catch ME
-    fprintf('  ERROR during Test Case %d, Sub-case 1 (Legend Location/Interactive): %s\n', test_case_idx, ME.message);
-end
-if ishandle(fig10_loc); close(fig10_loc); end
-
-test_name_case10_smart = sprintf('test_case_%02d_legend_smart_false', test_case_idx); % Renamed
-fprintf('  Running Sub-case 10.2: smart_legend_display = false (single item legend)\n');
-fig10_smart = figure('Visible', 'off'); % Renamed
-plot(1:10, rand(1,10), 'DisplayName', 'Single Series');
-title([test_name_case10_smart ' Original (No Legend Expected)'], 'Interpreter', 'none');
-xlabel('X'); ylabel('Y'); grid on;
-save_comparison_figure(fig10_smart, test_name_case10_smart, 'original', output_dir);
-leg_smart_params_tc10.smart_legend_display = false; % Renamed
-leg_smart_params_tc10.legend_force_single_entry = true;
-fprintf('  Params: smart_legend_display=false, legend_force_single_entry=true\n');
-try
-    leg_smart_params_tc10.figure_handle = fig10_smart;
-    beautify_figure(leg_smart_params_tc10);
-    title([test_name_case10_smart ' Beautified (Legend Forced for Single Item)'], 'Interpreter', 'none');
-    save_comparison_figure(fig10_smart, test_name_case10_smart, 'beautified', output_dir);
-    fprintf('  Applied beautify_figure. Legend should be visible for the single series.\n');
-catch ME
-    fprintf('  ERROR during Test Case %d, Sub-case 2 (Smart Legend False): %s\n', test_case_idx, ME.message);
-end
-if ishandle(fig10_smart); close(fig10_smart); end
-test_case_idx = test_case_idx + 1;
-
-% Test Case 11 (Original Test Case 13): Plot with Colorbar
-test_name_case11_colorbar = sprintf('test_case_%02d_plot_with_colorbar', test_case_idx); % Renamed
-fprintf('\n--- Running Test Case %d: Plot with Colorbar (Default Beautification) ---\n', test_case_idx);
-fig11_cb = figure('Visible', 'off'); % Renamed
-[X_cb11, Y_cb11, Z_cb11] = peaks(25); % Renamed
-contourf(X_cb11, Y_cb11, Z_cb11, 10);
-h_cb11 = colorbar; % Renamed
-xlabel('X-axis'); ylabel('Y-axis');
-title([test_name_case11_colorbar ' Original'], 'Interpreter', 'none');
-ylabel(h_cb11, 'Colorbar Units');
-save_comparison_figure(fig11_cb, test_name_case11_colorbar, 'original', output_dir);
-fprintf('  Applying default beautify_figure. Expect colorbar to be beautified.\n');
-try
-    beautify_figure(fig11_cb);
-    title([test_name_case11_colorbar ' Beautified'], 'Interpreter', 'none');
-    save_comparison_figure(fig11_cb, test_name_case11_colorbar, 'beautified', output_dir);
-    fprintf('  Applied default beautify_figure. Check appearance of plot and colorbar.\n');
-catch ME
-    fprintf('  ERROR during Test Case %d (Plot with Colorbar): %s\n', test_case_idx, ME.message);
-end
-if ishandle(fig11_cb); close(fig11_cb); end
-test_case_idx = test_case_idx + 1;
-
-% Test Case 12 (Original Test Case 14): Polar Plot
-test_name_case12_polar = sprintf('test_case_%02d_polar_plot', test_case_idx); % Renamed
-fprintf('\n--- Running Test Case %d: Polar Plot (Default Beautification) ---\n', test_case_idx);
-fig12_polar = figure('Visible', 'off'); % Renamed
-theta12 = 0:0.01:2*pi; rho12 = abs(sin(2*theta12).*cos(2*theta12));
-polarplot(theta12, rho12, 'r', 'LineWidth', 1.5);
-pax12 = gca; % Renamed
-pax12.ThetaZeroLocation = 'top'; pax12.ThetaDir = 'clockwise';
-title([test_name_case12_polar ' Original'], 'Interpreter', 'none');
-save_comparison_figure(fig12_polar, test_name_case12_polar, 'original', output_dir);
-fprintf('  Applying default beautify_figure. Expect polar plot to be beautified.\n');
-try
-    beautify_figure(fig12_polar);
-    title([test_name_case12_polar ' Beautified'], 'Interpreter', 'none'); 
-    save_comparison_figure(fig12_polar, test_name_case12_polar, 'beautified', output_dir);
-    fprintf('  Applied default beautify_figure. Check appearance of polar plot.\n');
-catch ME
-    fprintf('  ERROR during Test Case %d (Polar Plot): %s\n', test_case_idx, ME.message);
-end
-if ishandle(fig12_polar); close(fig12_polar); end
-test_case_idx = test_case_idx + 1;
-
-% Test Case 13 (Original Test Case 15): LaTeX in Labels
-test_name_case13_latex = sprintf('test_case_%02d_latex_labels', test_case_idx); % Renamed
-fprintf('\n--- Running Test Case %d: LaTeX in Labels (Default Beautification) ---\n', test_case_idx);
-fig13_latex = figure('Visible', 'off'); % Renamed
-x_latex13 = 0:0.1:2*pi; y_latex13 = sin(x_latex13);
-plot(x_latex13, y_latex13, 'LineWidth', 1);
-title_str_orig13 = 'Plot of $y = \sin(x)$ with $\Sigma_{i=1}^N x_i$';
-xlabel_str_orig13 = 'Angle $\theta$ (radians)';
-ylabel_str_orig13 = 'Amplitude $\alpha^2$';
-title(title_str_orig13, 'Interpreter', 'latex');
-xlabel(xlabel_str_orig13, 'Interpreter', 'latex');
-ylabel(ylabel_str_orig13, 'Interpreter', 'latex');
-grid on;
-save_comparison_figure(fig13_latex, test_name_case13_latex, 'original', output_dir);
-fprintf('  Applying default beautify_figure. Expect LaTeX in labels to be rendered correctly.\n');
-fprintf('  Original title: %s\n', title_str_orig13);
-fprintf('  Original xlabel: %s\n', xlabel_str_orig13);
-fprintf('  Original ylabel: %s\n', ylabel_str_orig13);
-try
-    beautify_figure(fig13_latex);
-    current_title13 = get(get(gca,'Title'),'String'); % Renamed
-    current_xlabel13 = get(get(gca,'XLabel'),'String'); % Renamed
-    current_ylabel13 = get(get(gca,'YLabel'),'String'); % Renamed
-    fprintf('  Beautified title string (may differ slightly due to processing): %s\n', current_title13);
-    fprintf('  Beautified xlabel string: %s\n', current_xlabel13);
-    fprintf('  Beautified ylabel string: %s\n', current_ylabel13);
-    title([test_name_case13_latex ' Beautified (LaTeX Check)'], 'Interpreter', 'none');
-    save_comparison_figure(fig13_latex, test_name_case13_latex, 'beautified', output_dir);
-    fprintf('  Applied default beautify_figure. Check appearance of LaTeX in labels in the saved image.\n');
-catch ME
-    fprintf('  ERROR during Test Case %d (LaTeX in Labels): %s\n', test_case_idx, ME.message);
-end
-if ishandle(fig13_latex); close(fig13_latex); end
-test_case_idx = test_case_idx + 1;
-
-% Test Case 14 (Original Test Case 16): Object Exclusion
-test_name_case14_exclusion = sprintf('test_case_%02d_object_exclusion', test_case_idx); % Renamed
-fprintf('\n--- Running Test Case %d: Object Exclusion by Tag ---\n', test_case_idx);
-fig14_exclude = figure('Visible', 'off'); % Renamed
-hold on;
-line1_tc14 = plot(1:10, rand(1,10)+2, 'LineWidth', 1, 'Color', 'blue', 'Marker', 'o'); % Renamed
-line2_tc14 = plot(1:10, rand(1,10), 'LineWidth', 3, 'Color', 'red', 'Marker', 'x', 'Tag', 'ExcludeThisLine'); % Renamed
-hold off;
-title([test_name_case14_exclusion ' Original'], 'Interpreter', 'none');
-xlabel('X-axis'); ylabel('Y-axis'); grid on;
-legend({'Line 1 (Beautify)', 'Line 2 (Exclude)'});
-original_line2_lw_tc14 = line2_tc14.LineWidth; % Renamed
-original_line2_color_tc14 = line2_tc14.Color; % Renamed
-original_line2_marker_tc14 = line2_tc14.Marker; % Renamed
-save_comparison_figure(fig14_exclude, test_name_case14_exclusion, 'original', output_dir);
-exclude_params_tc14.exclude_object_tags = {'ExcludeThisLine'}; % Renamed
-exclude_params_tc14.plot_line_width = 0.5; 
-exclude_params_tc14.color_palette = 'lines';
-fprintf('  Excluding objects with tag ''ExcludeThisLine''. Applying plot_line_width=0.5.\n');
-try
-    exclude_params_tc14.figure_handle = fig14_exclude;
-    beautify_figure(exclude_params_tc14);
-    title([test_name_case14_exclusion ' Beautified (One Line Excluded)'], 'Interpreter', 'none');
-    save_comparison_figure(fig14_exclude, test_name_case14_exclusion, 'beautified', output_dir);
-    fprintf('  Performing programmatic verification for excluded object...\n');
-    if isvalid(line2_tc14) && ...
-       abs(line2_tc14.LineWidth - original_line2_lw_tc14) < 1e-6 && ...
-       isequal(line2_tc14.Color, original_line2_color_tc14) && ...
-       strcmp(line2_tc14.Marker, original_line2_marker_tc14)
-        fprintf('  TEST RESULT (Test Case %d - Object Exclusion Verification): PASS - Tagged line correctly retained its original style.\n', test_case_idx);
+    params_current.figure_handle = fig_current;
+    beautify_figure(params_current); 
+    % Change the main figure title to indicate beautification attempt
+    % but the polar axes title (if part of polar axes) should remain original.
+    sgtitle_obj = findobj(fig_current, 'Type', 'text', 'Tag', 'sgtitle'); % sgtitle might be used by beautify_figure
+    if ~isempty(sgtitle_obj)
+       sgtitle_obj.String = [test_name_current ' Beautified (Polar Unchanged?)'];
     else
-        fprintf('  TEST RESULT (Test Case %d - Object Exclusion Verification): FAIL - Tagged line style changed or handle is invalid.\n', test_case_idx);
-        if ~isvalid(line2_tc14)
-            fprintf('    ERROR: Handle for line2_tc14 became invalid after beautification.\n');
+       % If no sgtitle, maybe the figure has a main title if it wasn't a polar axes directly
+       % For this test, we focus on the polar axes itself.
+       % The title on the polar axes itself is the key.
+    end
+    
+    pax_beautified = findobj(fig_current, 'Type', 'PolarAxes');
+    passed_verification = true;
+    if isempty(pax_beautified)
+        fprintf('  VERIFICATION FAIL: PolarAxes disappeared after beautification.\n');
+        passed_verification = false;
+    else
+        pax_beautified = pax_beautified(1);
+        if abs(pax_beautified.FontSize - original_pax_fontsize) > 0.1
+            fprintf('  VERIFICATION FAIL: PolarAxes FontSize changed. Original: %.1f, Current: %.1f\n', original_pax_fontsize, pax_beautified.FontSize);
+            passed_verification = false;
+        end
+        if ~strcmp(pax_beautified.FontName, original_pax_fontname)
+            fprintf('  VERIFICATION FAIL: PolarAxes FontName changed. Original: %s, Current: %s\n', original_pax_fontname, pax_beautified.FontName);
+            passed_verification = false;
+        end
+        if abs(pax_beautified.LineWidth - original_pax_linewidth) > 0.01
+            fprintf('  VERIFICATION FAIL: PolarAxes LineWidth changed. Original: %.2f, Current: %.2f\n', original_pax_linewidth, pax_beautified.LineWidth);
+            passed_verification = false;
+        end
+        if ~isequal(pax_beautified.GridColor, original_pax_gridcolor)
+            fprintf('  VERIFICATION FAIL: PolarAxes GridColor changed.\n');
+            passed_verification = false;
+        end
+        if ~isequal(pax_beautified.RColor, original_pax_rcolor)
+            fprintf('  VERIFICATION FAIL: PolarAxes RColor changed.\n');
+            passed_verification = false;
+        end
+        if ~isequal(pax_beautified.ThetaColor, original_pax_thetacolor)
+            fprintf('  VERIFICATION FAIL: PolarAxes ThetaColor changed.\n');
+            passed_verification = false;
+        end
+        if isvalid(pax_beautified.Title) && ~strcmp(pax_beautified.Title.String, original_pax_title_str)
+             fprintf('  VERIFICATION FAIL: PolarAxes Title string changed. Original: "%s", Current: "%s"\n', original_pax_title_str, pax_beautified.Title.String);
+             passed_verification = false;
+        elseif ~isvalid(pax_beautified.Title) && ~isempty(original_pax_title_str)
+             fprintf('  VERIFICATION FAIL: PolarAxes Title removed or invalid after beautification.\n');
+             passed_verification = false;
+        end
+    end
+    
+    if passed_verification
+        fprintf('  VERIFICATION PASS: PolarAxes properties appear unchanged as expected.\n');
+    else
+        fprintf('  VERIFICATION FAIL: Some PolarAxes properties changed unexpectedly.\n');
+    end
+    
+    % Explicitly set a title for the saved image if not sgtitle
+    if isempty(sgtitle_obj) && isvalid(pax_beautified) && isvalid(pax_beautified.Title)
+         pax_beautified.Title.String = [test_name_current ' Beautified (Polar Unchanged)'];
+    elseif isempty(sgtitle_obj) && isvalid(pax_beautified) && ~isvalid(pax_beautified.Title)
+        title(pax_beautified, [test_name_current ' Beautified (Polar Unchanged)']);
+    end
+
+    save_comparison_figure_new(fig_current, test_name_current, 'beautified', output_dir_new);
+    fprintf('  Applied beautify_figure. Check that the polar plot is NOT styled (font, colors, line width of axes/grid).\n');
+catch ME_test
+    fprintf('  ERROR during New Test Case %d (%s): %s\n', test_case_num, test_name_current, ME_test.message);
+end
+if ishandle(fig_current); close(fig_current); end
+test_case_num = test_case_num + 1;
+
+%% --- Test Case: `axis_limit_mode` (focus on 'tight') ---
+fprintf('\n--- Running New Test Case %d: `axis_limit_mode` (focus on ''tight'') ---\n', test_case_num);
+test_name_current = sprintf('new_test_%02d_axis_limit_mode_tight', test_case_num);
+
+% Data that doesn't span a huge range initially
+x_data_limits = linspace(0, 5, 100);
+y_data_limits = sin(x_data_limits) + 0.5; % Shifted sine wave
+
+fig_current = figure('Visible', 'off', 'Position', [100, 100, 600, 450]);
+plot(x_data_limits, y_data_limits, 'b-');
+% Set initial loose limits
+xlim([-1, 6]);
+ylim([-1, 2]);
+original_xlim = xlim;
+original_ylim = ylim;
+title([test_name_current ' Original (Loose Limits)'], 'Interpreter', 'none');
+xlabel('X-axis'); ylabel('Y-axis'); grid on;
+save_comparison_figure_new(fig_current, test_name_current, 'original', output_dir_new);
+
+params_current = struct();
+params_current.axis_limit_mode = 'tight';
+params_current.style_preset = 'default'; 
+params_current.log_level = 0;
+
+fprintf('  Testing with axis_limit_mode = ''tight''.\n');
+try
+    params_current.figure_handle = fig_current;
+    beautify_figure(params_current); 
+    title([test_name_current ' Beautified (Tight Limits Expected)'], 'Interpreter', 'none');
+    
+    ax_beautified = gca;
+    beautified_xlim = xlim(ax_beautified);
+    beautified_ylim = ylim(ax_beautified);
+    
+    % Verification: Check if limits are tighter than original and close to data range
+    % For 'tight', the limits should be very close to min/max of data, possibly with a small internal padding.
+    % beautify_figure might add its own small padding even with 'tight', so direct equality to data min/max is too strict.
+    % We check if they are significantly different from original loose limits and closer to data bounds.
+    
+    data_min_x = min(x_data_limits); data_max_x = max(x_data_limits);
+    data_min_y = min(y_data_limits); data_max_y = max(y_data_limits);
+    
+    passed_verification = true;
+    % Check X limits
+    if beautified_xlim(1) > data_min_x + 0.1*(data_max_x-data_min_x) || beautified_xlim(1) > original_xlim(1) + 0.1*abs(original_xlim(1))
+        fprintf('  VERIFICATION FAIL: Tight Xlim(1) (%.2f) seems too loose compared to data min (%.2f) or not tighter than original (%.2f).\n', beautified_xlim(1), data_min_x, original_xlim(1));
+        passed_verification = false;
+    end
+    if beautified_xlim(2) < data_max_x - 0.1*(data_max_x-data_min_x) || beautified_xlim(2) < original_xlim(2) - 0.1*abs(original_xlim(2))
+        fprintf('  VERIFICATION FAIL: Tight Xlim(2) (%.2f) seems too loose compared to data max (%.2f) or not tighter than original (%.2f).\n', beautified_xlim(2), data_max_x, original_xlim(2));
+        passed_verification = false;
+    end
+
+    % Check Y limits
+    if beautified_ylim(1) > data_min_y + 0.1*(data_max_y-data_min_y) || beautified_ylim(1) > original_ylim(1) + 0.1*abs(original_ylim(1))
+        fprintf('  VERIFICATION FAIL: Tight Ylim(1) (%.2f) seems too loose compared to data min (%.2f) or not tighter than original (%.2f).\n', beautified_ylim(1), data_min_y, original_ylim(1));
+        passed_verification = false;
+    end
+    if beautified_ylim(2) < data_max_y - 0.1*(data_max_y-data_min_y) || beautified_ylim(2) < original_ylim(2) - 0.1*abs(original_ylim(2))
+        fprintf('  VERIFICATION FAIL: Tight Ylim(2) (%.2f) seems too loose compared to data max (%.2f) or not tighter than original (%.2f).\n', beautified_ylim(2), data_max_y, original_ylim(2));
+        passed_verification = false;
+    end
+    
+    if passed_verification
+        fprintf('  VERIFICATION INFO: Limits changed from X[%.2f, %.2f] Y[%.2f, %.2f] to X[%.2f, %.2f] Y[%.2f, %.2f]. Visual check recommended for tightness.\n', ...
+                original_xlim(1), original_xlim(2), original_ylim(1), original_ylim(2), beautified_xlim(1), beautified_xlim(2), beautified_ylim(1), beautified_ylim(2));
+    end
+
+    save_comparison_figure_new(fig_current, test_name_current, 'beautified', output_dir_new);
+    fprintf('  Applied beautify_figure. Check that the axis limits are now tight around the data.\n');
+catch ME_test
+    fprintf('  ERROR during New Test Case %d (%s): %s\n', test_case_num, test_name_current, ME_test.message);
+end
+if ishandle(fig_current); close(fig_current); end
+test_case_num = test_case_num + 1;
+
+%% --- Test Case: `legend_num_columns` and `legend_reverse_order` ---
+fprintf('\n--- Running New Test Case %d: `legend_num_columns` and `legend_reverse_order` ---\n', test_case_num);
+
+% Sub-case 1: legend_num_columns
+test_name_multicolumn = sprintf('new_test_%02d_legend_num_columns', test_case_num);
+fig_multicolumn = figure('Visible', 'off', 'Position', [100, 100, 700, 500]);
+hold on;
+plot(1:10, rand(1,10)+6, 'DisplayName', 'Series Alpha');
+plot(1:10, rand(1,10)+4, 'DisplayName', 'Series Beta');
+plot(1:10, rand(1,10)+2, 'DisplayName', 'Series Gamma');
+plot(1:10, rand(1,10)+0, 'DisplayName', 'Series Delta');
+hold off;
+legend('show');
+title([test_name_multicolumn ' Original (Single Column Legend)'], 'Interpreter', 'none');
+xlabel('X-data'); ylabel('Y-data'); grid on;
+save_comparison_figure_new(fig_multicolumn, test_name_multicolumn, 'original', output_dir_new);
+
+params_multicolumn = struct();
+params_multicolumn.legend_num_columns = 2;
+params_multicolumn.log_level = 0;
+
+fprintf('  Testing with legend_num_columns = 2.\n');
+try
+    params_multicolumn.figure_handle = fig_multicolumn;
+    beautify_figure(params_multicolumn); 
+    title([test_name_multicolumn ' Beautified (2-Column Legend)'], 'Interpreter', 'none');
+    
+    lgd_multicolumn = findobj(fig_multicolumn, 'Type', 'Legend');
+    passed_multicolumn = false;
+    if ~isempty(lgd_multicolumn) && isprop(lgd_multicolumn(1), 'NumColumns') && lgd_multicolumn(1).NumColumns == 2
+        fprintf('  VERIFICATION PASS: Legend NumColumns is 2 as expected.\n');
+        passed_multicolumn = true;
+    elseif ~isempty(lgd_multicolumn) && isprop(lgd_multicolumn(1), 'NumColumns')
+        fprintf('  VERIFICATION FAIL: Legend NumColumns is %d, expected 2.\n', lgd_multicolumn(1).NumColumns);
+    elseif isempty(lgd_multicolumn)
+        fprintf('  VERIFICATION FAIL: Legend not found after beautification for multicolumn test.\n');
+    else
+        fprintf('  VERIFICATION WARN: Could not verify NumColumns property (possibly older MATLAB version or unexpected legend object).\n');
+    end
+    
+    save_comparison_figure_new(fig_multicolumn, test_name_multicolumn, 'beautified', output_dir_new);
+    fprintf('  Applied beautify_figure. Check that the legend now has 2 columns.\n');
+catch ME_test_multicolumn
+    fprintf('  ERROR during New Test Case %d (%s): %s\n', test_case_num, test_name_multicolumn, ME_test_multicolumn.message);
+end
+if ishandle(fig_multicolumn); close(fig_multicolumn); end
+
+% Sub-case 2: legend_reverse_order
+test_name_revorder = sprintf('new_test_%02d_legend_reverse_order', test_case_num);
+fig_revorder = figure('Visible', 'off', 'Position', [100, 100, 700, 500]);
+hold on;
+h_plots_rev(1) = plot(1:10, rand(1,10)+3, 'DisplayName', 'First Plot (Top in Code)');
+h_plots_rev(2) = plot(1:10, rand(1,10)+1, 'DisplayName', 'Second Plot (Bottom in Code)');
+hold off;
+legend_original_revorder = legend('show');
+original_legend_strings = legend_original_revorder.String;
+title([test_name_revorder ' Original (Normal Legend Order)'], 'Interpreter', 'none');
+xlabel('X-data'); ylabel('Y-data'); grid on;
+save_comparison_figure_new(fig_revorder, test_name_revorder, 'original', output_dir_new);
+
+params_revorder = struct();
+params_revorder.legend_reverse_order = true;
+params_revorder.log_level = 0;
+
+fprintf('  Testing with legend_reverse_order = true.\n');
+try
+    params_revorder.figure_handle = fig_revorder;
+    beautify_figure(params_revorder); 
+    title([test_name_revorder ' Beautified (Reversed Legend Order)'], 'Interpreter', 'none');
+    
+    lgd_revorder = findobj(fig_revorder, 'Type', 'Legend');
+    passed_revorder = false;
+    if ~isempty(lgd_revorder) && isprop(lgd_revorder(1), 'String')
+        beautified_legend_strings = lgd_revorder(1).String;
+        if length(beautified_legend_strings) == length(original_legend_strings) && ...
+           strcmp(beautified_legend_strings{1}, original_legend_strings{2}) && ...
+           strcmp(beautified_legend_strings{2}, original_legend_strings{1})
+            fprintf('  VERIFICATION PASS: Legend order appears reversed as expected.\n');
+            passed_revorder = true;
         else
-            if abs(line2_tc14.LineWidth - original_line2_lw_tc14) >= 1e-6
-                fprintf('    LineWidth mismatch: Current LW: %.2f (Original: %.2f)\n', line2_tc14.LineWidth, original_line2_lw_tc14);
-            end
-            if ~isequal(line2_tc14.Color, original_line2_color_tc14)
-                fprintf('    Color mismatch: Current Color: [%.2f %.2f %.2f] (Original: [%.2f %.2f %.2f])\n', line2_tc14.Color, original_line2_color_tc14);
-            end
-            if ~strcmp(line2_tc14.Marker, original_line2_marker_tc14)
-                fprintf('    Marker mismatch: Current Marker: %s (Original: %s)\n', line2_tc14.Marker, original_line2_marker_tc14);
-            end
+            fprintf('  VERIFICATION FAIL: Legend order does not appear reversed. Original: {%s, %s}, Current: {%s, %s}.\n', ...
+                original_legend_strings{1}, original_legend_strings{2}, beautified_legend_strings{1}, beautified_legend_strings{2});
         end
+    elseif isempty(lgd_revorder)
+         fprintf('  VERIFICATION FAIL: Legend not found after beautification for reverse order test.\n');
+    else
+        fprintf('  VERIFICATION WARN: Could not verify legend strings for reverse order test.\n');
     end
-    fprintf('  Visual check: The red, thick, x-marked line should have retained its original style in the saved image.\n');
-catch ME
-    fprintf('  ERROR during Test Case %d (Object Exclusion): %s\n', test_case_idx, ME.message);
-end
-if ishandle(fig14_exclude); close(fig14_exclude); end
-test_case_idx = test_case_idx + 1;
-
-% Test Case 15 (Original Test Case 17): Empty Figure
-fprintf('\n--- Running Test Case %d: Empty Figure ---\n', test_case_idx);
-test_name_case15_empty = sprintf('test_case_%02d_empty_figure', test_case_idx); % Renamed
-fig15_empty = figure('Visible', 'off'); % Renamed
-fprintf('  Created an empty figure (no axes, no data).\n');
-save_comparison_figure(fig15_empty, test_name_case15_empty, 'original', output_dir);
-fprintf('  Applying beautify_figure() to the empty figure.\n');
-error_occurred_empty_fig_test_tc15 = false; % Renamed
-try
-    beautify_figure(fig15_empty);
-    fprintf('  Successfully applied beautify_figure() to an empty figure.\n');
-catch ME
-    fprintf('  ERROR during Test Case %d (Empty Figure): %s\n', test_case_idx, ME.message);
-    error_occurred_empty_fig_test_tc15 = true;
-end
-if ~error_occurred_empty_fig_test_tc15
-    save_comparison_figure(fig15_empty, test_name_case15_empty, 'beautified', output_dir);
-else
-    fprintf('  Skipping save of "beautified" empty figure due to error during beautification.\n');
-end
-if ishandle(fig15_empty); close(fig15_empty); end
-test_case_idx = test_case_idx + 1;
-
-% Test Case 16 (Original Test Case 18): Figure with UI Tabs
-fprintf('\n--- Running Test Case %d: Figure with UI Tabs ---\n', test_case_idx);
-test_name_case16_uitabs = sprintf('test_case_%02d_uitabs_figure', test_case_idx); % Renamed
-fig16_tabs = figure('Visible', 'off', 'Position', [100, 100, 700, 500]); % Renamed
-fprintf('  Created a figure with UI tabs.\n');
-tab_group16 = uitabgroup(fig16_tabs); % Renamed
-tab1_tc16 = uitab(tab_group16, 'Title', 'First Tab'); % Renamed
-ax1_tab16 = axes(tab1_tc16); % Renamed
-plot(ax1_tab16, 1:10, rand(1,10).* (1:10), 'r-o');
-title(ax1_tab16, 'Plot in Tab 1'); xlabel(ax1_tab16, 'X-Tab1'); ylabel(ax1_tab16, 'Y-Tab1'); grid(ax1_tab16, 'on');
-tab2_tc16 = uitab(tab_group16, 'Title', 'Second Tab'); % Renamed
-ax2_tab16 = axes(tab2_tc16); % Renamed
-scatter(ax2_tab16, rand(20,1), rand(20,1)*5, 36, 'b', 'filled', 'Marker', '*');
-title(ax2_tab16, 'Plot in Tab 2'); xlabel(ax2_tab16, 'X-Tab2'); ylabel(ax2_tab16, 'Y-Tab2'); grid(ax2_tab16, 'on');
-try sgtitle(fig16_tabs, [test_name_case16_uitabs ' Original'], 'Interpreter', 'none'); catch; end
-save_comparison_figure(fig16_tabs, test_name_case16_uitabs, 'original', output_dir);
-fprintf('  Applying beautify_figure() to the figure with UI tabs.\n');
-error_occurred_uitab_fig_test_tc16 = false; % Renamed
-try
-    beautify_figure(fig16_tabs); 
-    fprintf('  Successfully applied beautify_figure() to a figure with UI tabs.\n');
-    try sgtitle(fig16_tabs, [test_name_case16_uitabs ' Beautified'], 'Interpreter', 'none'); catch; end
-catch ME
-    fprintf('  ERROR during Test Case %d (UI Tabs Figure): %s\n', test_case_idx, ME.message);
-    error_occurred_uitab_fig_test_tc16 = true;
-end
-if ~error_occurred_uitab_fig_test_tc16
-    if isvalid(tab_group16) && ~isempty(tab_group16.Children)
-        tab_group16.SelectedTab = tab1_tc16; 
-        drawnow;
-    end
-    save_comparison_figure(fig16_tabs, test_name_case16_uitabs, 'beautified', output_dir);
-else
-    fprintf('  Skipping save of "beautified" UI tab figure due to error during beautification.\n');
-end
-if ishandle(fig16_tabs); close(fig16_tabs); end
-test_case_idx = test_case_idx + 1;
-
-% Test Case 17 (Original Test Case 19): Invalid Parameters
-fprintf('\n--- Running Test Case %d: Invalid Parameters ---\n', test_case_idx);
-test_name_case17_invalid = sprintf('test_case_%02d_invalid_params', test_case_idx); % Renamed
-fig17_invalid = figure('Visible', 'off'); % Renamed
-plot(1:10, rand(1,10));
-title([test_name_case17_invalid ' Original'], 'Interpreter', 'none');
-xlabel('X-axis'); ylabel('Y-axis'); grid on;
-save_comparison_figure(fig17_invalid, test_name_case17_invalid, 'original', output_dir);
-
-invalid_params_tc17.font_name = 123; % Renamed
-invalid_params_tc17.plot_line_width = 'not_a_number';
-invalid_params_tc17.theme = 'non_existent_theme';
-invalid_params_tc17.log_level = 2;
-invalid_params_tc17.export_settings = 'not_a_struct';
-% invalid_params_tc17.panel_labeling.enabled = 'maybe'; % Panel labeling removed
-invalid_params_tc17.stats_overlay.precision = -1.5;
-fprintf('  Defined invalid parameters: font_name=123, plot_line_width=''not_a_number'', theme=''non_existent_theme'', export_settings=''not_a_struct'', stats_overlay.precision=-1.5 \n'); % Panel labeling removed from message
-
-error_occurred_invalid_params_test_tc17 = false; % Renamed
-console_output_tc17 = ''; % Renamed
-
-missing_warnings_details_tc17 = {}; % Renamed
-
-% Initialize expected_warnings_found_tc17 and its fields to false
-expected_warnings_found_tc17 = struct();
-expected_warnings_found_tc17.font_name = false;
-expected_warnings_found_tc17.plot_line_width = false;
-expected_warnings_found_tc17.theme = false;
-expected_warnings_found_tc17.export_settings_type = false;
-expected_warnings_found_tc17.stats_overlay_precision_value = false;
-
-try
-    fprintf('  Applying beautify_figure() with intentionally invalid parameters. Expect warnings in console output.\n');
-    invalid_params_tc17.figure_handle = fig17_invalid;
-    console_output_tc17 = evalc('beautify_figure(invalid_params_tc17)');
-    fprintf('  beautify_figure() completed execution.\n');
     
-    if contains(console_output_tc17, 'Invalid value for font_name', 'IgnoreCase', true) || contains(console_output_tc17, 'Invalid type for font_name', 'IgnoreCase', true)
-        expected_warnings_found_tc17.font_name = true;
-    end
-    if contains(console_output_tc17, 'Invalid value for plot_line_width', 'IgnoreCase', true)
-        expected_warnings_found_tc17.plot_line_width = true;
-    end
-    if contains(console_output_tc17, 'Invalid value for theme', 'IgnoreCase', true) || contains(console_output_tc17, 'Unknown style preset', 'IgnoreCase', true)
-        expected_warnings_found_tc17.theme = true;
-    end
-    if contains(console_output_tc17, 'Parameter ''export_settings'' is not a struct', 'IgnoreCase', true)
-        expected_warnings_found_tc17.export_settings_type = true;
-    end
-    % Panel labeling check removed
-    if contains(console_output_tc17, 'Invalid value for stats_overlay.precision', 'IgnoreCase', true)
-        expected_warnings_found_tc17.stats_overlay_precision_value = true;
-    end
-catch ME
-    fprintf('  CRITICAL ERROR: beautify_figure() crashed with invalid parameters: %s\n', ME.message);
-    fprintf('  Stack trace:\n');
-    for k_stack = 1:length(ME.stack)
-        fprintf('    File: %s, Name: %s, Line: %d\n', ME.stack(k_stack).file, ME.stack(k_stack).name, ME.stack(k_stack).line);
-    end
-    fprintf('  This test expects graceful handling (warnings/logging), not a crash.\n');
-    error_occurred_invalid_params_test_tc17 = true;
+    save_comparison_figure_new(fig_revorder, test_name_revorder, 'beautified', output_dir_new);
+    fprintf('  Applied beautify_figure. Check that the legend entry order is reversed.\n');
+catch ME_test_revorder
+    fprintf('  ERROR during New Test Case %d (%s): %s\n', test_case_num, test_name_revorder, ME_test_revorder.message);
 end
+if ishandle(fig_revorder); close(fig_revorder); end
 
-if ishandle(fig17_invalid)
-    title([test_name_case17_invalid ' After Invalid Params Attempt'], 'Interpreter', 'none');
-    save_comparison_figure(fig17_invalid, test_name_case17_invalid, 'beautified_after_invalid_attempt', output_dir);
-else
-    fprintf('  Figure handle for invalid params test became invalid. Cannot save "beautified" state.\n');
+test_case_num = test_case_num + 1;
+
+%% --- Test Case: `stats_overlay` positions and inheritance ---
+fprintf('\n--- Running New Test Case %d: `stats_overlay` positions and inheritance ---\n', test_case_num);
+
+% Sub-case 1: Different position (southwest_inset)
+test_name_stats_pos = sprintf('new_test_%02d_stats_pos_sw', test_case_num);
+fig_stats_pos = figure('Visible', 'off', 'Position', [100, 100, 600, 450]);
+x_data_stats_pos = 1:30;
+y_data_stats_pos = cos(x_data_stats_pos/3) + randn(1,30)*0.5;
+plot(x_data_stats_pos, y_data_stats_pos, 'Tag', 'DataForStatsPos', 'LineWidth', 1.2, 'Color', [0.2 0.5 0.2]);
+title([test_name_stats_pos ' Original'], 'Interpreter', 'none');
+xlabel('X'); ylabel('Y'); grid on;
+save_comparison_figure_new(fig_stats_pos, test_name_stats_pos, 'original', output_dir_new);
+
+params_stats_pos = struct();
+params_stats_pos.stats_overlay.enabled = true;
+params_stats_pos.stats_overlay.target_plot_handle_tag = 'DataForStatsPos';
+params_stats_pos.stats_overlay.statistics = {'mean', 'N'};
+params_stats_pos.stats_overlay.position = 'southwest_inset'; % Different position
+params_stats_pos.stats_overlay.precision = 4;
+params_stats_pos.log_level = 0;
+
+fprintf('  Testing stats_overlay with position = ''southwest_inset''.\n');
+try
+    params_stats_pos.figure_handle = fig_stats_pos;
+    beautify_figure(params_stats_pos); 
+    title([test_name_stats_pos ' Beautified (Stats SW)'], 'Interpreter', 'none');
+    % Visual verification needed for position
+    fprintf('  VERIFICATION INFO: Visual check needed for stats overlay in southwest_inset position.\n');
+    save_comparison_figure_new(fig_stats_pos, test_name_stats_pos, 'beautified', output_dir_new);
+catch ME_test_stats_pos
+    fprintf('  ERROR during New Test Case %d (%s - SW Position): %s\n', test_case_num, test_name_stats_pos, ME_test_stats_pos.message);
 end
-if ishandle(fig17_invalid); close(fig17_invalid); end
+if ishandle(fig_stats_pos); close(fig_stats_pos); end
 
-all_warnings_detected_tc17 = all(struct2array(expected_warnings_found_tc17)); % Renamed
-if error_occurred_invalid_params_test_tc17
-    fprintf('  TEST RESULT (Test Case %d - Invalid Parameters): FAIL - beautify_figure crashed.\n', test_case_idx);
-elseif ~all_warnings_detected_tc17
-    fprintf('  TEST RESULT (Test Case %d - Invalid Parameters): FAIL - beautify_figure did not crash, but some expected warnings were NOT found.\n', test_case_idx);
-    warning_fields_tc17 = fieldnames(expected_warnings_found_tc17); % Renamed
-    for k_wf = 1:length(warning_fields_tc17)
-        if ~expected_warnings_found_tc17.(warning_fields_tc17{k_wf})
-            missing_warnings_details_tc17{end+1} = sprintf('Missing expected warning related to: %s', warning_fields_tc17{k_wf});
-            fprintf('    - %s\n', missing_warnings_details_tc17{end});
+% Sub-case 2: Font and Color Inheritance for stats_overlay
+test_name_stats_inherit = sprintf('new_test_%02d_stats_font_color_inherit', test_case_num);
+fig_stats_inherit = figure('Visible', 'off', 'Position', [100, 100, 600, 450]);
+x_data_stats_inherit = 1:30;
+y_data_stats_inherit = sin(x_data_stats_inherit/5) * 2;
+plot(x_data_stats_inherit, y_data_stats_inherit, 'Tag', 'DataForStatsInherit', 'LineWidth', 1.2, 'Color', [0.7 0.2 0.2]);
+title([test_name_stats_inherit ' Original'], 'Interpreter', 'none');
+xlabel('X'); ylabel('Y'); grid on;
+save_comparison_figure_new(fig_stats_inherit, test_name_stats_inherit, 'original', output_dir_new);
+
+params_stats_inherit = struct();
+% Set global font and colors that stats overlay should inherit
+params_stats_inherit.font_name = 'Courier New'; % A distinct font
+params_stats_inherit.text_color = [0.1 0.5 0.1]; % A distinct color (dark green)
+params_stats_inherit.base_font_size = 12; % To make label font size predictable
+
+params_stats_inherit.stats_overlay.enabled = true;
+params_stats_inherit.stats_overlay.target_plot_handle_tag = 'DataForStatsInherit';
+params_stats_inherit.stats_overlay.statistics = {'median', 'std'};
+params_stats_inherit.stats_overlay.position = 'northwest_inset';
+% params_stats_inherit.stats_overlay.font_name is NOT set (should inherit)
+% params_stats_inherit.stats_overlay.text_color is NOT set (should inherit)
+params_stats_inherit.log_level = 2; % ENABLE DETAILED LOGGING FOR THIS SUB-CASE
+
+fprintf('  Testing stats_overlay for font and color inheritance.\n');
+fprintf('  Global font: %s, Global text color: [%.1f %.1f %.1f]\n', params_stats_inherit.font_name, params_stats_inherit.text_color);
+try
+    params_stats_inherit.figure_handle = fig_stats_inherit;
+    beautify_figure(params_stats_inherit); 
+    title([test_name_stats_inherit ' Beautified (Stats Inherit Font/Color)'], 'Interpreter', 'none');
+    
+    stats_text_obj = findobj(fig_stats_inherit, 'Type', 'text', 'Tag', 'BeautifyFig_StatsOverlay');
+    passed_inherit_verification = true;
+    if isempty(stats_text_obj)
+        fprintf('  VERIFICATION FAIL: Stats overlay text object not found for inheritance test.\n');
+        passed_inherit_verification = false;
+    else
+        stats_text_obj = stats_text_obj(1);
+        actual_font_name = stats_text_obj.FontName;
+        actual_text_color = stats_text_obj.Color;
+        
+        if ~strcmp(actual_font_name, params_stats_inherit.font_name)
+            fprintf('  VERIFICATION FAIL: Stats overlay FontName ("%s") does not match global FontName ("%s").\n', actual_font_name, params_stats_inherit.font_name);
+            passed_inherit_verification = false;
+        else
+            fprintf('  VERIFICATION PASS: Stats overlay FontName correctly inherited as "%s".\n', actual_font_name);
+        end
+        
+        if ~isequal(actual_text_color, params_stats_inherit.text_color)
+            fprintf('  VERIFICATION FAIL: Stats overlay TextColor ([%.1f %.1f %.1f]) does not match global TextColor ([%.1f %.1f %.1f]).\n', actual_text_color, params_stats_inherit.text_color);
+            passed_inherit_verification = false;
+        else
+            fprintf('  VERIFICATION PASS: Stats overlay TextColor correctly inherited.\n');
         end
     end
-    fprintf('  Captured console output for review:\n%s\n', console_output_tc17);
-else
-    fprintf('  TEST RESULT (Test Case %d - Invalid Parameters): PASS - beautify_figure did not crash and all expected warnings were found.\n', test_case_idx);
-    fprintf('  Captured console output (contains expected warnings):\n%s\n', console_output_tc17);
+    
+    if ~passed_inherit_verification
+         fprintf('  VERIFICATION FAIL: Stats overlay did not correctly inherit font/color properties.\n');
+    end
+
+    save_comparison_figure_new(fig_stats_inherit, test_name_stats_inherit, 'beautified', output_dir_new);
+catch ME_test_stats_inherit
+    fprintf('  ERROR during New Test Case %d (%s - Inheritance): %s\n', test_case_num, test_name_stats_inherit, ME_test_stats_inherit.message);
 end
-test_case_idx = test_case_idx + 1;
+if ishandle(fig_stats_inherit); close(fig_stats_inherit); end
 
+test_case_num = test_case_num + 1;
+
+%% --- Test Case: `exclude_object_types` ---
+fprintf('\n--- Running New Test Case %d: `exclude_object_types` (excluding Text objects) ---\n', test_case_num);
+test_name_current = sprintf('new_test_%02d_exclude_object_types_text', test_case_num);
+
+fig_current = figure('Visible', 'off', 'Position', [100, 100, 600, 450]);
+hold on;
+plot(1:10, rand(1,10), 'b-o', 'LineWidth', 1, 'MarkerSize', 4, 'DisplayName', 'Line Plot');
+text(2, 0.8, 'Original Text 1 (Exclude)', 'FontSize', 10, 'Color', 'red', 'Tag', 'MyTextObject1');
+text(5, 0.2, 'Original Text 2 (Exclude)', 'FontSize', 12, 'Color', 'magenta', 'Tag', 'MyTextObject2');
+hold off;
+title([test_name_current ' Original with Text Objects'], 'Interpreter', 'none');
+xlabel('X-axis (should be styled)'); 
+ylabel('Y-axis (should be styled)'); 
+legend('show');
+grid on;
+
+% Store original properties of text objects for verification
+text_obj1 = findobj(fig_current, 'Tag', 'MyTextObject1');
+original_text1_fontsize = text_obj1.FontSize;
+original_text1_color = text_obj1.Color;
+original_text1_fontname = text_obj1.FontName;
+
+text_obj2 = findobj(fig_current, 'Tag', 'MyTextObject2');
+original_text2_fontsize = text_obj2.FontSize;
+original_text2_color = text_obj2.Color;
+original_text2_fontname = text_obj2.FontName;
+
+save_comparison_figure_new(fig_current, test_name_current, 'original', output_dir_new);
+
+params_current = struct();
+params_current.exclude_object_types = {'matlab.graphics.primitive.Text'};
+% Apply some global styles to see if they are NOT applied to the excluded text
+params_current.font_name = 'Times New Roman'; 
+params_current.base_font_size = 16; % This would make text huge if applied
+params_current.text_color = [0 0.5 0]; % Dark green
+params_current.log_level = 0;
+
+fprintf('  Testing with exclude_object_types = {''matlab.graphics.primitive.Text''}.\n');
+fprintf('  Global font set to: %s, base_font_size: %d, text_color: [%.1f %.1f %.1f]\n', ...
+    params_current.font_name, params_current.base_font_size, params_current.text_color);
+
+try
+    params_current.figure_handle = fig_current;
+    beautify_figure(params_current); 
+    title([test_name_current ' Beautified (Text Objects Excluded)'], 'Interpreter', 'none');
+    
+    text_obj1_after = findobj(fig_current, 'Tag', 'MyTextObject1');
+    text_obj2_after = findobj(fig_current, 'Tag', 'MyTextObject2');
+    passed_verification = true;
+
+    if isempty(text_obj1_after) || ~isvalid(text_obj1_after)
+        fprintf('  VERIFICATION FAIL: Text object 1 not found or invalid after beautification.\n');
+        passed_verification = false;
+    else
+        if abs(text_obj1_after.FontSize - original_text1_fontsize) > 0.1
+            fprintf('  VERIFICATION FAIL: Text object 1 FontSize changed. Original: %.1f, Current: %.1f\n', original_text1_fontsize, text_obj1_after.FontSize);
+            passed_verification = false;
+        end
+        if ~isequal(text_obj1_after.Color, original_text1_color)
+            fprintf('  VERIFICATION FAIL: Text object 1 Color changed.\n');
+            passed_verification = false;
+        end
+        if ~strcmp(text_obj1_after.FontName, original_text1_fontname)
+            fprintf('  VERIFICATION FAIL: Text object 1 FontName changed. Original: %s, Current: %s\n', original_text1_fontname, text_obj1_after.FontName);
+            passed_verification = false;
+        end
+    end
+    
+    if isempty(text_obj2_after) || ~isvalid(text_obj2_after)
+        fprintf('  VERIFICATION FAIL: Text object 2 not found or invalid after beautification.\n');
+        passed_verification = false;
+    else
+        if abs(text_obj2_after.FontSize - original_text2_fontsize) > 0.1
+            fprintf('  VERIFICATION FAIL: Text object 2 FontSize changed. Original: %.1f, Current: %.1f\n', original_text2_fontsize, text_obj2_after.FontSize);
+            passed_verification = false;
+        end
+        if ~isequal(text_obj2_after.Color, original_text2_color)
+            fprintf('  VERIFICATION FAIL: Text object 2 Color changed.\n');
+            passed_verification = false;
+        end
+         if ~strcmp(text_obj2_after.FontName, original_text2_fontname)
+            fprintf('  VERIFICATION FAIL: Text object 2 FontName changed. Original: %s, Current: %s\n', original_text2_fontname, text_obj2_after.FontName);
+            passed_verification = false;
+        end
+    end
+    
+    % Check that title and labels ARE styled (as they are not general text objects)
+    ax_after = gca;
+    if strcmp(ax_after.XLabel.FontName, params_current.font_name) && ...
+       abs(ax_after.XLabel.FontSize - round(params_current.base_font_size * 1.0 * 1.0)) < 1.1 && ... % label_scale=1, global_scale=1 for this test setup
+       isequal(ax_after.XLabel.Color, params_current.text_color)
+        fprintf('  VERIFICATION INFO: XLabel appears styled as expected.\n');
+    else
+        fprintf('  VERIFICATION WARN: XLabel does not appear to be styled with global settings. Font: %s (exp %s), Size: %.1f (exp ~%.1f), Color: [%.1f %.1f %.1f] (exp [%.1f %.1f %.1f]) \n', ...
+            ax_after.XLabel.FontName, params_current.font_name, ax_after.XLabel.FontSize, params_current.base_font_size, ax_after.XLabel.Color, params_current.text_color);
+        % This is not a failure of exclusion, but good to note.
+    end
+
+    if passed_verification
+        fprintf('  VERIFICATION PASS: Custom text objects appear unchanged as expected.\n');
+    else
+        fprintf('  VERIFICATION FAIL: Some custom text object properties changed unexpectedly.\n');
+    end
+    
+    save_comparison_figure_new(fig_current, test_name_current, 'beautified', output_dir_new);
+    fprintf('  Applied beautify_figure. Check that the manually added text objects (red, magenta) are NOT styled, but other elements (axes labels, title, line) are.\n');
+catch ME_test
+    fprintf('  ERROR during New Test Case %d (%s): %s\n', test_case_num, test_name_current, ME_test.message);
+end
+if ishandle(fig_current); close(fig_current); end
+test_case_num = test_case_num + 1;
+
+%% --- Test Case: `beautify_sgtitle = false` ---
+fprintf('\n--- Running New Test Case %d: `beautify_sgtitle = false` ---\n', test_case_num);
+test_name_current = sprintf('new_test_%02d_beautify_sgtitle_false', test_case_num);
+
+fig_current = figure('Visible', 'off', 'Position', [100, 100, 600, 450]);
+% Create a layout to ensure sgtitle has a target
+tiledlayout(fig_current, 1, 1, 'Padding', 'compact'); 
+ax_sgtitle_test = nexttile;
+plot(ax_sgtitle_test, 1:10, rand(1,10));
+title(ax_sgtitle_test, 'Subplot Title (should be styled)');
+original_sgtitle_text = 'Original SGTitle (Should NOT Be Styled)';
+original_sgtitle_fontname = 'Helvetica'; % Set a specific original font
+original_sgtitle_fontsize = 18;      % Set a specific original size
+original_sgtitle_color = [0.8 0.2 0.2]; % Set a specific original color (e.g., dark red)
+
+sgt_handle = sgtitle(fig_current, original_sgtitle_text, ...
+                        'FontName', original_sgtitle_fontname, ...
+                        'FontSize', original_sgtitle_fontsize, ...
+                        'Color', original_sgtitle_color, ...
+                        'FontWeight', 'bold'); % Also check weight
+
+save_comparison_figure_new(fig_current, test_name_current, 'original', output_dir_new);
+
+params_current = struct();
+params_current.beautify_sgtitle = false;
+% Apply some global styles to see they are NOT applied to sgtitle
+params_current.font_name = 'Arial'; % Different from sgtitle's original
+params_current.base_font_size = 10;   % Different from sgtitle's original
+params_current.text_color = [0 0.5 0]; % Different from sgtitle's original (dark green)
+params_current.title_scale = 1.5; % This would affect sgtitle if it were processed
+params_current.log_level = 0;
+
+fprintf('  Testing with beautify_sgtitle = false.\n');
+fprintf('  Original sgtitle - Font: %s, Size: %d, Color: [%.1f %.1f %.1f]\n', ...
+    original_sgtitle_fontname, original_sgtitle_fontsize, original_sgtitle_color);
+fprintf('  Global beautify params - Font: %s, BaseSize: %d, TextColor: [%.1f %.1f %.1f]\n', ...
+    params_current.font_name, params_current.base_font_size, params_current.text_color);
+
+try
+    params_current.figure_handle = fig_current;
+    beautify_figure(params_current); 
+    % We don't set the main figure title here, as we are checking sgtitle specifically
+    
+    sgt_handle_after = findobj(fig_current, 'Type', 'text', '-and', 'Tag', 'sgtitle'); % sgtitle creates a text object with this tag
+    passed_verification = true;
+
+    if isempty(sgt_handle_after) || ~isvalid(sgt_handle_after)
+        fprintf('  VERIFICATION FAIL: SGTitle handle not found or invalid after beautification.\n');
+        passed_verification = false;
+    else
+        sgt_handle_after = sgt_handle_after(1); % Use the first one found
+        if ~strcmp(sgt_handle_after.String, original_sgtitle_text)
+            % This shouldn't happen as beautify_figure doesn't change string content
+            fprintf('  VERIFICATION WARN: SGTitle String changed. Original: "%s", Current: "%s"\n', original_sgtitle_text, sgt_handle_after.String);
+        end
+        if ~strcmp(sgt_handle_after.FontName, original_sgtitle_fontname)
+            fprintf('  VERIFICATION FAIL: SGTitle FontName changed. Original: %s, Current: %s\n', original_sgtitle_fontname, sgt_handle_after.FontName);
+            passed_verification = false;
+        end
+        if abs(sgt_handle_after.FontSize - original_sgtitle_fontsize) > 0.1
+            fprintf('  VERIFICATION FAIL: SGTitle FontSize changed. Original: %.1f, Current: %.1f\n', original_sgtitle_fontsize, sgt_handle_after.FontSize);
+            passed_verification = false;
+        end
+        if ~isequal(sgt_handle_after.Color, original_sgtitle_color)
+            fprintf('  VERIFICATION FAIL: SGTitle Color changed. Original: [%.1f %.1f %.1f], Current: [%.1f %.1f %.1f]\n', ...
+                original_sgtitle_color, sgt_handle_after.Color);
+            passed_verification = false;
+        end
+         if ~strcmp(lower(sgt_handle_after.FontWeight), 'bold') % Original was bold
+            fprintf('  VERIFICATION FAIL: SGTitle FontWeight changed. Original: bold, Current: %s\n', sgt_handle_after.FontWeight);
+            passed_verification = false;
+        end
+    end
+    
+    % Also check that the subplot title IS styled
+    ax_title_after = ax_sgtitle_test.Title;
+    expected_ax_title_font = params_current.font_name;
+    % Scaled font size for subplot title: base_font_size * title_scale * global_font_scale (global_font_scale is 1 here)
+    expected_ax_title_fontsize = round(params_current.base_font_size * params_current.title_scale); 
+    if isvalid(ax_title_after)
+        if strcmp(ax_title_after.FontName, expected_ax_title_font) && ...
+           abs(ax_title_after.FontSize - expected_ax_title_fontsize) < 1.1 && ...
+           isequal(ax_title_after.Color, params_current.text_color)
+            fprintf('  VERIFICATION INFO: Subplot title appears styled as expected.\n');
+        else
+            fprintf('  VERIFICATION WARN: Subplot title does not appear to be styled as expected.\n');
+            fprintf('    Subplot Title - Font: %s (Exp: %s), Size: %.1f (Exp: ~%.1f), Color: [%.1f %.1f %.1f] (Exp: [%.1f %.1f %.1f])\n', ...
+                ax_title_after.FontName, expected_ax_title_font, ax_title_after.FontSize, expected_ax_title_fontsize, ax_title_after.Color, params_current.text_color);
+        end
+    else
+        fprintf('  VERIFICATION WARN: Could not find subplot title to check if it was styled.\n');
+    end
+
+    if passed_verification
+        fprintf('  VERIFICATION PASS: SGTitle properties appear unchanged as expected.\n');
+    else
+        fprintf('  VERIFICATION FAIL: Some SGTitle properties changed unexpectedly.\n');
+    end
+    
+    save_comparison_figure_new(fig_current, test_name_current, 'beautified', output_dir_new);
+    fprintf('  Applied beautify_figure. Check that the main sgtitle is NOT styled (font, size, color), but the subplot title IS styled.\n');
+catch ME_test
+    fprintf('  ERROR during New Test Case %d (%s): %s\n', test_case_num, test_name_current, ME_test.message);
+end
+if ishandle(fig_current); close(fig_current); end
+test_case_num = test_case_num + 1;
+
+%% --- Test Case: `marker_cycle_threshold` and `line_style_cycle_threshold` ('auto' mode) ---
+fprintf('\n--- Running New Test Case %d: Marker/Line Cycle Thresholds (auto mode) ---\n', test_case_num);
+
+common_params_threshold_test = struct();
+common_params_threshold_test.cycle_marker_styles = 'auto';
+common_params_threshold_test.cycle_line_styles = 'auto';
+common_params_threshold_test.log_level = 2; % ENABLE DETAILED LOGGING
+% Define some default marker and line styles for beautify_figure to use if it decides to cycle
+common_params_threshold_test.marker_styles = {'o', 's', 'd', '^'}; 
+common_params_threshold_test.line_style_order = {'-', '--', ':'};
+
+% Sub-case 1: Marker cycling based on marker_cycle_threshold
+marker_thresh = 3; % Let's use the default from beautify_figure: params.marker_cycle_threshold = 3
+common_params_threshold_test.marker_cycle_threshold = marker_thresh;
+
+% Test just below threshold (markers should NOT cycle, all should be 'none' or their original if any)
+num_plots_below_marker_thresh = marker_thresh; 
+test_name_marker_below = sprintf('new_test_%02d_marker_cycle_below_thresh%d', test_case_num, num_plots_below_marker_thresh);
+fig_marker_below = figure('Visible', 'off', 'Position', [100,100,700,500]);
+hold on;
+h_plots_marker_below = gobjects(num_plots_below_marker_thresh, 1);
+for p_idx = 1:num_plots_below_marker_thresh
+    h_plots_marker_below(p_idx) = plot(1:5, rand(1,5) + p_idx, 'DisplayName', sprintf('Series %d', p_idx));
+end
+hold off; legend('show'); grid on;
+title([test_name_marker_below ' Original'], 'Interpreter', 'none');
+save_comparison_figure_new(fig_marker_below, test_name_marker_below, 'original', output_dir_new);
+
+fprintf('  Testing marker cycling: %d plots (<= threshold %d). Markers should NOT cycle beyond plot defaults.\n', num_plots_below_marker_thresh, marker_thresh);
+try
+    params_marker_below = common_params_threshold_test;
+    params_marker_below.figure_handle = fig_marker_below;
+    beautify_figure(params_marker_below);
+    title([test_name_marker_below ' Beautified (Markers Unchanged)'], 'Interpreter', 'none');
+    
+    passed_marker_below = true;
+    for p_idx = 1:num_plots_below_marker_thresh
+        if ~isvalid(h_plots_marker_below(p_idx)) continue; end
+        current_marker = get(h_plots_marker_below(p_idx), 'Marker');
+        % Default for plot is 'none'. If beautify_figure didn't cycle, it should remain 'none'.
+        if ~strcmp(current_marker, 'none') 
+            fprintf('  VERIFICATION FAIL (Marker Below Thresh): Plot %d Marker is "%s", expected "none" (no cycle).\n', p_idx, current_marker);
+            passed_marker_below = false;
+        end
+    end
+    if passed_marker_below
+        fprintf('  VERIFICATION PASS (Marker Below Thresh): Markers did not cycle as expected.\n');
+    end
+    save_comparison_figure_new(fig_marker_below, test_name_marker_below, 'beautified', output_dir_new);
+catch ME_marker_below
+    fprintf('  ERROR during New Test Case %d (%s): %s\n', test_case_num, test_name_marker_below, ME_marker_below.message);
+end
+if ishandle(fig_marker_below); close(fig_marker_below); end
+
+% Test just above threshold (markers SHOULD cycle)
+num_plots_above_marker_thresh = marker_thresh + 1;
+test_name_marker_above = sprintf('new_test_%02d_marker_cycle_above_thresh%d', test_case_num, num_plots_above_marker_thresh);
+fig_marker_above = figure('Visible', 'off', 'Position', [100,100,700,500]);
+hold on;
+h_plots_marker_above = gobjects(num_plots_above_marker_thresh, 1);
+for p_idx = 1:num_plots_above_marker_thresh
+    h_plots_marker_above(p_idx) = plot(1:5, rand(1,5) + p_idx, 'DisplayName', sprintf('Series %d', p_idx));
+end
+hold off; legend('show'); grid on;
+title([test_name_marker_above ' Original'], 'Interpreter', 'none');
+save_comparison_figure_new(fig_marker_above, test_name_marker_above, 'original', output_dir_new);
+
+fprintf('  Testing marker cycling: %d plots (> threshold %d). Markers SHOULD cycle.\n', num_plots_above_marker_thresh, marker_thresh);
+try
+    params_marker_above = common_params_threshold_test;
+    params_marker_above.figure_handle = fig_marker_above;
+    beautify_figure(params_marker_above);
+    title([test_name_marker_above ' Beautified (Markers Cycled)'], 'Interpreter', 'none');
+    
+    passed_marker_above = true;
+    cycled_markers_found = zeros(num_plots_above_marker_thresh,1);
+    for p_idx = 1:num_plots_above_marker_thresh
+         if ~isvalid(h_plots_marker_above(p_idx)) continue; end
+        current_marker = get(h_plots_marker_above(p_idx), 'Marker');
+        expected_marker = common_params_threshold_test.marker_styles{mod(p_idx-1, length(common_params_threshold_test.marker_styles))+1};
+        if ~strcmp(current_marker, expected_marker)
+            fprintf('  VERIFICATION FAIL (Marker Above Thresh): Plot %d Marker is "%s", expected "%s" from cycle.\n', p_idx, current_marker, expected_marker);
+            passed_marker_above = false;
+        else
+            cycled_markers_found(p_idx) = 1;
+        end
+    end
+    if passed_marker_above && sum(cycled_markers_found) == num_plots_above_marker_thresh
+        fprintf('  VERIFICATION PASS (Marker Above Thresh): Markers cycled as expected.\n');
+    elseif passed_marker_above % individual checks passed but maybe not all plots checked if some invalid
+        fprintf('  VERIFICATION INFO (Marker Above Thresh): All valid plots showed expected cycled markers.\n');
+    else
+         fprintf('  VERIFICATION FAIL (Marker Above Thresh): Not all markers cycled as expected.\n');
+    end
+    save_comparison_figure_new(fig_marker_above, test_name_marker_above, 'beautified', output_dir_new);
+catch ME_marker_above
+    fprintf('  ERROR during New Test Case %d (%s): %s\n', test_case_num, test_name_marker_above, ME_marker_above.message);
+end
+if ishandle(fig_marker_above); close(fig_marker_above); end
+
+
+% Sub-case 2: Line style cycling based on line_style_cycle_threshold
+line_thresh = 2; % Let's use the default from beautify_figure: params.line_style_cycle_threshold = 2
+common_params_threshold_test.line_style_cycle_threshold = line_thresh;
+common_params_threshold_test.cycle_marker_styles = false; % Turn off marker cycling for this sub-test clarity
+
+% Test just below threshold (line styles should NOT cycle beyond plot defaults)
+num_plots_below_line_thresh = line_thresh;
+test_name_line_below = sprintf('new_test_%02d_line_cycle_below_thresh%d', test_case_num, num_plots_below_line_thresh);
+fig_line_below = figure('Visible', 'off', 'Position', [100,100,700,500]);
+hold on;
+h_plots_line_below = gobjects(num_plots_below_line_thresh, 1);
+for p_idx = 1:num_plots_below_line_thresh
+    h_plots_line_below(p_idx) = plot(1:5, rand(1,5) + p_idx, 'DisplayName', sprintf('Series %d', p_idx));
+end
+hold off; legend('show'); grid on;
+title([test_name_line_below ' Original'], 'Interpreter', 'none');
+save_comparison_figure_new(fig_line_below, test_name_line_below, 'original', output_dir_new);
+
+fprintf('  Testing line style cycling: %d plots (<= threshold %d). Line styles should NOT cycle beyond plot defaults (solid).\n', num_plots_below_line_thresh, line_thresh);
+try
+    params_line_below = common_params_threshold_test;
+    params_line_below.figure_handle = fig_line_below;
+    beautify_figure(params_line_below);
+    title([test_name_line_below ' Beautified (Lines Unchanged)'], 'Interpreter', 'none');
+    
+    passed_line_below = true;
+    for p_idx = 1:num_plots_below_line_thresh
+        if ~isvalid(h_plots_line_below(p_idx)) continue; end
+        current_linestyle = get(h_plots_line_below(p_idx), 'LineStyle');
+        % Default for plot is '-'. If beautify_figure didn't cycle, it should remain '-'.
+        if ~strcmp(current_linestyle, '-') 
+            fprintf('  VERIFICATION FAIL (Line Below Thresh): Plot %d LineStyle is "%s", expected "-" (no cycle).\n', p_idx, current_linestyle);
+            passed_line_below = false;
+        end
+    end
+    if passed_line_below
+        fprintf('  VERIFICATION PASS (Line Below Thresh): Line styles did not cycle as expected.\n');
+    end
+    save_comparison_figure_new(fig_line_below, test_name_line_below, 'beautified', output_dir_new);
+catch ME_line_below
+    fprintf('  ERROR during New Test Case %d (%s): %s\n', test_case_num, test_name_line_below, ME_line_below.message);
+end
+if ishandle(fig_line_below); close(fig_line_below); end
+
+% Test just above threshold (line styles SHOULD cycle)
+num_plots_above_line_thresh = line_thresh + 1;
+test_name_line_above = sprintf('new_test_%02d_line_cycle_above_thresh%d', test_case_num, num_plots_above_line_thresh);
+fig_line_above = figure('Visible', 'off', 'Position', [100,100,700,500]);
+hold on;
+h_plots_line_above = gobjects(num_plots_above_line_thresh, 1);
+for p_idx = 1:num_plots_above_line_thresh
+    h_plots_line_above(p_idx) = plot(1:5, rand(1,5) + p_idx, 'DisplayName', sprintf('Series %d', p_idx));
+end
+hold off; legend('show'); grid on;
+title([test_name_line_above ' Original'], 'Interpreter', 'none');
+save_comparison_figure_new(fig_line_above, test_name_line_above, 'original', output_dir_new);
+
+fprintf('  Testing line style cycling: %d plots (> threshold %d). Line styles SHOULD cycle.\n', num_plots_above_line_thresh, line_thresh);
+try
+    params_line_above = common_params_threshold_test;
+    params_line_above.figure_handle = fig_line_above;
+    beautify_figure(params_line_above);
+    title([test_name_line_above ' Beautified (Lines Cycled)'], 'Interpreter', 'none');
+    
+    passed_line_above = true;
+    cycled_lines_found = zeros(num_plots_above_line_thresh,1);
+    for p_idx = 1:num_plots_above_line_thresh
+        if ~isvalid(h_plots_line_above(p_idx)) continue; end
+        current_linestyle = get(h_plots_line_above(p_idx), 'LineStyle');
+        expected_linestyle = common_params_threshold_test.line_style_order{mod(p_idx-1, length(common_params_threshold_test.line_style_order))+1};
+        if ~strcmp(current_linestyle, expected_linestyle)
+            fprintf('  VERIFICATION FAIL (Line Above Thresh): Plot %d LineStyle is "%s", expected "%s" from cycle.\n', p_idx, current_linestyle, expected_linestyle);
+            passed_line_above = false;
+        else
+            cycled_lines_found(p_idx) = 1;
+        end
+    end
+    if passed_line_above && sum(cycled_lines_found) == num_plots_above_line_thresh
+        fprintf('  VERIFICATION PASS (Line Above Thresh): Line styles cycled as expected.\n');
+    elseif passed_line_above
+         fprintf('  VERIFICATION INFO (Line Above Thresh): All valid plots showed expected cycled line styles.\n');
+    else
+        fprintf('  VERIFICATION FAIL (Line Above Thresh): Not all line styles cycled as expected.\n');
+    end
+    save_comparison_figure_new(fig_line_above, test_name_line_above, 'beautified', output_dir_new);
+catch ME_line_above
+    fprintf('  ERROR during New Test Case %d (%s): %s\n', test_case_num, test_name_line_above, ME_line_above.message);
+end
+if ishandle(fig_line_above); close(fig_line_above); end
+
+test_case_num = test_case_num + 1;
+
+%% --- Test Case: Specific Named Color Palettes ('turbo', 'cividis') ---
+fprintf('\n--- Running New Test Case %d: Specific Named Color Palettes ---\n', test_case_num);
+palettes_to_test = {'turbo', 'cividis'};
+num_lines_palette_test = 5; % Number of lines to plot
+
+for p_idx = 1:length(palettes_to_test)
+    current_palette_name = palettes_to_test{p_idx};
+    test_name_current_palette = sprintf('new_test_%02d_palette_%s', test_case_num, current_palette_name);
+    
+    fig_palette = figure('Visible', 'off', 'Position', [100, 100, 650, 480]);
+    hold on;
+    h_plot_lines_palette = gobjects(num_lines_palette_test, 1);
+    for line_idx = 1:num_lines_palette_test
+        h_plot_lines_palette(line_idx) = plot(1:10, rand(1,10) + line_idx*2, 'DisplayName', sprintf('Data %d', line_idx));
+    end
+    hold off;
+    legend('show');
+    title([test_name_current_palette ' Original (Default Colors)'], 'Interpreter', 'none');
+    xlabel('X-value'); ylabel('Y-value'); grid on;
+    save_comparison_figure_new(fig_palette, test_name_current_palette, 'original', output_dir_new);
+    
+    params_palette = struct();
+    params_palette.color_palette = current_palette_name;
+    params_palette.plot_line_width = 1.5; % Make lines reasonably thick
+    params_palette.log_level = 0;
+
+    fprintf('  Testing with color_palette = ''%s''.\n', current_palette_name);
+    try
+        params_palette.figure_handle = fig_palette;
+        beautify_figure(params_palette); 
+        title([test_name_current_palette ' Beautified (' current_palette_name ')'], 'Interpreter', 'none');
+        
+        % Verification: Check if line colors are different from default and from each other
+        % This is a basic check; exact color values depend on the palette definition.
+        colors_changed = false;
+        if num_lines_palette_test > 1 && isvalid(h_plot_lines_palette(1)) && isvalid(h_plot_lines_palette(2))
+            color1 = get(h_plot_lines_palette(1), 'Color');
+            color2 = get(h_plot_lines_palette(2), 'Color');
+            if ~isequal(color1, color2)
+                colors_changed = true; % At least the first two are different
+            end
+            % A more robust check would involve comparing with known values from these palettes
+            % but that's too complex for this auto-generated script.
+            % For now, we rely on visual inspection and the fact that an error isn't thrown.
+            fprintf('  VERIFICATION INFO: Line colors are expected to match the ''%s'' palette. Visual check required.\n', current_palette_name);
+            if colors_changed
+                 fprintf('    Basic check: First two line colors are different, suggesting palette application.\n');
+            else
+                 fprintf('    Basic check WARN: First two line colors are the same. Palette may not have applied as expected or has few unique colors.\n');
+            end
+        elseif num_lines_palette_test == 1
+             fprintf('  VERIFICATION INFO: Single line plotted. Visual check required for ''%s'' palette color.\n', current_palette_name);
+        end
+        
+        save_comparison_figure_new(fig_palette, test_name_current_palette, 'beautified', output_dir_new);
+        fprintf('  Applied beautify_figure with %s palette. Visually inspect line colors.\n', current_palette_name);
+    catch ME_test_palette
+        fprintf('  ERROR during New Test Case %d (%s with %s palette): %s\n', test_case_num, test_name_current_palette, current_palette_name, ME_test_palette.message);
+    end
+    if ishandle(fig_palette); close(fig_palette); end
+end
+test_case_num = test_case_num + 1;
+
+%% --- Test Case: `force_latex_if_dollar_present` ---
+fprintf('\n--- Running New Test Case %d: `force_latex_if_dollar_present` ---\n', test_case_num);
+
+dollar_string_title = 'Value (\$) in USD'; % String with dollars but no other LaTeX
+dollar_string_label = 'Amount (\$)';
+
+% Sub-case 1: force_latex_if_dollar_present = true
+test_name_force_latex_true = sprintf('new_test_%02d_force_latex_true', test_case_num);
+fig_force_latex_true = figure('Visible', 'off', 'Position', [100,100,600,450]);
+plot(1:5, rand(1,5));
+title(dollar_string_title); % Interpreter will be default 'tex' initially
+xlabel(dollar_string_label);
+ylabel('Y-axis'); grid on;
+original_title_interpreter_true = get(get(gca,'Title'), 'Interpreter');
+original_xlabel_interpreter_true = get(get(gca,'XLabel'), 'Interpreter');
+save_comparison_figure_new(fig_force_latex_true, test_name_force_latex_true, 'original', output_dir_new);
+
+params_force_latex_true = struct();
+params_force_latex_true.force_latex_if_dollar_present = true;
+params_force_latex_true.auto_latex_interpreter_for_labels = true; % This needs to be on for force_latex to matter
+params_force_latex_true.log_level = 0;
+
+fprintf('  Testing with force_latex_if_dollar_present = true. Expect LaTeX interpreter.\n');
+try
+    params_force_latex_true.figure_handle = fig_force_latex_true;
+    beautify_figure(params_force_latex_true);
+    title([test_name_force_latex_true ' Beautified (Force LaTeX True)'], 'Interpreter', 'none'); % Set main title for image
+    
+    ax_after_true = gca;
+    title_interpreter_after_true = get(ax_after_true.Title, 'Interpreter');
+    xlabel_interpreter_after_true = get(ax_after_true.XLabel, 'Interpreter');
+    passed_force_true = true;
+    
+    if ~strcmp(title_interpreter_after_true, 'latex')
+        fprintf('  VERIFICATION FAIL (Force True): Title interpreter is "%s", expected "latex".\n', title_interpreter_after_true);
+        passed_force_true = false;
+    else
+        fprintf('  VERIFICATION PASS (Force True): Title interpreter is "latex" as expected.\n');
+    end
+    if ~strcmp(xlabel_interpreter_after_true, 'latex')
+        fprintf('  VERIFICATION FAIL (Force True): XLabel interpreter is "%s", expected "latex".\n', xlabel_interpreter_after_true);
+        passed_force_true = false;
+    else
+        fprintf('  VERIFICATION PASS (Force True): XLabel interpreter is "latex" as expected.\n');
+    end
+    save_comparison_figure_new(fig_force_latex_true, test_name_force_latex_true, 'beautified', output_dir_new);
+catch ME_force_latex_true
+    fprintf('  ERROR during New Test Case %d (%s): %s\n', test_case_num, test_name_force_latex_true, ME_force_latex_true.message);
+end
+if ishandle(fig_force_latex_true); close(fig_force_latex_true); end
+
+% Sub-case 2: force_latex_if_dollar_present = false
+test_name_force_latex_false = sprintf('new_test_%02d_force_latex_false', test_case_num);
+fig_force_latex_false = figure('Visible', 'off', 'Position', [100,100,600,450]);
+plot(1:5, rand(1,5));
+title(dollar_string_title); % Interpreter will be default 'tex' initially
+xlabel(dollar_string_label);
+ylabel('Y-axis'); grid on;
+original_title_interpreter_false = get(get(gca,'Title'), 'Interpreter');
+original_xlabel_interpreter_false = get(get(gca,'XLabel'), 'Interpreter');
+save_comparison_figure_new(fig_force_latex_false, test_name_force_latex_false, 'original', output_dir_new);
+
+params_force_latex_false = struct();
+params_force_latex_false.force_latex_if_dollar_present = false;
+params_force_latex_false.auto_latex_interpreter_for_labels = true; % auto_latex still on, but force is off
+params_force_latex_false.log_level = 0;
+
+fprintf('  Testing with force_latex_if_dollar_present = false. Expect TeX interpreter (dollar alone is not enough).\n');
+try
+    params_force_latex_false.figure_handle = fig_force_latex_false;
+    beautify_figure(params_force_latex_false);
+    title([test_name_force_latex_false ' Beautified (Force LaTeX False)'], 'Interpreter', 'none'); % Set main title for image
+    
+    ax_after_false = gca;
+    title_interpreter_after_false = get(ax_after_false.Title, 'Interpreter');
+    xlabel_interpreter_after_false = get(ax_after_false.XLabel, 'Interpreter');
+    passed_force_false = true;
+    
+    if ~strcmp(title_interpreter_after_false, 'tex')
+        fprintf('  VERIFICATION FAIL (Force False): Title interpreter is "%s", expected "tex".\n', title_interpreter_after_false);
+        passed_force_false = false;
+    else
+        fprintf('  VERIFICATION PASS (Force False): Title interpreter is "tex" as expected.\n');
+    end
+    if ~strcmp(xlabel_interpreter_after_false, 'tex')
+        fprintf('  VERIFICATION FAIL (Force False): XLabel interpreter is "%s", expected "tex".\n', xlabel_interpreter_after_false);
+        passed_force_false = false;
+    else
+        fprintf('  VERIFICATION PASS (Force False): XLabel interpreter is "tex" as expected.\n');
+    end
+    save_comparison_figure_new(fig_force_latex_false, test_name_force_latex_false, 'beautified', output_dir_new);
+catch ME_force_latex_false
+    fprintf('  ERROR during New Test Case %d (%s): %s\n', test_case_num, test_name_force_latex_false, ME_force_latex_false.message);
+end
+if ishandle(fig_force_latex_false); close(fig_force_latex_false); end
+
+test_case_num = test_case_num + 1;
 %% Teardown
-fprintf('\n--- Test Script Complete ---\n');
-fprintf('Please check the "%s" directory for saved figures.\n', output_dir);
-fprintf('For Test Case 6 (Log Level), please check the MATLAB command window output during the test run.\n'); % Updated TC number
-
-% Close all figures
-% close all; 
-fprintf('Done.\n');
+fprintf('\n--- New Test Script Complete ---\n');
+fprintf('Please check the "%s" directory for saved figures from new tests.\n', output_dir_new);
+% close all; % Optional: close all figures at the very end
+fprintf('Done with new tests.\n');

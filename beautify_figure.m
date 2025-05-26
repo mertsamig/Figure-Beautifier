@@ -1207,7 +1207,13 @@ for k=1:length(potential_children)
         is_ignored_by_type = any(strcmp(class(child), params.exclude_object_types));
 
         if ~is_ignored_by_tag && ~is_ignored_by_type
-            axes_handles(end+1) = child; 
+            % Explicitly check for ColorBar type if apply_to_colorbars is false
+            if isa(child, 'matlab.graphics.illustration.ColorBar') && ~params.apply_to_colorbars
+                % Skip adding this colorbar to the list of axes to be beautified by beautify_single_axes
+                log_message(params, sprintf('Skipping ColorBar object (Tag: %s) from main axes processing list because apply_to_colorbars is false.', child_tag), 2, 'Debug');
+            else
+                axes_handles(end+1) = child; 
+            end
         end
     end
 end
@@ -1248,331 +1254,364 @@ function sf = get_scale_factor(num_sps, scaling_map, min_sf, max_sf)
     sf = max(min_sf, min(max_sf, sf)); % Clamp to global min/max scale factors
 end
 
-
 % --- Core Function: Beautify a Single Axes Object ---
 function beautify_single_axes(ax, params, scale_factor, ~) % axes_idx not used currently
-if ~isvalid(ax); return; end
-current_hold_state = ishold(ax); if ~current_hold_state; safe_hold(params, ax, 'on'); end
+    if ~isvalid(ax); return; end
 
-% Calculate scaled dimensions
-fs = round(params.base_font_size * scale_factor); % General font size for axis numbers etc.
-tfs = round(params.base_font_size * params.title_scale * scale_factor); % Title font size
-lfs = round(params.base_font_size * params.label_scale * scale_factor); % Label font size
-actual_plot_lw = max(0.75, params.plot_line_width * scale_factor); % Plot line width
-alw = max(0.5, params.axis_line_width * scale_factor); % Axis line width (re-scale the derived param)
-ms = max(3, params.marker_size * scale_factor); % Marker size (points)
-
-% --- Apply Axes Properties ---
-common_props = {'FontName', params.font_name, 'FontSize', fs, 'LineWidth', alw, 'TickDir', 'out', ...
-                'GridColor', params.grid_color, 'GridAlpha', params.grid_alpha, 'GridLineStyle', params.grid_line_style, ...
-                'MinorGridColor', params.grid_color, 'MinorGridAlpha', params.minor_grid_alpha, 'MinorGridLineStyle', params.minor_grid_line_style};
-
-switch lower(params.axis_box_style)
-    case 'on'; common_props = [common_props, {'Box', 'on'}];
-    case 'off'; common_props = [common_props, {'Box', 'off'}];
-    case 'left-bottom'
-        common_props = [common_props, {'Box', 'off'}]; % Box off first
-        % Then set locations, which might re-enable parts of the box if not handled carefully
-        % For modern graphics, setting XAxisLocation/YAxisLocation is preferred
-        if isprop(ax, 'XAxisLocation'); safe_set(params, ax, 'XAxisLocation', 'bottom'); end
-        if isprop(ax, 'YAxisLocation'); safe_set(params, ax, 'YAxisLocation', 'left'); end
-        
-        % Explicitly hide other axes if they exist (e.g., for YAxis on right)
-        try
-            if isprop(ax, 'XAxis') && numel(ax.XAxis) > 1; safe_set(params, ax.XAxis(2), 'Visible', 'off'); end
-            if isprop(ax, 'YAxis') && numel(ax.YAxis) > 1; safe_set(params, ax.YAxis(2), 'Visible', 'off'); end
-            if isprop(ax, 'ZAxis') && numel(ax.ZAxis) > 1; safe_set(params, ax.ZAxis(2), 'Visible', 'off'); end
-        catch ME_hide_extra_axes
-             log_message(params, sprintf('Minor issue hiding extra axes for left-bottom style: %s', ME_hide_extra_axes.message), 2, 'Debug');
-        end
-end
-
-major_grid_on = 'off'; minor_grid_on = 'off';
-if strcmpi(params.grid_density, 'normal'); major_grid_on = 'on'; minor_grid_on = 'on';
-elseif strcmpi(params.grid_density, 'major_only'); major_grid_on = 'on'; end
-
-try
-    if isa(ax, 'matlab.graphics.axis.Axes')
-        safe_set(params, ax, common_props{:}, ...
-                 'XGrid', major_grid_on, 'YGrid', major_grid_on, 'ZGrid', major_grid_on, ...
-                 'XMinorGrid', minor_grid_on, 'YMinorGrid', minor_grid_on, 'ZMinorGrid', minor_grid_on, ...
-                 'XColor', params.axis_color, 'YColor', params.axis_color, 'ZColor', params.axis_color, ...
-                 'Layer', params.axes_layer);
-        process_text_prop(ax.Title, ax.Title.String, tfs, 'bold', params.text_color, params.font_name, params);
-        process_text_prop(ax.XLabel, ax.XLabel.String, lfs, 'normal', params.text_color, params.font_name, params);
-        process_text_prop(ax.YLabel, ax.YLabel.String, lfs, 'normal', params.text_color, params.font_name, params);
-        process_text_prop(ax.ZLabel, ax.ZLabel.String, lfs, 'normal', params.text_color, params.font_name, params);
-
-        if ~isgeoaxes(ax) && strcmpi(params.axis_limit_mode, 'padded') && params.expand_axis_limits_factor > 0
-            expand_axis_lims(ax, 'XLim', params.expand_axis_limits_factor, params);
-            expand_axis_lims(ax, 'YLim', params.expand_axis_limits_factor, params);
-            if isprop(ax,'ZAxis') && ~isempty(ax.ZAxis) && isprop(ax, 'ZLim') && diff(ax.ZLim) > 1e-9 % Check ZLim specifically
-                expand_axis_lims(ax, 'ZLim', params.expand_axis_limits_factor, params); 
-            end
-        elseif strcmpi(params.axis_limit_mode, 'tight')
-            try; axis(ax, 'tight');
-                if params.expand_axis_limits_factor > 0 && params.expand_axis_limits_factor < 0.015 % very slight pad after tight
-                    expand_axis_lims(ax, 'XLim', params.expand_axis_limits_factor*0.5, params); 
-                    expand_axis_lims(ax, 'YLim', params.expand_axis_limits_factor*0.5, params);
-                end
-            catch ME_tight
-                log_message(params, sprintf('Warning: "axis tight" failed for axes (Tag: %s): %s', ax.Tag, ME_tight.message),1,'Warning'); 
-            end
-        end
-    elseif isa(ax, 'matlab.graphics.axis.PolarAxes') && params.apply_to_polaraxes
-        % PolarAxes does not have 'Layer', 'X/Y/ZColor', 'X/Y/ZGrid/MinorGrid'
-        % It has RColor, ThetaColor, RGrid, ThetaGrid
-        safe_set(params, ax, common_props{:}, ... % common_props includes FontName, FontSize, LineWidth, TickDir, GridColor etc.
-                 'RGrid', major_grid_on, 'ThetaGrid', major_grid_on, ... % No minor grid for polar by default properties
-                 'RColor', params.axis_color, 'ThetaColor', params.axis_color);
-        % For PolarAxes, grid lines are controlled by GridColor/Alpha/LineStyle from common_props.
-        % Minor grid lines controlled by MinorGridColor/Alpha/LineStyle
-        % Need to check if PolarAxes supports MinorGrid properties directly
-        if isprop(ax, 'MinorGridLineStyle'); safe_set(params, ax, 'MinorGridVisible', minor_grid_on); end % R2021a+
-        
-        process_text_prop(ax.Title, ax.Title.String, tfs, 'bold', params.text_color, params.font_name, params);
-        % Polar axes have RLabel, ThetaLabel but they are not direct properties like XLabel
-        % Access them via ax.RAxis.Label, ax.ThetaAxis.Label if needed, or assume title is enough for now.
+    % Early exit if ax is a ColorBar and apply_to_colorbars is false
+    if isa(ax, 'matlab.graphics.illustration.ColorBar') && ~params.apply_to_colorbars
+        ax_tag_info = ''; if isprop(ax,'Tag'); ax_tag_info = ax.Tag; end
+        log_message(params, sprintf('Skipping all styling for ColorBar object (Tag: %s) itself as apply_to_colorbars is false.', ax_tag_info), 1, 'Info');
+        return; 
     end
-catch ME_axes_props
-    log_message(params, sprintf('Error setting main axes properties for (Tag: %s, Type: %s): %s', ax.Tag, class(ax), ME_axes_props.message), 1, 'Warning');
-end
 
-% --- Beautify Child Graphics Objects ---
-try; all_children_orig = get(ax, 'Children'); catch; all_children_orig = []; end
-all_children_filtered = [];
-for k_child = 1:length(all_children_orig)
-    child_obj = all_children_orig(k_child);
-    if ~isvalid(child_obj); continue; end
-    child_tag = ''; if isprop(child_obj,'Tag'); try child_tag = get(child_obj,'Tag'); catch; end; end
-    
-    is_excluded_tag = false;
-    if ~isempty(child_tag) && iscellstr(params.exclude_object_tags) %#ok<ISCLSTR>
-        is_excluded_tag = any(strcmp(child_tag, params.exclude_object_tags));
-    end
-    is_excluded_type = any(strcmp(class(child_obj), params.exclude_object_types));
-    
-    if ~is_excluded_tag && ~is_excluded_type
-        all_children_filtered = [all_children_filtered; child_obj]; %#ok<AGROW>
-    end
-end
-
-color_idx = 0; % Tracks unique plottable items for color/marker/linestyle cycling
-num_marker_styles = length(params.marker_styles);
-num_line_styles = length(params.line_style_order);
-plottable_children_for_legend = []; % Store handles that are candidates for legend
-
-% Determine number of legend candidates for auto cycling logic
-temp_legend_candidates = [];
-for i = 1:length(all_children_filtered)
-    if is_legend_candidate_check(all_children_filtered(i))
-        temp_legend_candidates = [temp_legend_candidates; all_children_filtered(i)]; %#ok<AGROW>
-    end
-end
-num_total_legend_candidates = length(temp_legend_candidates);
-
-activate_marker_cycle_now = false;
-if islogical(params.cycle_marker_styles) && params.cycle_marker_styles
-    activate_marker_cycle_now = true;
-elseif ischar(params.cycle_marker_styles) && strcmpi(params.cycle_marker_styles, 'auto') && num_total_legend_candidates > params.marker_cycle_threshold
-    activate_marker_cycle_now = true;
-end
-
-activate_linestyle_cycle_now = false;
-if islogical(params.cycle_line_styles) && params.cycle_line_styles
-    activate_linestyle_cycle_now = true;
-elseif ischar(params.cycle_line_styles) && strcmpi(params.cycle_line_styles, 'auto') && num_total_legend_candidates > params.line_style_cycle_threshold
-    activate_linestyle_cycle_now = true;
-end
-
-% Process children in specified order for legend consistency
-processed_children_order = all_children_filtered;
-if params.legend_reverse_order
-    processed_children_order = flipud(all_children_filtered); % flipud works on column vectors
-end
-
-for i = 1:length(processed_children_order)
-    child = processed_children_order(i);
-    try
-        is_leg_cand_current = is_legend_candidate_check(child);
-        current_color_to_apply = []; 
-        current_marker_style_name = 'none'; % Default marker style unless cycled
-        current_line_style_name = ''; % Default line style (usually solid) unless cycled
-        
-        if is_leg_cand_current
-            plottable_children_for_legend = [plottable_children_for_legend; child]; %#ok<AGROW>
-            color_idx = color_idx + 1; % Increment for each legend candidate
-            current_color_to_apply = params.active_color_palette(mod(color_idx-1, params.num_palette_colors)+1, :);
-            
-            if activate_marker_cycle_now && num_marker_styles > 0
-                current_marker_style_name = params.marker_styles{mod(color_idx-1, num_marker_styles)+1};
-            end
-            if activate_linestyle_cycle_now && num_line_styles > 0
-                current_line_style_name = params.line_style_order{mod(color_idx-1, num_line_styles)+1};
-            end
-        end
-
-        % Apply properties to different plot types
-        if isa(child, 'matlab.graphics.chart.primitive.Line')
-            safe_set(params, child, 'LineWidth', actual_plot_lw, 'MarkerSize', ms);
-            if ~isempty(current_color_to_apply); safe_set(params, child, 'Color', current_color_to_apply); end
-            if ~isempty(current_line_style_name); safe_set(params, child, 'LineStyle', current_line_style_name); end
-            
-            % Marker settings for Line objects
-            if ~strcmpi(current_marker_style_name, 'none') % If a marker style is determined (cycled or pre-existing and we want to style it)
-                safe_set(params, child, 'Marker', current_marker_style_name);
-                if ~strcmpi(current_marker_style_name, '.') && ~isempty(current_color_to_apply) % For non-'.' markers
-                    safe_set(params, child, 'MarkerFaceColor', current_color_to_apply, 'MarkerEdgeColor', current_color_to_apply*0.7);
-                elseif strcmpi(current_marker_style_name, '.') && ~isempty(current_color_to_apply) % For '.' marker
-                    safe_set(params, child, 'MarkerEdgeColor', current_color_to_apply); % Only EdgeColor for '.'
-                    safe_set(params, child, 'MarkerFaceColor', 'none'); % Ensure no face color for '.'
-                end
-            elseif ~strcmpi(child.Marker,'none') && ~isempty(current_color_to_apply) % If marker exists but not cycling, ensure its colors match assigned line color
-                 if isprop(child,'MarkerFaceColor') && ~ischar(child.MarkerFaceColor) && ~any(strcmpi(child.MarkerFaceColor,{'auto','none'}))
-                     safe_set(params, child,'MarkerFaceColor',current_color_to_apply);
+    original_cb_props = []; 
+    cb_handle_for_restore = [];
+    % If ax is a regular axes, check for an associated colorbar to store its properties
+    if ~isa(ax, 'matlab.graphics.illustration.ColorBar') && ~params.apply_to_colorbars 
+         cb_handle_for_restore = find_associated_colorbar(ax, params); 
+         if ~isempty(cb_handle_for_restore) && isvalid(cb_handle_for_restore)
+             ax_tag_info = ''; if isprop(ax,'Tag'); ax_tag_info = ax.Tag; end
+             log_message(params, sprintf('Storing original properties for colorbar of axes (Tag: %s) because apply_to_colorbars is false.', ax_tag_info), 2, 'Debug');
+             try
+                 original_cb_props.FontName = cb_handle_for_restore.FontName;
+                 original_cb_props.FontSize = cb_handle_for_restore.FontSize;
+                 original_cb_props.Color = cb_handle_for_restore.Color;
+                 original_cb_props.LineWidth = cb_handle_for_restore.LineWidth;
+                 original_cb_props.TickDirection = cb_handle_for_restore.TickDirection;
+                 if isprop(cb_handle_for_restore, 'Label') && isvalid(cb_handle_for_restore.Label) && ~isempty(cb_handle_for_restore.Label.String)
+                     original_cb_props.LabelString = cb_handle_for_restore.Label.String;
+                     original_cb_props.LabelFontName = cb_handle_for_restore.Label.FontName;
+                     original_cb_props.LabelFontSize = cb_handle_for_restore.Label.FontSize;
+                     original_cb_props.LabelColor = cb_handle_for_restore.Label.Color;
+                     original_cb_props.LabelInterpreter = cb_handle_for_restore.Label.Interpreter;
+                 else
+                     original_cb_props.LabelString = ''; 
                  end
-                 if isprop(child,'MarkerEdgeColor') && ~ischar(child.MarkerEdgeColor) && ~any(strcmpi(child.MarkerEdgeColor,{'auto','none'}))
-                      safe_set(params, child,'MarkerEdgeColor',current_color_to_apply*0.7);
-                 end
-            end
-
-        elseif isa(child, 'matlab.graphics.chart.primitive.Scatter')
-            safe_set(params, child, 'SizeData', ms^2, 'LineWidth', actual_plot_lw*0.5);
-            if ~isempty(current_color_to_apply)
-                % Only set if not 'flat' or 'none' which imply CData usage or no color
-                if isprop(child, 'MarkerFaceColor') && ~(ischar(child.MarkerFaceColor) && any(strcmpi(child.MarkerFaceColor,{'none','flat'})))
-                    safe_set(params, child,'MarkerFaceColor', current_color_to_apply); 
-                end
-                if isprop(child, 'MarkerEdgeColor') && ~(ischar(child.MarkerEdgeColor) && strcmpi(child.MarkerEdgeColor,'none'))
-                    safe_set(params, child,'MarkerEdgeColor', current_color_to_apply*0.75); 
-                end
-            end
-            if ~strcmpi(current_marker_style_name, 'none'); safe_set(params, child, 'Marker', current_marker_style_name); end
-        
-        elseif isa(child, 'matlab.graphics.chart.primitive.Bar')
-            safe_set(params, child, 'LineWidth', alw*0.9); % Bar edge slightly thinner than axis line
-            if ~isempty(current_color_to_apply)
-                % Only set FaceColor if it's not 'flat' (implying CData usage)
-                if isprop(child, 'FaceColor') && (~ischar(child.FaceColor) || ~strcmpi(child.FaceColor,'flat'))
-                     safe_set(params, child, 'FaceColor', current_color_to_apply);
-                end
-                % Set EdgeColor based on FaceColor or a general dark color
-                 edge_c = current_color_to_apply * 0.7; % Darker shade of face color
-                 if isequal(edge_c, [0 0 0]); edge_c = params.axis_color*0.5; end % Avoid pure black if face is dark
-                 safe_set(params, child, 'EdgeColor', edge_c);
-            else % No color cycling, use general theme colors
-                 safe_set(params, child, 'EdgeColor', params.axis_color*0.7);
-            end
-
-        elseif isa(child, 'matlab.graphics.chart.primitive.Histogram')
-            safe_set(params, child, 'LineWidth', alw*0.8, 'FaceAlpha', 0.7);
-             if ~isempty(current_color_to_apply)
-                safe_set(params, child, 'FaceColor', current_color_to_apply);
-                safe_set(params, child, 'EdgeColor', current_color_to_apply*0.5); % Darker shade for edge
-             else
-                safe_set(params, child, 'EdgeColor', params.axis_color*0.5);
+             catch ME_store_cb
+                 log_message(params, sprintf('Could not store all original colorbar properties: %s', ME_store_cb.message), 1, 'Warning');
+                 original_cb_props = []; % Clear if properties couldn't be stored
+                 cb_handle_for_restore = [];
              end
-
-        elseif isa(child, 'matlab.graphics.chart.primitive.ErrorBar')
-            safe_set(params, child, 'LineWidth', actual_plot_lw*0.8, 'MarkerSize', ms*0.8, 'CapSize', actual_plot_lw*params.errorbar_cap_size_scale*6);
-            if ~isempty(current_color_to_apply); safe_set(params, child,'Color',current_color_to_apply); end
-            if ~strcmpi(current_marker_style_name, 'none'); safe_set(params, child, 'Marker', current_marker_style_name); end
-        
-        elseif isa(child,'matlab.graphics.primitive.Surface') || ...
-               isa(child,'matlab.graphics.chart.primitive.Surface') || ...
-               isa(child,'matlab.graphics.primitive.Patch')
-            safe_set(params, child, 'EdgeColor', params.axis_color*0.6, 'LineWidth', alw*0.7);
-            % FaceColor for these is often colormap-driven, so typically not set here unless specific params exist
-        end
-    catch ME_child
-        child_tag_disp = ''; if isprop(child,'Tag'); child_tag_disp = child.Tag; end
-        log_message(params, sprintf('Error processing child object (Type: %s, Tag: %s): %s', class(child), child_tag_disp, ME_child.message), 1, 'Warning');
+         else
+             cb_handle_for_restore = []; 
+         end
     end
-end
 
-if params.legend_reverse_order && ~isempty(plottable_children_for_legend)
-    plottable_children_for_legend = flipud(plottable_children_for_legend); 
-end
+    current_hold_state = ishold(ax); if ~current_hold_state; safe_hold(params, ax, 'on'); end
 
-% --- Beautify General Text Objects in Axes ---
-if params.apply_to_general_text
-    try; text_children = findobj(ax, 'Type', 'text', '-depth', 1); catch; text_children = []; end
-    for k_text = 1:length(text_children)
-        txt_obj=text_children(k_text); 
-        if ~isvalid(txt_obj); continue; end
-        
-        is_label_or_title_or_legend_text = false;
-        if isprop(txt_obj,'Tag')
-            tag_str = txt_obj.Tag;
-            is_label_or_title_or_legend_text = any(strcmp(tag_str, {'XLabel','YLabel','ZLabel','Title'}));
-        end
-        try % Check if text is part of a legend
-            parent_obj = get(txt_obj,'Parent');
-            if isa(parent_obj,'matlab.graphics.illustration.Legend') || ...
-               (isprop(parent_obj, 'Parent') && isa(get(parent_obj,'Parent'),'matlab.graphics.illustration.Legend')) % Text inside legend entry
-                is_label_or_title_or_legend_text = true;
+    fs = round(params.base_font_size * scale_factor); 
+    tfs = round(params.base_font_size * params.title_scale * scale_factor); 
+    lfs = round(params.base_font_size * params.label_scale * scale_factor); 
+    actual_plot_lw = max(0.75, params.plot_line_width * scale_factor); 
+    alw = max(0.5, params.axis_line_width * scale_factor); 
+    ms = max(3, params.marker_size * scale_factor); 
+
+    common_props_cell = {'FontName', params.font_name, 'FontSize', fs, 'LineWidth', alw, 'TickDir', 'out', ...
+                    'GridColor', params.grid_color, 'GridAlpha', params.grid_alpha, 'GridLineStyle', params.grid_line_style, ...
+                    'MinorGridColor', params.grid_color, 'MinorGridAlpha', params.minor_grid_alpha, 'MinorGridLineStyle', params.minor_grid_line_style};
+
+    switch lower(params.axis_box_style)
+        case 'on'; common_props_cell = [common_props_cell, {'Box', 'on'}];
+        case 'off'; common_props_cell = [common_props_cell, {'Box', 'off'}];
+        case 'left-bottom'
+            common_props_cell = [common_props_cell, {'Box', 'off'}]; 
+            if isprop(ax, 'XAxisLocation'); safe_set(params, ax, 'XAxisLocation', 'bottom'); end
+            if isprop(ax, 'YAxisLocation'); safe_set(params, ax, 'YAxisLocation', 'left'); end
+            try
+                if isprop(ax, 'XAxis') && numel(ax.XAxis) > 1; safe_set(params, ax.XAxis(2), 'Visible', 'off'); end
+                if isprop(ax, 'YAxis') && numel(ax.YAxis) > 1; safe_set(params, ax.YAxis(2), 'Visible', 'off'); end
+                if isprop(ax, 'ZAxis') && numel(ax.ZAxis) > 1; safe_set(params, ax.ZAxis(2), 'Visible', 'off'); end
+            catch ME_hide_extra_axes
+                 log_message(params, sprintf('Minor issue hiding extra axes for left-bottom style: %s', ME_hide_extra_axes.message), 2, 'Debug');
             end
-        catch
-            % Issue getting parent, assume not legend text for safety
-        end
-        
-        if ~is_label_or_title_or_legend_text && ~strcmp(txt_obj.Tag, 'BeautifyFig_StatsOverlay') % Don't re-process stats overlay text
-            % For general text, use scaled base font size 'fs', and preserve its existing weight/color unless overridden by params
-            current_text_color = txt_obj.Color;
-            if isequal(current_text_color, base_defaults.text_color) || isempty(current_text_color) % If it was default or empty, apply new theme text color
-                current_text_color = params.text_color;
-            end
-            process_text_prop(txt_obj, txt_obj.String, fs, txt_obj.FontWeight, current_text_color, params.font_name, params);
-        end
-    end
-end
-
-% --- Handle Legend ---
-beautify_legend(ax, params, plottable_children_for_legend, fs, alw);
-
-% --- Handle Colorbar ---
-if params.apply_to_colorbars; beautify_colorbar(ax, params, fs, lfs, alw); end
-
-% --- Apply 3D View Preset ---
-if isprop(ax, 'View') && ~isempty(params.view_preset_3d) && ~strcmpi(params.view_preset_3d, 'none')
-    % Check if axes is meaningfully 3D (e.g., ZLim has a span, or ZLabel has text)
-    % This is a heuristic; user might want to apply view to a 2D plot in a 3D axes.
-    is_intended_3d = false;
-    if diff(get(ax,'ZLim')) > 1e-9; is_intended_3d = true; end
-    if isprop(ax, 'ZLabel') && isvalid(ax.ZLabel) && ~isempty(ax.ZLabel.String); is_intended_3d = true; end
-    
-    if ~is_intended_3d && isa(ax, 'matlab.graphics.axis.Axes') % Only log for standard Axes
-        log_message(params, sprintf('Axes (Tag: %s) appears 2D. Applying 3D view preset "%s" might be unexpected but will proceed.', ax.Tag, params.view_preset_3d), 2, 'Info');
     end
 
-    current_view_preset = lower(params.view_preset_3d);
-    log_message(params, sprintf('Applying 3D view preset "%s" to Axes (Tag: %s).', current_view_preset, ax.Tag), 2, 'Info');
+    major_grid_on = 'off'; minor_grid_on = 'off';
+    if strcmpi(params.grid_density, 'normal'); major_grid_on = 'on'; minor_grid_on = 'on';
+    elseif strcmpi(params.grid_density, 'major_only'); major_grid_on = 'on'; end
+
     try
-        switch current_view_preset
-            case 'iso'; view(ax, 3); % Standard MATLAB isometric view
-            case 'top'; view(ax, 0, 90);
-            case 'front'; view(ax, 0, 0);
-            case 'side_left'; view(ax, -90, 0);
-            case 'side_right'; view(ax, 90, 0);
-            otherwise
-                log_message(params, sprintf('Unknown 3D view preset: "%s". No view change applied.', params.view_preset_3d), 1, 'Warning');
+        if isa(ax, 'matlab.graphics.axis.Axes')
+            current_axes_props = {common_props_cell{:}, ...
+                     'XGrid', major_grid_on, 'YGrid', major_grid_on, 'ZGrid', major_grid_on, ...
+                     'XMinorGrid', minor_grid_on, 'YMinorGrid', minor_grid_on, 'ZMinorGrid', minor_grid_on, ...
+                     'XColor', params.axis_color, 'YColor', params.axis_color, 'ZColor', params.axis_color, ...
+                     'Layer', params.axes_layer};
+            safe_set(params, ax, current_axes_props{:});
+            process_text_prop(ax.Title, ax.Title.String, tfs, 'bold', params.text_color, params.font_name, params);
+            process_text_prop(ax.XLabel, ax.XLabel.String, lfs, 'normal', params.text_color, params.font_name, params);
+            process_text_prop(ax.YLabel, ax.YLabel.String, lfs, 'normal', params.text_color, params.font_name, params);
+            process_text_prop(ax.ZLabel, ax.ZLabel.String, lfs, 'normal', params.text_color, params.font_name, params);
+
+            if ~isgeoaxes(ax) && strcmpi(params.axis_limit_mode, 'padded') && params.expand_axis_limits_factor > 0
+                expand_axis_lims(ax, 'XLim', params.expand_axis_limits_factor, params);
+                expand_axis_lims(ax, 'YLim', params.expand_axis_limits_factor, params);
+                if isprop(ax,'ZAxis') && ~isempty(ax.ZAxis) && isprop(ax, 'ZLim') && diff(ax.ZLim) > 1e-9 
+                    expand_axis_lims(ax, 'ZLim', params.expand_axis_limits_factor, params); 
+                end
+            elseif strcmpi(params.axis_limit_mode, 'tight')
+                try; axis(ax, 'tight');
+                    if params.expand_axis_limits_factor > 0 && params.expand_axis_limits_factor < 0.015 
+                        expand_axis_lims(ax, 'XLim', params.expand_axis_limits_factor*0.5, params); 
+                        expand_axis_lims(ax, 'YLim', params.expand_axis_limits_factor*0.5, params);
+                    end
+                catch ME_tight
+                    log_message(params, sprintf('Warning: "axis tight" failed for axes (Tag: %s): %s', ax.Tag, ME_tight.message),1,'Warning'); 
+                end
+            end
+        elseif isa(ax, 'matlab.graphics.axis.PolarAxes') && params.apply_to_polaraxes % This condition is now fine as direct ColorBar styling is returned early
+            current_polar_props = {common_props_cell{:}, ...
+                     'RGrid', major_grid_on, 'ThetaGrid', major_grid_on, ... 
+                     'RColor', params.axis_color, 'ThetaColor', params.axis_color};
+            safe_set(params, ax, current_polar_props{:});
+            if isprop(ax, 'MinorGridLineStyle'); safe_set(params, ax, 'MinorGridVisible', minor_grid_on); end 
+            process_text_prop(ax.Title, ax.Title.String, tfs, 'bold', params.text_color, params.font_name, params);
         end
-    catch ME_view
-        log_message(params, sprintf('Error applying 3D view preset "%s": %s', params.view_preset_3d, ME_view.message), 1, 'Warning');
+    catch ME_axes_props
+        log_message(params, sprintf('Error setting main axes properties for (Tag: %s, Type: %s): %s', ax.Tag, class(ax), ME_axes_props.message), 1, 'Warning');
     end
-end
 
-% Apply Basic Statistical Overlay
-if params.stats_overlay.enabled && isa(ax, 'matlab.graphics.axis.Axes') % Stats overlay usually for Cartesian axes
-   try
-       apply_stats_overlay(ax, params, scale_factor);
-   catch ME_stats_overlay
-       log_message(params, sprintf('Error applying stats overlay to Axes (Tag: %s): %s (Line: %d)', ax.Tag, ME_stats_overlay.message, ME_stats_overlay.stack(1).line), 1, 'Warning');
-   end
-end
+    try; all_children_orig = get(ax, 'Children'); catch; all_children_orig = []; end
+    all_children_filtered = [];
+    for k_child = 1:length(all_children_orig)
+        child_obj = all_children_orig(k_child);
+        if ~isvalid(child_obj); continue; end
+        child_tag = ''; if isprop(child_obj,'Tag'); try child_tag = get(child_obj,'Tag'); catch; end; end
+        
+        is_excluded_tag = false;
+        if ~isempty(child_tag) && iscellstr(params.exclude_object_tags) 
+            is_excluded_tag = any(strcmp(child_tag, params.exclude_object_tags));
+        end
+        is_excluded_type = any(strcmp(class(child_obj), params.exclude_object_types));
+        
+        if ~is_excluded_tag && ~is_excluded_type
+            all_children_filtered = [all_children_filtered; child_obj]; 
+        end
+    end
 
-if ~current_hold_state; safe_hold(params, ax, 'off'); end
-end
+    color_idx = 0; 
+    num_marker_styles = length(params.marker_styles);
+    num_line_styles = length(params.line_style_order);
+    plottable_children_for_legend = []; 
+
+    temp_legend_candidates = [];
+    for i = 1:length(all_children_filtered)
+        if is_legend_candidate_check(all_children_filtered(i))
+            temp_legend_candidates = [temp_legend_candidates; all_children_filtered(i)]; 
+        end
+    end
+    num_total_legend_candidates = length(temp_legend_candidates);
+
+    activate_marker_cycle_now = false;
+    if islogical(params.cycle_marker_styles) && params.cycle_marker_styles
+        activate_marker_cycle_now = true;
+    elseif ischar(params.cycle_marker_styles) && strcmpi(params.cycle_marker_styles, 'auto') && num_total_legend_candidates > params.marker_cycle_threshold
+        activate_marker_cycle_now = true;
+    end
+
+    activate_linestyle_cycle_now = false;
+    if islogical(params.cycle_line_styles) && params.cycle_line_styles
+        activate_linestyle_cycle_now = true;
+    elseif ischar(params.cycle_line_styles) && strcmpi(params.cycle_line_styles, 'auto') && num_total_legend_candidates > params.line_style_cycle_threshold
+        activate_linestyle_cycle_now = true;
+    end
+
+    processed_children_order = all_children_filtered;
+    if ~params.legend_reverse_order 
+        log_message(params, 'Flipping children order for normal legend sequence (plot creation order).', 2, 'Debug');
+        processed_children_order = flipud(all_children_filtered);
+    else
+        log_message(params, 'Using default children order for reversed legend sequence (reverse plot creation order).', 2, 'Debug');
+    end
+
+    for i = 1:length(processed_children_order)
+        child = processed_children_order(i);
+        try
+            is_leg_cand_current = is_legend_candidate_check(child);
+            current_color_to_apply = []; 
+            current_marker_style_name = 'none'; 
+            current_line_style_name = ''; 
+            
+            if is_leg_cand_current
+                plottable_children_for_legend = [plottable_children_for_legend; child]; 
+                color_idx = color_idx + 1; 
+                current_color_to_apply = params.active_color_palette(mod(color_idx-1, params.num_palette_colors)+1, :);
+                
+                if activate_marker_cycle_now && num_marker_styles > 0
+                    current_marker_style_name = params.marker_styles{mod(color_idx-1, num_marker_styles)+1};
+                end
+                if activate_linestyle_cycle_now && num_line_styles > 0
+                    current_line_style_name = params.line_style_order{mod(color_idx-1, num_line_styles)+1};
+                end
+            end
+
+            if isa(child, 'matlab.graphics.chart.primitive.Line')
+                safe_set(params, child, 'LineWidth', actual_plot_lw, 'MarkerSize', ms);
+                if ~isempty(current_color_to_apply); safe_set(params, child, 'Color', current_color_to_apply); end
+                if ~isempty(current_line_style_name); safe_set(params, child, 'LineStyle', current_line_style_name); end
+                if ~strcmpi(current_marker_style_name, 'none') 
+                    safe_set(params, child, 'Marker', current_marker_style_name);
+                    if ~strcmpi(current_marker_style_name, '.') && ~isempty(current_color_to_apply) 
+                        safe_set(params, child, 'MarkerFaceColor', current_color_to_apply, 'MarkerEdgeColor', current_color_to_apply*0.7);
+                    elseif strcmpi(current_marker_style_name, '.') && ~isempty(current_color_to_apply) 
+                        safe_set(params, child, 'MarkerEdgeColor', current_color_to_apply); 
+                        safe_set(params, child, 'MarkerFaceColor', 'none'); 
+                    end
+                elseif ~strcmpi(child.Marker,'none') && ~isempty(current_color_to_apply) 
+                     if isprop(child,'MarkerFaceColor') && ~ischar(child.MarkerFaceColor) && ~any(strcmpi(child.MarkerFaceColor,{'auto','none'}))
+                         safe_set(params, child,'MarkerFaceColor',current_color_to_apply);
+                     end
+                     if isprop(child,'MarkerEdgeColor') && ~ischar(child.MarkerEdgeColor) && ~any(strcmpi(child.MarkerEdgeColor,{'auto','none'}))
+                          safe_set(params, child,'MarkerEdgeColor',current_color_to_apply*0.7);
+                     end
+                end
+            elseif isa(child, 'matlab.graphics.chart.primitive.Scatter')
+                safe_set(params, child, 'SizeData', ms^2, 'LineWidth', actual_plot_lw*0.5);
+                if ~isempty(current_color_to_apply)
+                    if isprop(child, 'MarkerFaceColor') && ~(ischar(child.MarkerFaceColor) && any(strcmpi(child.MarkerFaceColor,{'none','flat'})))
+                        safe_set(params, child,'MarkerFaceColor', current_color_to_apply); 
+                    end
+                    if isprop(child, 'MarkerEdgeColor') && ~(ischar(child.MarkerEdgeColor) && strcmpi(child.MarkerEdgeColor,'none'))
+                        safe_set(params, child,'MarkerEdgeColor', current_color_to_apply*0.75); 
+                    end
+                end
+                if ~strcmpi(current_marker_style_name, 'none'); safe_set(params, child, 'Marker', current_marker_style_name); end
+            elseif isa(child, 'matlab.graphics.chart.primitive.Bar')
+                safe_set(params, child, 'LineWidth', alw*0.9); 
+                if ~isempty(current_color_to_apply)
+                    if isprop(child, 'FaceColor') && (~ischar(child.FaceColor) || ~strcmpi(child.FaceColor,'flat'))
+                         safe_set(params, child, 'FaceColor', current_color_to_apply);
+                    end
+                     edge_c = current_color_to_apply * 0.7; 
+                     if isequal(edge_c, [0 0 0]); edge_c = params.axis_color*0.5; end 
+                     safe_set(params, child, 'EdgeColor', edge_c);
+                else 
+                     safe_set(params, child, 'EdgeColor', params.axis_color*0.7);
+                end
+            elseif isa(child, 'matlab.graphics.chart.primitive.Histogram')
+                safe_set(params, child, 'LineWidth', alw*0.8, 'FaceAlpha', 0.7);
+                 if ~isempty(current_color_to_apply)
+                    safe_set(params, child, 'FaceColor', current_color_to_apply);
+                    safe_set(params, child, 'EdgeColor', current_color_to_apply*0.5); 
+                 else
+                    safe_set(params, child, 'EdgeColor', params.axis_color*0.5);
+                 end
+            elseif isa(child, 'matlab.graphics.chart.primitive.ErrorBar')
+                safe_set(params, child, 'LineWidth', actual_plot_lw*0.8, 'MarkerSize', ms*0.8, 'CapSize', actual_plot_lw*params.errorbar_cap_size_scale*6);
+                if ~isempty(current_color_to_apply); safe_set(params, child,'Color',current_color_to_apply); end
+                if ~strcmpi(current_marker_style_name, 'none'); safe_set(params, child, 'Marker', current_marker_style_name); end
+            elseif isa(child,'matlab.graphics.primitive.Surface') || ...
+                   isa(child,'matlab.graphics.chart.primitive.Surface') || ...
+                   isa(child,'matlab.graphics.primitive.Patch')
+                safe_set(params, child, 'EdgeColor', params.axis_color*0.6, 'LineWidth', alw*0.7);
+            end
+        catch ME_child
+            child_tag_disp = ''; if isprop(child,'Tag'); child_tag_disp = child.Tag; end
+            log_message(params, sprintf('Error processing child object (Type: %s, Tag: %s): %s', class(child), child_tag_disp, ME_child.message), 1, 'Warning');
+        end
+    end
+
+    if params.apply_to_general_text
+        try; text_children = findobj(ax, 'Type', 'text', '-depth', 1); catch; text_children = []; end
+        for k_text = 1:length(text_children)
+            txt_obj=text_children(k_text); 
+            if ~isvalid(txt_obj); continue; end
+            is_excluded_type = any(strcmp(class(txt_obj), params.exclude_object_types));
+            if is_excluded_type
+                log_message(params, sprintf('Skipping styling for general text object of excluded type: %s (Tag: %s)', class(txt_obj), txt_obj.Tag), 2, 'Debug');
+                continue; 
+            end
+            parent_of_text = [];
+            try parent_of_text = get(txt_obj, 'Parent'); catch; end 
+            if isa(parent_of_text, 'matlab.graphics.illustration.ColorBar') && ~params.apply_to_colorbars
+                log_message(params, sprintf('Skipping styling for text object (Tag: %s) because it is part of a ColorBar and apply_to_colorbars is false.', txt_obj.Tag), 2, 'Debug');
+                continue; 
+            end
+            is_label_or_title_or_legend_text = false;
+            if isprop(txt_obj,'Tag')
+                tag_str = txt_obj.Tag;
+                is_label_or_title_or_legend_text = any(strcmpi(tag_str, {'xlabel','ylabel','zlabel','title', 'legend_title_text'}));
+            end
+            try 
+                parent_obj_for_legend_check = get(txt_obj,'Parent'); % Renamed variable
+                if isa(parent_obj_for_legend_check,'matlab.graphics.illustration.Legend') || ...
+                   (isprop(parent_obj_for_legend_check, 'Parent') && isa(get(parent_obj_for_legend_check,'Parent'),'matlab.graphics.illustration.Legend')) 
+                    is_label_or_title_or_legend_text = true;
+                end
+            catch
+            end
+            if ~is_label_or_title_or_legend_text && ~strcmp(txt_obj.Tag, 'BeautifyFig_StatsOverlay') 
+                process_text_prop(txt_obj, txt_obj.String, fs, txt_obj.FontWeight, params.text_color, params.font_name, params);
+            end
+        end
+    end
+
+    beautify_legend(ax, params, plottable_children_for_legend, fs, alw);
+    if params.apply_to_colorbars; beautify_colorbar(ax, params, fs, lfs, alw); end
+
+    if isprop(ax, 'View') && ~isempty(params.view_preset_3d) && ~strcmpi(params.view_preset_3d, 'none')
+        is_intended_3d = false;
+        if diff(get(ax,'ZLim')) > 1e-9; is_intended_3d = true; end
+        if isprop(ax, 'ZLabel') && isvalid(ax.ZLabel) && ~isempty(ax.ZLabel.String); is_intended_3d = true; end
+        if ~is_intended_3d && isa(ax, 'matlab.graphics.axis.Axes') 
+            log_message(params, sprintf('Axes (Tag: %s) appears 2D. Applying 3D view preset "%s" might be unexpected but will proceed.', ax.Tag, params.view_preset_3d), 2, 'Info');
+        end
+        current_view_preset = lower(params.view_preset_3d);
+        log_message(params, sprintf('Applying 3D view preset "%s" to Axes (Tag: %s).', current_view_preset, ax.Tag), 2, 'Info');
+        try
+            switch current_view_preset
+                case 'iso'; view(ax, 3); 
+                case 'top'; view(ax, 0, 90);
+                case 'front'; view(ax, 0, 0);
+                case 'side_left'; view(ax, -90, 0);
+                case 'side_right'; view(ax, 90, 0);
+                otherwise
+                    log_message(params, sprintf('Unknown 3D view preset: "%s". No view change applied.', params.view_preset_3d), 1, 'Warning');
+            end
+        catch ME_view
+            log_message(params, sprintf('Error applying 3D view preset "%s": %s', params.view_preset_3d, ME_view.message), 1, 'Warning');
+        end
+    end
+
+    if params.stats_overlay.enabled && isa(ax, 'matlab.graphics.axis.Axes') 
+       try
+           apply_stats_overlay(ax, params, scale_factor);
+       catch ME_stats_overlay
+           log_message(params, sprintf('Error applying stats overlay to Axes (Tag: %s): %s (Line: %d)', ax.Tag, ME_stats_overlay.message, ME_stats_overlay.stack(1).line), 1, 'Warning');
+       end
+    end
+
+    % Restore original colorbar properties if they were stored
+    if ~isempty(original_cb_props) && ~isempty(cb_handle_for_restore) && isvalid(cb_handle_for_restore)
+        ax_tag_info = ''; if isprop(ax,'Tag'); ax_tag_info = ax.Tag; end
+        log_message(params, sprintf('Restoring original properties for colorbar of axes (Tag: %s) because apply_to_colorbars is false.', ax_tag_info), 2, 'Debug');
+        
+        safe_set(params, cb_handle_for_restore, ...
+            'FontName', original_cb_props.FontName, ...
+            'FontSize', original_cb_props.FontSize, ...
+            'Color', original_cb_props.Color, ...
+            'LineWidth', original_cb_props.LineWidth, ...
+            'TickDirection', original_cb_props.TickDirection);
+        
+        if isprop(cb_handle_for_restore, 'Label') && isvalid(cb_handle_for_restore.Label)
+            if isfield(original_cb_props, 'LabelString') && ~isempty(original_cb_props.LabelString)
+                safe_set(params, cb_handle_for_restore.Label, ...
+                    'String', original_cb_props.LabelString, ...
+                    'FontName', original_cb_props.LabelFontName, ...
+                    'FontSize', original_cb_props.LabelFontSize, ...
+                    'Color', original_cb_props.LabelColor, ...
+                    'Interpreter', original_cb_props.LabelInterpreter, ...
+                    'Visible', 'on');
+            elseif isfield(original_cb_props, 'LabelString') % Original label string was empty or only whitespace
+                safe_set(params, cb_handle_for_restore.Label, 'String', '', 'Visible', 'off');
+            end
+        end
+    end
+
+    if ~current_hold_state; safe_hold(params, ax, 'off'); end
+end % End of beautify_single_axes
+
 
 % --- Helper Function: Check if an object is a legend candidate ---
 function is_candidate = is_legend_candidate_check(obj_handle)
@@ -1783,33 +1822,7 @@ end
 
 % --- Helper Function: Beautify Colorbar ---
 function beautify_colorbar(ax, params, fs, lfs, alw)
-try
-    cb=[]; fig_handle=ancestor(ax,'figure');
-    if ~isvalid(fig_handle); return; end
-
-    % Modern way: Axes has a Colorbar property (R2014b+)
-    if isprop(ax, 'Colorbar') && isa(ax.Colorbar, 'matlab.graphics.illustration.ColorBar') && isvalid(ax.Colorbar)
-        cb = ax.Colorbar;
-    else % Fallback: find colorbars in figure and check association
-        all_colorbars_in_fig = findobj(fig_handle,'Type','colorbar');
-        for cb_idx=1:length(all_colorbars_in_fig)
-            current_cb_candidate = all_colorbars_in_fig(cb_idx); 
-            if ~isvalid(current_cb_candidate); continue; end
-            
-            cb_associated_ax = [];
-            if isprop(current_cb_candidate,'Axes'); % R2022a+
-                cb_associated_ax = current_cb_candidate.Axes;
-            elseif isprop(current_cb_candidate,'Axle') && isprop(current_cb_candidate.Axle,'Peer') % Older
-                cb_associated_ax = current_cb_candidate.Axle.Peer;
-            end
-            
-            if isequal(cb_associated_ax, ax)
-                cb = current_cb_candidate; 
-                break; 
-            end
-        end
-    end
-
+    cb = find_associated_colorbar(ax, params); % Use the new helper
     if ~isempty(cb) && isvalid(cb)
         cb_to_style = cb(1); % Should only be one per axes
         safe_set(params, cb_to_style, 'FontSize', round(fs*0.9), 'LineWidth', alw*0.85, 'Color', params.axis_color, 'TickDirection', 'out', 'FontName', params.font_name);
@@ -1817,9 +1830,6 @@ try
             process_text_prop(cb_to_style.Label,cb_to_style.Label.String,lfs,'normal',params.text_color,params.font_name,params);
         end
     end
-catch ME_colorbar
-    log_message(params, sprintf('Error processing colorbar for Axes (Tag: %s): %s', ax.Tag, ME_colorbar.message), 1, 'Warning');
-end
 end
 
 % --- Helper Function: Process Text Properties (Title, Labels, etc.) ---
@@ -1878,25 +1888,24 @@ else
 end
 if isempty(str_in_char); return; end
 
+% Check for $ if force_latex_if_dollar_present is true
+if params.force_latex_if_dollar_present
+    % If force_latex_if_dollar_present is true, any unescaped dollar sign triggers LaTeX
+    if ~isempty(regexp(str_in_char, '(?<!\\)\$', 'once')) 
+        tf = true; 
+        return; % Found a reason to use LaTeX, no need to check further
+    end
+end
+
 % Basic LaTeX characters
 latex_patterns = {'\', '_', '^'}; 
-tf = any(arrayfun(@(p)contains(str_in_char,p), latex_patterns));
-if tf; return; end % Found basic LaTeX char
+if any(arrayfun(@(p)contains(str_in_char,p), latex_patterns)); tf = true; return; end
 
-% Check for \command or \symbol (e.g., \alpha, \neq)
+% Check for \command or \symbol (e.g., lpha, 
+eq)
 if contains(str_in_char, '\')
     if ~isempty(regexp(str_in_char, '\\[a-zA-Z]+', 'once')); tf = true; return; end % \ followed by letters
     if ~isempty(regexp(str_in_char, '\\[^a-zA-Z0-9\s]', 'once')); tf = true; return; end % \ followed by non-alphanumeric, non-space symbol
-end
-
-% Check for $...$ or $$...$$ if forced
-if params.force_latex_if_dollar_present
-    if contains(str_in_char, '$') % Simpler check, might need refinement for escaped $
-        % A more robust check for unescaped $ pairs:
-        if ~isempty(regexp(str_in_char, '(?<!\\)\$.*?(?<!\\)\$', 'once')) % $...$ not preceded by \
-           tf = true;
-        end
-    end
 end
 end
 
@@ -1975,6 +1984,40 @@ end
 function tf = isgeoaxes(ax)
     tf = isa(ax,'matlab.graphics.axis.GeographicAxes') || ...
          (isprop(ax,'Type') && strcmp(ax.Type,'geoaxes')); % Older check
+end
+
+% --- Helper Function: Find Associated Colorbar ---
+function cb_handle = find_associated_colorbar(ax, params_for_log)
+    cb_handle = []; fig_handle = ancestor(ax, 'figure');
+    if ~isvalid(fig_handle); return; end
+
+    % Modern way: Axes has a Colorbar property (R2014b+)
+    if isprop(ax, 'Colorbar') && isa(ax.Colorbar, 'matlab.graphics.illustration.ColorBar') && isvalid(ax.Colorbar)
+        cb_handle = ax.Colorbar;
+    else % Fallback: find colorbars in figure and check association
+        all_colorbars_in_fig = findobj(fig_handle,'Type','colorbar');
+        for cb_idx=1:length(all_colorbars_in_fig)
+            current_cb_candidate = all_colorbars_in_fig(cb_idx); 
+            if ~isvalid(current_cb_candidate); continue; end
+            
+            cb_associated_ax = [];
+            if isprop(current_cb_candidate,'Axes'); % R2022a+
+                cb_associated_ax = current_cb_candidate.Axes;
+            elseif isprop(current_cb_candidate,'Axle') && isprop(current_cb_candidate.Axle,'Peer') % Older
+                cb_associated_ax = current_cb_candidate.Axle.Peer;
+            end
+            
+            if isequal(cb_associated_ax, ax)
+                cb_handle = current_cb_candidate; 
+                break; 
+            end
+        end
+    end
+    if ~isempty(cb_handle) && isvalid(cb_handle) % check isvalid for cb_handle
+        cb_tag_info = ''; if isprop(cb_handle,'Tag'); cb_tag_info = cb_handle.Tag; end
+        ax_tag_info = ''; if isprop(ax,'Tag'); ax_tag_info = ax.Tag; end
+        log_message(params_for_log, sprintf('Found associated colorbar (Tag: %s) for axes (Tag: %s)', cb_tag_info, ax_tag_info), 2, 'Debug');
+    end
 end
 
 % --- Helper Function: Advanced Interactive Legend Callback ---
@@ -2349,7 +2392,7 @@ function apply_stats_overlay(ax, params, scale_factor)
     text_props = {
         'Units', 'normalized', 'String', full_stats_str, 'FontName', stats_font_name, ...
         'FontSize', stats_fs, 'Color', stats_text_color, 'HorizontalAlignment', horz_align, ...
-        'VerticalAlignment', vert_align, 'PickableParts', 'none', 'HandleVisibility', 'off', ...
+        'VerticalAlignment', vert_align, ...
         'Tag', 'BeautifyFig_StatsOverlay' % Tag to identify/avoid re-processing
     };
 
@@ -2395,34 +2438,59 @@ function apply_stats_overlay(ax, params, scale_factor)
     % --- Start Debugging Logs for text_props ---
     log_message(params, sprintf('Stats Overlay Debug: full_stats_str class: %s, value: "%s"', class(full_stats_str), strrep(full_stats_str,newline,'\n')), 2, 'Debug');
     log_message(params, sprintf('Stats Overlay Debug: stats_font_name class: %s, value: "%s"', class(stats_font_name), stats_font_name), 2, 'Debug');
-    log_message(params, sprintf('Stats Overlay Debug: stats_fs class: %s, value: %s', class(stats_fs), beautify_fig_format_param_value_for_log(stats_fs)), 2, 'Debug');
-    log_message(params, sprintf('Stats Overlay Debug: stats_text_color class: %s, value: %s', class(stats_text_color), beautify_fig_format_param_value_for_log(stats_text_color)), 2, 'Debug');
+    % log_message(params, sprintf('Stats Overlay Debug: stats_fs class: %s, value: %s', class(stats_fs), beautify_fig_format_param_value_for_log(stats_fs)), 2, 'Debug'); % COMMENTED OUT
+    % log_message(params, sprintf('Stats Overlay Debug: stats_text_color class: %s, value: %s', class(stats_text_color), beautify_fig_format_param_value_for_log(stats_text_color)), 2, 'Debug'); % COMMENTED OUT
     log_message(params, sprintf('Stats Overlay Debug: horz_align class: %s, value: "%s"', class(horz_align), horz_align), 2, 'Debug');
     log_message(params, sprintf('Stats Overlay Debug: vert_align class: %s, value: "%s"', class(vert_align), vert_align), 2, 'Debug');
 
     if exist('has_background','var') && has_background
-        log_message(params, sprintf('Stats Overlay Debug: bg_color_final class: %s, value: %s', class(bg_color_final), beautify_fig_format_param_value_for_log(bg_color_final)), 2, 'Debug');
+        % log_message(params, sprintf('Stats Overlay Debug: bg_color_final class: %s, value: %s', class(bg_color_final), beautify_fig_format_param_value_for_log(bg_color_final)), 2, 'Debug'); % COMMENTED OUT
     else
         log_message(params, 'Stats Overlay Debug: No BackgroundColor being set or bg_color_final is ''none''.', 2, 'Debug');
     end
 
     if exist('has_edge','var') && has_edge
-        log_message(params, sprintf('Stats Overlay Debug: edge_color_final class: %s, value: %s', class(edge_color_final), beautify_fig_format_param_value_for_log(edge_color_final)), 2, 'Debug');
+        % log_message(params, sprintf('Stats Overlay Debug: edge_color_final class: %s, value: %s', class(edge_color_final), beautify_fig_format_param_value_for_log(edge_color_final)), 2, 'Debug'); % COMMENTED OUT
     else
         log_message(params, 'Stats Overlay Debug: No EdgeColor being set or edge_color_final is ''none''.', 2, 'Debug');
     end
 
     if exist('has_background','var') && exist('has_edge','var') && (has_background || has_edge)
-        margin_val = stats_fs*0.3; % This is how it's calculated for text_props
-        log_message(params, sprintf('Stats Overlay Debug: Margin class: %s, value: %s', class(margin_val), beautify_fig_format_param_value_for_log(margin_val)), 2, 'Debug');
+        % margin_val = stats_fs*0.3; % This is how it's calculated for text_props
+        % log_message(params, sprintf('Stats Overlay Debug: Margin class: %s, value: %s', class(margin_val), beautify_fig_format_param_value_for_log(margin_val)), 2, 'Debug'); % COMMENTED OUT
     else
         log_message(params, 'Stats Overlay Debug: No Margin being set.', 2, 'Debug');
     end
     
-    log_message(params, sprintf('Stats Overlay Debug: text_props contents before call: %s', beautify_fig_format_param_value_for_log(text_props)), 2, 'Debug');
+    % log_message(params, sprintf('Stats Overlay Debug: text_props contents before call: %s', beautify_fig_format_param_value_for_log(text_props)), 2, 'Debug'); % COMMENTED OUT
     % --- End Debugging Logs for text_props ---
 
-    text(ax, text_x_norm, text_y_norm, 0, text_props{:}); % Add Z=0 for 2D text
+    log_message(params, sprintf('Attempting to create stats overlay text object in axes (Tag: %s)...', ax.Tag), 2, 'Info');
+    log_message(params, sprintf('Stats Overlay VAL: stats_fs (FontSize) = %s (class %s, size %s)', num2str(stats_fs), class(stats_fs), mat2str(size(stats_fs))), 2, 'Debug');
+    log_message(params, sprintf('Stats Overlay VAL: stats_text_color (Color) = %s (class %s, size %s)', mat2str(stats_text_color), class(stats_text_color), mat2str(size(stats_text_color))), 2, 'Debug');
+    log_message(params, sprintf('Stats Overlay VAL: full_stats_str isempty: %d',isempty(full_stats_str)), 2, 'Debug');
+    log_message(params, sprintf('Stats Overlay VAL: stats_font_name isempty: %d',isempty(stats_font_name)), 2, 'Debug');
+    log_message(params, sprintf('Stats Overlay VAL: horz_align isempty: %d',isempty(horz_align)), 2, 'Debug');
+    log_message(params, sprintf('Stats Overlay VAL: vert_align isempty: %d',isempty(vert_align)), 2, 'Debug');
+    
+    % Log all text_props before the call
+    props_str_for_log = '{';
+    for k_tp = 1:length(text_props)
+        current_text_prop_val = text_props{k_tp};
+        if ischar(current_text_prop_val)
+            props_str_for_log = [props_str_for_log '''' current_text_prop_val ''', '];
+        elseif isnumeric(current_text_prop_val)
+            props_str_for_log = [props_str_for_log mat2str(current_text_prop_val) ', '];
+        else
+            props_str_for_log = [props_str_for_log class(current_text_prop_val) ', '];
+        end
+    end
+    if length(props_str_for_log) > 1; props_str_for_log = props_str_for_log(1:end-2); end % Remove trailing comma space
+    props_str_for_log = [props_str_for_log '}'];
+    log_message(params, sprintf('Stats Overlay TXTPROPS: %s', props_str_for_log), 2, 'Debug');
+
+    text_handle_stats_overlay = text(ax, text_x_norm, text_y_norm, 0, text_props{:}); % Add Z=0 for 2D text
+    log_message(params, sprintf('Stats overlay text object created. Handle valid: %s. Tag: %s', num2str(isvalid(text_handle_stats_overlay)), get(text_handle_stats_overlay,'Tag')), 2, 'Info');
 
     safe_set(params, ax, 'Units', original_axes_units); % Restore original units
 end
