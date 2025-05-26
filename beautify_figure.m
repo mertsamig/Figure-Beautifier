@@ -1902,7 +1902,6 @@ latex_patterns = {'\', '_', '^'};
 if any(arrayfun(@(p)contains(str_in_char,p), latex_patterns)); tf = true; return; end
 
 % Check for \command or \symbol (e.g., lpha, 
-eq)
 if contains(str_in_char, '\')
     if ~isempty(regexp(str_in_char, '\\[a-zA-Z]+', 'once')); tf = true; return; end % \ followed by letters
     if ~isempty(regexp(str_in_char, '\\[^a-zA-Z0-9\s]', 'once')); tf = true; return; end % \ followed by non-alphanumeric, non-space symbol
