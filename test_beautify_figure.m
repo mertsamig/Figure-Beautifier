@@ -54,28 +54,28 @@ test_case_num = 1;
 
 %% Helper Functions
 function save_comparison_figure_new(fig_handle, test_name_str, stage_str, out_dir_str)
-    % stage_str can be 'original' or 'beautified'
-    if ~ishandle(fig_handle) || ~strcmp(get(fig_handle, 'Type'), 'figure')
-        fprintf('ERROR (save_comparison_figure_new): Invalid figure handle for test: %s, stage: %s.\n', test_name_str, stage_str);
-        return;
+% stage_str can be 'original' or 'beautified'
+if ~ishandle(fig_handle) || ~strcmp(get(fig_handle, 'Type'), 'figure')
+    fprintf('ERROR (save_comparison_figure_new): Invalid figure handle for test: %s, stage: %s.\n', test_name_str, stage_str);
+    return;
+end
+
+filename_str = fullfile(out_dir_str, sprintf('%s_%s.png', test_name_str, stage_str));
+try
+    drawnow;
+    original_visibility_str = get(fig_handle, 'Visible');
+    if strcmp(original_visibility_str, 'off')
+        set(fig_handle, 'Visible', 'on');
+        drawnow; % Allow figure to render if it was off
     end
-    
-    filename_str = fullfile(out_dir_str, sprintf('%s_%s.png', test_name_str, stage_str));
-    try
-        drawnow; 
-        original_visibility_str = get(fig_handle, 'Visible');
-        if strcmp(original_visibility_str, 'off')
-            set(fig_handle, 'Visible', 'on');
-            drawnow; % Allow figure to render if it was off
-        end
-        saveas(fig_handle, filename_str);
-        fprintf('Saved: %s\n', filename_str);
-        if strcmp(original_visibility_str, 'off') % Restore visibility if changed
-            set(fig_handle, 'Visible', 'off');
-        end
-    catch ME_save
-        fprintf('ERROR (save_comparison_figure_new) saving figure %s: %s\n', filename_str, ME_save.message);
+    saveas(fig_handle, filename_str);
+    fprintf('Saved: %s\n', filename_str);
+    if strcmp(original_visibility_str, 'off') % Restore visibility if changed
+        set(fig_handle, 'Visible', 'off');
     end
+catch ME_save
+    fprintf('ERROR (save_comparison_figure_new) saving figure %s: %s\n', filename_str, ME_save.message);
+end
 end
 
 %% --- Test Case Placeholders ---
@@ -93,7 +93,7 @@ end
 % % ... (define specific params for beautify_figure for this test) ...
 % try
 %     params_current.figure_handle = fig_current; % Or beautify_figure(fig_current, params_current)
-%     beautify_figure(params_current); 
+%     beautify_figure(params_current);
 %     title([test_name_current ' Beautified'], 'Interpreter', 'none');
 %     save_comparison_figure_new(fig_current, test_name_current, 'beautified', output_dir_new);
 %     fprintf('  Applied beautify_figure for %s.\n', test_name_current);
@@ -111,7 +111,7 @@ view_presets_to_test = {'none', 'iso', 'top', 'front', 'side_left', 'side_right'
 for v_idx = 1:length(view_presets_to_test)
     current_view_preset = view_presets_to_test{v_idx};
     test_name_current = sprintf('new_test_%02d_view_preset_%s', test_case_num, current_view_preset);
-    
+
     fig_current = figure('Visible', 'off', 'Position', [100, 100, 600, 450]);
     surf(X_peaks, Y_peaks, Z_peaks);
     colormap(fig_current, 'jet'); % Apply a colormap
@@ -119,18 +119,18 @@ for v_idx = 1:length(view_presets_to_test)
     xlabel('X-axis'); ylabel('Y-axis'); zlabel('Z-axis');
     axis tight;
     save_comparison_figure_new(fig_current, test_name_current, 'original', output_dir_new);
-    
+
     params_current = struct();
     params_current.view_preset_3d = current_view_preset;
     % Use a preset that works well with 3D views, e.g., 'default' or 'presentation_light'
-    params_current.style_preset = 'default'; 
+    params_current.style_preset = 'default';
     % Ensure logs don't clutter this specific test too much unless debugging
-    params_current.log_level = 0; 
+    params_current.log_level = 0;
 
     fprintf('  Testing view_preset_3d: ''%s''\n', current_view_preset);
     try
         params_current.figure_handle = fig_current;
-        beautify_figure(params_current); 
+        beautify_figure(params_current);
         title([test_name_current ' Beautified (View: ' current_view_preset ')'], 'Interpreter', 'none');
         % Add a pause to allow visual inspection if figures were visible
         % if strcmp(get(fig_current,'Visible'),'on'); pause(1); end
@@ -177,9 +177,9 @@ params_current.log_level = 0;
 fprintf('  Testing with apply_to_colorbars = false.\n');
 try
     params_current.figure_handle = fig_current;
-    beautify_figure(params_current); 
+    beautify_figure(params_current);
     title([test_name_current ' Beautified (Colorbar Unchanged)'], 'Interpreter', 'none');
-    
+
     h_cb_beautified = findobj(fig_current, 'Type', 'ColorBar');
     passed_verification = true;
     if isempty(h_cb_beautified)
@@ -199,31 +199,31 @@ try
             fprintf('  VERIFICATION FAIL: Colorbar LineWidth changed. Original: %.2f, Current: %.2f\n', original_cb_linewidth, h_cb_beautified.LineWidth);
             passed_verification = false;
         end
-         if ~isequal(h_cb_beautified.Color, original_cb_color)
+        if ~isequal(h_cb_beautified.Color, original_cb_color)
             fprintf('  VERIFICATION FAIL: Colorbar Color changed.\n');
             passed_verification = false;
         end
         if isprop(h_cb_beautified, 'Label') && isvalid(h_cb_beautified.Label)
             if ~strcmp(h_cb_beautified.Label.String, original_cb_label_str)
-                 fprintf('  VERIFICATION FAIL: Colorbar Label String changed.\n');
-                 passed_verification = false;
+                fprintf('  VERIFICATION FAIL: Colorbar Label String changed.\n');
+                passed_verification = false;
             end
             if ~isempty(original_cb_label_fontsize) && abs(h_cb_beautified.Label.FontSize - original_cb_label_fontsize) > 0.1
-                 fprintf('  VERIFICATION FAIL: Colorbar Label FontSize changed.\n');
-                 passed_verification = false;
+                fprintf('  VERIFICATION FAIL: Colorbar Label FontSize changed.\n');
+                passed_verification = false;
             end
         elseif ~isempty(original_cb_label_str) % Original had a label, but beautified doesn't or it's invalid
             fprintf('  VERIFICATION FAIL: Colorbar Label seems to have been removed or is invalid.\n');
             passed_verification = false;
         end
     end
-    
+
     if passed_verification
         fprintf('  VERIFICATION PASS: Colorbar properties appear unchanged as expected.\n');
     else
         fprintf('  VERIFICATION FAIL: Some colorbar properties changed unexpectedly.\n');
     end
-    
+
     save_comparison_figure_new(fig_current, test_name_current, 'beautified', output_dir_new);
     fprintf('  Applied beautify_figure. Check that the colorbar is NOT styled, but the rest of the plot is.\n');
 catch ME_test
@@ -237,7 +237,7 @@ fprintf('\n--- Running New Test Case %d: `apply_to_polaraxes = false` ---\n', te
 test_name_current = sprintf('new_test_%02d_apply_to_polaraxes_false', test_case_num);
 
 fig_current = figure('Visible', 'off', 'Position', [100, 100, 600, 450]);
-theta_polar = 0:0.01:2*pi; 
+theta_polar = 0:0.01:2*pi;
 rho_polar = abs(sin(3*theta_polar).*cos(3*theta_polar)); % A more complex polar pattern
 polarplot(theta_polar, rho_polar, 'm', 'LineWidth', 1.5); % Magenta color for original
 pax_original = gca;
@@ -262,18 +262,18 @@ params_current.log_level = 0;
 fprintf('  Testing with apply_to_polaraxes = false.\n');
 try
     params_current.figure_handle = fig_current;
-    beautify_figure(params_current); 
+    beautify_figure(params_current);
     % Change the main figure title to indicate beautification attempt
     % but the polar axes title (if part of polar axes) should remain original.
     sgtitle_obj = findobj(fig_current, 'Type', 'text', 'Tag', 'sgtitle'); % sgtitle might be used by beautify_figure
     if ~isempty(sgtitle_obj)
-       sgtitle_obj.String = [test_name_current ' Beautified (Polar Unchanged?)'];
+        sgtitle_obj.String = [test_name_current ' Beautified (Polar Unchanged?)'];
     else
-       % If no sgtitle, maybe the figure has a main title if it wasn't a polar axes directly
-       % For this test, we focus on the polar axes itself.
-       % The title on the polar axes itself is the key.
+        % If no sgtitle, maybe the figure has a main title if it wasn't a polar axes directly
+        % For this test, we focus on the polar axes itself.
+        % The title on the polar axes itself is the key.
     end
-    
+
     pax_beautified = findobj(fig_current, 'Type', 'PolarAxes');
     passed_verification = true;
     if isempty(pax_beautified)
@@ -306,23 +306,23 @@ try
             passed_verification = false;
         end
         if isvalid(pax_beautified.Title) && ~strcmp(pax_beautified.Title.String, original_pax_title_str)
-             fprintf('  VERIFICATION FAIL: PolarAxes Title string changed. Original: "%s", Current: "%s"\n', original_pax_title_str, pax_beautified.Title.String);
-             passed_verification = false;
+            fprintf('  VERIFICATION FAIL: PolarAxes Title string changed. Original: "%s", Current: "%s"\n', original_pax_title_str, pax_beautified.Title.String);
+            passed_verification = false;
         elseif ~isvalid(pax_beautified.Title) && ~isempty(original_pax_title_str)
-             fprintf('  VERIFICATION FAIL: PolarAxes Title removed or invalid after beautification.\n');
-             passed_verification = false;
+            fprintf('  VERIFICATION FAIL: PolarAxes Title removed or invalid after beautification.\n');
+            passed_verification = false;
         end
     end
-    
+
     if passed_verification
         fprintf('  VERIFICATION PASS: PolarAxes properties appear unchanged as expected.\n');
     else
         fprintf('  VERIFICATION FAIL: Some PolarAxes properties changed unexpectedly.\n');
     end
-    
+
     % Explicitly set a title for the saved image if not sgtitle
     if isempty(sgtitle_obj) && isvalid(pax_beautified) && isvalid(pax_beautified.Title)
-         pax_beautified.Title.String = [test_name_current ' Beautified (Polar Unchanged)'];
+        pax_beautified.Title.String = [test_name_current ' Beautified (Polar Unchanged)'];
     elseif isempty(sgtitle_obj) && isvalid(pax_beautified) && ~isvalid(pax_beautified.Title)
         title(pax_beautified, [test_name_current ' Beautified (Polar Unchanged)']);
     end
@@ -356,27 +356,27 @@ save_comparison_figure_new(fig_current, test_name_current, 'original', output_di
 
 params_current = struct();
 params_current.axis_limit_mode = 'tight';
-params_current.style_preset = 'default'; 
+params_current.style_preset = 'default';
 params_current.log_level = 0;
 
 fprintf('  Testing with axis_limit_mode = ''tight''.\n');
 try
     params_current.figure_handle = fig_current;
-    beautify_figure(params_current); 
+    beautify_figure(params_current);
     title([test_name_current ' Beautified (Tight Limits Expected)'], 'Interpreter', 'none');
-    
+
     ax_beautified = gca;
     beautified_xlim = xlim(ax_beautified);
     beautified_ylim = ylim(ax_beautified);
-    
+
     % Verification: Check if limits are tighter than original and close to data range
     % For 'tight', the limits should be very close to min/max of data, possibly with a small internal padding.
     % beautify_figure might add its own small padding even with 'tight', so direct equality to data min/max is too strict.
     % We check if they are significantly different from original loose limits and closer to data bounds.
-    
+
     data_min_x = min(x_data_limits); data_max_x = max(x_data_limits);
     data_min_y = min(y_data_limits); data_max_y = max(y_data_limits);
-    
+
     passed_verification = true;
     % Check X limits
     if beautified_xlim(1) > data_min_x + 0.1*(data_max_x-data_min_x) || beautified_xlim(1) > original_xlim(1) + 0.1*abs(original_xlim(1))
@@ -397,10 +397,10 @@ try
         fprintf('  VERIFICATION FAIL: Tight Ylim(2) (%.2f) seems too loose compared to data max (%.2f) or not tighter than original (%.2f).\n', beautified_ylim(2), data_max_y, original_ylim(2));
         passed_verification = false;
     end
-    
+
     if passed_verification
         fprintf('  VERIFICATION INFO: Limits changed from X[%.2f, %.2f] Y[%.2f, %.2f] to X[%.2f, %.2f] Y[%.2f, %.2f]. Visual check recommended for tightness.\n', ...
-                original_xlim(1), original_xlim(2), original_ylim(1), original_ylim(2), beautified_xlim(1), beautified_xlim(2), beautified_ylim(1), beautified_ylim(2));
+            original_xlim(1), original_xlim(2), original_ylim(1), original_ylim(2), beautified_xlim(1), beautified_xlim(2), beautified_ylim(1), beautified_ylim(2));
     end
 
     save_comparison_figure_new(fig_current, test_name_current, 'beautified', output_dir_new);
@@ -435,9 +435,9 @@ params_multicolumn.log_level = 0;
 fprintf('  Testing with legend_num_columns = 2.\n');
 try
     params_multicolumn.figure_handle = fig_multicolumn;
-    beautify_figure(params_multicolumn); 
+    beautify_figure(params_multicolumn);
     title([test_name_multicolumn ' Beautified (2-Column Legend)'], 'Interpreter', 'none');
-    
+
     lgd_multicolumn = findobj(fig_multicolumn, 'Type', 'Legend');
     passed_multicolumn = false;
     if ~isempty(lgd_multicolumn) && isprop(lgd_multicolumn(1), 'NumColumns') && lgd_multicolumn(1).NumColumns == 2
@@ -450,7 +450,7 @@ try
     else
         fprintf('  VERIFICATION WARN: Could not verify NumColumns property (possibly older MATLAB version or unexpected legend object).\n');
     end
-    
+
     save_comparison_figure_new(fig_multicolumn, test_name_multicolumn, 'beautified', output_dir_new);
     fprintf('  Applied beautify_figure. Check that the legend now has 2 columns.\n');
 catch ME_test_multicolumn
@@ -478,16 +478,16 @@ params_revorder.log_level = 0;
 fprintf('  Testing with legend_reverse_order = true.\n');
 try
     params_revorder.figure_handle = fig_revorder;
-    beautify_figure(params_revorder); 
+    beautify_figure(params_revorder);
     title([test_name_revorder ' Beautified (Reversed Legend Order)'], 'Interpreter', 'none');
-    
+
     lgd_revorder = findobj(fig_revorder, 'Type', 'Legend');
     passed_revorder = false;
     if ~isempty(lgd_revorder) && isprop(lgd_revorder(1), 'String')
         beautified_legend_strings = lgd_revorder(1).String;
         if length(beautified_legend_strings) == length(original_legend_strings) && ...
-           strcmp(beautified_legend_strings{1}, original_legend_strings{2}) && ...
-           strcmp(beautified_legend_strings{2}, original_legend_strings{1})
+                strcmp(beautified_legend_strings{1}, original_legend_strings{2}) && ...
+                strcmp(beautified_legend_strings{2}, original_legend_strings{1})
             fprintf('  VERIFICATION PASS: Legend order appears reversed as expected.\n');
             passed_revorder = true;
         else
@@ -495,11 +495,11 @@ try
                 original_legend_strings{1}, original_legend_strings{2}, beautified_legend_strings{1}, beautified_legend_strings{2});
         end
     elseif isempty(lgd_revorder)
-         fprintf('  VERIFICATION FAIL: Legend not found after beautification for reverse order test.\n');
+        fprintf('  VERIFICATION FAIL: Legend not found after beautification for reverse order test.\n');
     else
         fprintf('  VERIFICATION WARN: Could not verify legend strings for reverse order test.\n');
     end
-    
+
     save_comparison_figure_new(fig_revorder, test_name_revorder, 'beautified', output_dir_new);
     fprintf('  Applied beautify_figure. Check that the legend entry order is reversed.\n');
 catch ME_test_revorder
@@ -533,7 +533,7 @@ params_stats_pos.log_level = 0;
 fprintf('  Testing stats_overlay with position = ''southwest_inset''.\n');
 try
     params_stats_pos.figure_handle = fig_stats_pos;
-    beautify_figure(params_stats_pos); 
+    beautify_figure(params_stats_pos);
     title([test_name_stats_pos ' Beautified (Stats SW)'], 'Interpreter', 'none');
     % Visual verification needed for position
     fprintf('  VERIFICATION INFO: Visual check needed for stats overlay in southwest_inset position.\n');
@@ -571,9 +571,9 @@ fprintf('  Testing stats_overlay for font and color inheritance.\n');
 fprintf('  Global font: %s, Global text color: [%.1f %.1f %.1f]\n', params_stats_inherit.font_name, params_stats_inherit.text_color);
 try
     params_stats_inherit.figure_handle = fig_stats_inherit;
-    beautify_figure(params_stats_inherit); 
+    beautify_figure(params_stats_inherit);
     title([test_name_stats_inherit ' Beautified (Stats Inherit Font/Color)'], 'Interpreter', 'none');
-    
+
     stats_text_obj = findobj(fig_stats_inherit, 'Type', 'text', 'Tag', 'BeautifyFig_StatsOverlay');
     passed_inherit_verification = true;
     if isempty(stats_text_obj)
@@ -583,14 +583,14 @@ try
         stats_text_obj = stats_text_obj(1);
         actual_font_name = stats_text_obj.FontName;
         actual_text_color = stats_text_obj.Color;
-        
+
         if ~strcmp(actual_font_name, params_stats_inherit.font_name)
             fprintf('  VERIFICATION FAIL: Stats overlay FontName ("%s") does not match global FontName ("%s").\n', actual_font_name, params_stats_inherit.font_name);
             passed_inherit_verification = false;
         else
             fprintf('  VERIFICATION PASS: Stats overlay FontName correctly inherited as "%s".\n', actual_font_name);
         end
-        
+
         if ~isequal(actual_text_color, params_stats_inherit.text_color)
             fprintf('  VERIFICATION FAIL: Stats overlay TextColor ([%.1f %.1f %.1f]) does not match global TextColor ([%.1f %.1f %.1f]).\n', actual_text_color, params_stats_inherit.text_color);
             passed_inherit_verification = false;
@@ -598,9 +598,9 @@ try
             fprintf('  VERIFICATION PASS: Stats overlay TextColor correctly inherited.\n');
         end
     end
-    
+
     if ~passed_inherit_verification
-         fprintf('  VERIFICATION FAIL: Stats overlay did not correctly inherit font/color properties.\n');
+        fprintf('  VERIFICATION FAIL: Stats overlay did not correctly inherit font/color properties.\n');
     end
 
     save_comparison_figure_new(fig_stats_inherit, test_name_stats_inherit, 'beautified', output_dir_new);
@@ -622,8 +622,8 @@ text(2, 0.8, 'Original Text 1 (Exclude)', 'FontSize', 10, 'Color', 'red', 'Tag',
 text(5, 0.2, 'Original Text 2 (Exclude)', 'FontSize', 12, 'Color', 'magenta', 'Tag', 'MyTextObject2');
 hold off;
 title([test_name_current ' Original with Text Objects'], 'Interpreter', 'none');
-xlabel('X-axis (should be styled)'); 
-ylabel('Y-axis (should be styled)'); 
+xlabel('X-axis (should be styled)');
+ylabel('Y-axis (should be styled)');
 legend('show');
 grid on;
 
@@ -643,7 +643,7 @@ save_comparison_figure_new(fig_current, test_name_current, 'original', output_di
 params_current = struct();
 params_current.exclude_object_types = {'matlab.graphics.primitive.Text'};
 % Apply some global styles to see if they are NOT applied to the excluded text
-params_current.font_name = 'Times New Roman'; 
+params_current.font_name = 'Times New Roman';
 params_current.base_font_size = 16; % This would make text huge if applied
 params_current.text_color = [0 0.5 0]; % Dark green
 params_current.log_level = 0;
@@ -654,9 +654,9 @@ fprintf('  Global font set to: %s, base_font_size: %d, text_color: [%.1f %.1f %.
 
 try
     params_current.figure_handle = fig_current;
-    beautify_figure(params_current); 
+    beautify_figure(params_current);
     title([test_name_current ' Beautified (Text Objects Excluded)'], 'Interpreter', 'none');
-    
+
     text_obj1_after = findobj(fig_current, 'Tag', 'MyTextObject1');
     text_obj2_after = findobj(fig_current, 'Tag', 'MyTextObject2');
     passed_verification = true;
@@ -678,7 +678,7 @@ try
             passed_verification = false;
         end
     end
-    
+
     if isempty(text_obj2_after) || ~isvalid(text_obj2_after)
         fprintf('  VERIFICATION FAIL: Text object 2 not found or invalid after beautification.\n');
         passed_verification = false;
@@ -691,17 +691,17 @@ try
             fprintf('  VERIFICATION FAIL: Text object 2 Color changed.\n');
             passed_verification = false;
         end
-         if ~strcmp(text_obj2_after.FontName, original_text2_fontname)
+        if ~strcmp(text_obj2_after.FontName, original_text2_fontname)
             fprintf('  VERIFICATION FAIL: Text object 2 FontName changed. Original: %s, Current: %s\n', original_text2_fontname, text_obj2_after.FontName);
             passed_verification = false;
         end
     end
-    
+
     % Check that title and labels ARE styled (as they are not general text objects)
     ax_after = gca;
     if strcmp(ax_after.XLabel.FontName, params_current.font_name) && ...
-       abs(ax_after.XLabel.FontSize - round(params_current.base_font_size * 1.0 * 1.0)) < 1.1 && ... % label_scale=1, global_scale=1 for this test setup
-       isequal(ax_after.XLabel.Color, params_current.text_color)
+            abs(ax_after.XLabel.FontSize - round(params_current.base_font_size * 1.0 * 1.0)) < 1.1 && ... % label_scale=1, global_scale=1 for this test setup
+            isequal(ax_after.XLabel.Color, params_current.text_color)
         fprintf('  VERIFICATION INFO: XLabel appears styled as expected.\n');
     else
         fprintf('  VERIFICATION WARN: XLabel does not appear to be styled with global settings. Font: %s (exp %s), Size: %.1f (exp ~%.1f), Color: [%.1f %.1f %.1f] (exp [%.1f %.1f %.1f]) \n', ...
@@ -714,7 +714,7 @@ try
     else
         fprintf('  VERIFICATION FAIL: Some custom text object properties changed unexpectedly.\n');
     end
-    
+
     save_comparison_figure_new(fig_current, test_name_current, 'beautified', output_dir_new);
     fprintf('  Applied beautify_figure. Check that the manually added text objects (red, magenta) are NOT styled, but other elements (axes labels, title, line) are.\n');
 catch ME_test
@@ -729,7 +729,7 @@ test_name_current = sprintf('new_test_%02d_beautify_sgtitle_false', test_case_nu
 
 fig_current = figure('Visible', 'off', 'Position', [100, 100, 600, 450]);
 % Create a layout to ensure sgtitle has a target
-tiledlayout(fig_current, 1, 1, 'Padding', 'compact'); 
+tiledlayout(fig_current, 1, 1, 'Padding', 'compact');
 ax_sgtitle_test = nexttile;
 plot(ax_sgtitle_test, 1:10, rand(1,10));
 title(ax_sgtitle_test, 'Subplot Title (should be styled)');
@@ -739,10 +739,10 @@ original_sgtitle_fontsize = 18;      % Set a specific original size
 original_sgtitle_color = [0.8 0.2 0.2]; % Set a specific original color (e.g., dark red)
 
 sgt_handle = sgtitle(fig_current, original_sgtitle_text, ...
-                        'FontName', original_sgtitle_fontname, ...
-                        'FontSize', original_sgtitle_fontsize, ...
-                        'Color', original_sgtitle_color, ...
-                        'FontWeight', 'bold'); % Also check weight
+    'FontName', original_sgtitle_fontname, ...
+    'FontSize', original_sgtitle_fontsize, ...
+    'Color', original_sgtitle_color, ...
+    'FontWeight', 'bold'); % Also check weight
 
 save_comparison_figure_new(fig_current, test_name_current, 'original', output_dir_new);
 
@@ -763,9 +763,9 @@ fprintf('  Global beautify params - Font: %s, BaseSize: %d, TextColor: [%.1f %.1
 
 try
     params_current.figure_handle = fig_current;
-    beautify_figure(params_current); 
+    beautify_figure(params_current);
     % We don't set the main figure title here, as we are checking sgtitle specifically
-    
+
     sgt_handle_after = findobj(fig_current, 'Type', 'text', '-and', 'Tag', 'sgtitle'); % sgtitle creates a text object with this tag
     passed_verification = true;
 
@@ -791,21 +791,21 @@ try
                 original_sgtitle_color, sgt_handle_after.Color);
             passed_verification = false;
         end
-         if ~strcmp(lower(sgt_handle_after.FontWeight), 'bold') % Original was bold
+        if ~strcmp(lower(sgt_handle_after.FontWeight), 'bold') % Original was bold
             fprintf('  VERIFICATION FAIL: SGTitle FontWeight changed. Original: bold, Current: %s\n', sgt_handle_after.FontWeight);
             passed_verification = false;
         end
     end
-    
+
     % Also check that the subplot title IS styled
     ax_title_after = ax_sgtitle_test.Title;
     expected_ax_title_font = params_current.font_name;
     % Scaled font size for subplot title: base_font_size * title_scale * global_font_scale (global_font_scale is 1 here)
-    expected_ax_title_fontsize = round(params_current.base_font_size * params_current.title_scale); 
+    expected_ax_title_fontsize = round(params_current.base_font_size * params_current.title_scale);
     if isvalid(ax_title_after)
         if strcmp(ax_title_after.FontName, expected_ax_title_font) && ...
-           abs(ax_title_after.FontSize - expected_ax_title_fontsize) < 1.1 && ...
-           isequal(ax_title_after.Color, params_current.text_color)
+                abs(ax_title_after.FontSize - expected_ax_title_fontsize) < 1.1 && ...
+                isequal(ax_title_after.Color, params_current.text_color)
             fprintf('  VERIFICATION INFO: Subplot title appears styled as expected.\n');
         else
             fprintf('  VERIFICATION WARN: Subplot title does not appear to be styled as expected.\n');
@@ -821,7 +821,7 @@ try
     else
         fprintf('  VERIFICATION FAIL: Some SGTitle properties changed unexpectedly.\n');
     end
-    
+
     save_comparison_figure_new(fig_current, test_name_current, 'beautified', output_dir_new);
     fprintf('  Applied beautify_figure. Check that the main sgtitle is NOT styled (font, size, color), but the subplot title IS styled.\n');
 catch ME_test
@@ -838,7 +838,7 @@ common_params_threshold_test.cycle_marker_styles = 'auto';
 common_params_threshold_test.cycle_line_styles = 'auto';
 common_params_threshold_test.log_level = 2; % ENABLE DETAILED LOGGING
 % Define some default marker and line styles for beautify_figure to use if it decides to cycle
-common_params_threshold_test.marker_styles = {'o', 's', 'd', '^'}; 
+common_params_threshold_test.marker_styles = {'o', 's', 'd', '^'};
 common_params_threshold_test.line_style_order = {'-', '--', ':'};
 
 % Sub-case 1: Marker cycling based on marker_cycle_threshold
@@ -846,7 +846,7 @@ marker_thresh = 3; % Let's use the default from beautify_figure: params.marker_c
 common_params_threshold_test.marker_cycle_threshold = marker_thresh;
 
 % Test just below threshold (markers should NOT cycle, all should be 'none' or their original if any)
-num_plots_below_marker_thresh = marker_thresh; 
+num_plots_below_marker_thresh = marker_thresh;
 test_name_marker_below = sprintf('new_test_%02d_marker_cycle_below_thresh%d', test_case_num, num_plots_below_marker_thresh);
 fig_marker_below = figure('Visible', 'off', 'Position', [100,100,700,500]);
 hold on;
@@ -864,13 +864,13 @@ try
     params_marker_below.figure_handle = fig_marker_below;
     beautify_figure(params_marker_below);
     title([test_name_marker_below ' Beautified (Markers Unchanged)'], 'Interpreter', 'none');
-    
+
     passed_marker_below = true;
     for p_idx = 1:num_plots_below_marker_thresh
         if ~isvalid(h_plots_marker_below(p_idx)) continue; end
         current_marker = get(h_plots_marker_below(p_idx), 'Marker');
         % Default for plot is 'none'. If beautify_figure didn't cycle, it should remain 'none'.
-        if ~strcmp(current_marker, 'none') 
+        if ~strcmp(current_marker, 'none')
             fprintf('  VERIFICATION FAIL (Marker Below Thresh): Plot %d Marker is "%s", expected "none" (no cycle).\n', p_idx, current_marker);
             passed_marker_below = false;
         end
@@ -903,11 +903,11 @@ try
     params_marker_above.figure_handle = fig_marker_above;
     beautify_figure(params_marker_above);
     title([test_name_marker_above ' Beautified (Markers Cycled)'], 'Interpreter', 'none');
-    
+
     passed_marker_above = true;
     cycled_markers_found = zeros(num_plots_above_marker_thresh,1);
     for p_idx = 1:num_plots_above_marker_thresh
-         if ~isvalid(h_plots_marker_above(p_idx)) continue; end
+        if ~isvalid(h_plots_marker_above(p_idx)) continue; end
         current_marker = get(h_plots_marker_above(p_idx), 'Marker');
         expected_marker = common_params_threshold_test.marker_styles{mod(p_idx-1, length(common_params_threshold_test.marker_styles))+1};
         if ~strcmp(current_marker, expected_marker)
@@ -922,7 +922,7 @@ try
     elseif passed_marker_above % individual checks passed but maybe not all plots checked if some invalid
         fprintf('  VERIFICATION INFO (Marker Above Thresh): All valid plots showed expected cycled markers.\n');
     else
-         fprintf('  VERIFICATION FAIL (Marker Above Thresh): Not all markers cycled as expected.\n');
+        fprintf('  VERIFICATION FAIL (Marker Above Thresh): Not all markers cycled as expected.\n');
     end
     save_comparison_figure_new(fig_marker_above, test_name_marker_above, 'beautified', output_dir_new);
 catch ME_marker_above
@@ -955,13 +955,13 @@ try
     params_line_below.figure_handle = fig_line_below;
     beautify_figure(params_line_below);
     title([test_name_line_below ' Beautified (Lines Unchanged)'], 'Interpreter', 'none');
-    
+
     passed_line_below = true;
     for p_idx = 1:num_plots_below_line_thresh
         if ~isvalid(h_plots_line_below(p_idx)) continue; end
         current_linestyle = get(h_plots_line_below(p_idx), 'LineStyle');
         % Default for plot is '-'. If beautify_figure didn't cycle, it should remain '-'.
-        if ~strcmp(current_linestyle, '-') 
+        if ~strcmp(current_linestyle, '-')
             fprintf('  VERIFICATION FAIL (Line Below Thresh): Plot %d LineStyle is "%s", expected "-" (no cycle).\n', p_idx, current_linestyle);
             passed_line_below = false;
         end
@@ -994,7 +994,7 @@ try
     params_line_above.figure_handle = fig_line_above;
     beautify_figure(params_line_above);
     title([test_name_line_above ' Beautified (Lines Cycled)'], 'Interpreter', 'none');
-    
+
     passed_line_above = true;
     cycled_lines_found = zeros(num_plots_above_line_thresh,1);
     for p_idx = 1:num_plots_above_line_thresh
@@ -1011,7 +1011,7 @@ try
     if passed_line_above && sum(cycled_lines_found) == num_plots_above_line_thresh
         fprintf('  VERIFICATION PASS (Line Above Thresh): Line styles cycled as expected.\n');
     elseif passed_line_above
-         fprintf('  VERIFICATION INFO (Line Above Thresh): All valid plots showed expected cycled line styles.\n');
+        fprintf('  VERIFICATION INFO (Line Above Thresh): All valid plots showed expected cycled line styles.\n');
     else
         fprintf('  VERIFICATION FAIL (Line Above Thresh): Not all line styles cycled as expected.\n');
     end
@@ -1031,7 +1031,7 @@ num_lines_palette_test = 5; % Number of lines to plot
 for p_idx = 1:length(palettes_to_test)
     current_palette_name = palettes_to_test{p_idx};
     test_name_current_palette = sprintf('new_test_%02d_palette_%s', test_case_num, current_palette_name);
-    
+
     fig_palette = figure('Visible', 'off', 'Position', [100, 100, 650, 480]);
     hold on;
     h_plot_lines_palette = gobjects(num_lines_palette_test, 1);
@@ -1043,7 +1043,7 @@ for p_idx = 1:length(palettes_to_test)
     title([test_name_current_palette ' Original (Default Colors)'], 'Interpreter', 'none');
     xlabel('X-value'); ylabel('Y-value'); grid on;
     save_comparison_figure_new(fig_palette, test_name_current_palette, 'original', output_dir_new);
-    
+
     params_palette = struct();
     params_palette.color_palette = current_palette_name;
     params_palette.plot_line_width = 1.5; % Make lines reasonably thick
@@ -1052,9 +1052,9 @@ for p_idx = 1:length(palettes_to_test)
     fprintf('  Testing with color_palette = ''%s''.\n', current_palette_name);
     try
         params_palette.figure_handle = fig_palette;
-        beautify_figure(params_palette); 
+        beautify_figure(params_palette);
         title([test_name_current_palette ' Beautified (' current_palette_name ')'], 'Interpreter', 'none');
-        
+
         % Verification: Check if line colors are different from default and from each other
         % This is a basic check; exact color values depend on the palette definition.
         colors_changed = false;
@@ -1069,14 +1069,14 @@ for p_idx = 1:length(palettes_to_test)
             % For now, we rely on visual inspection and the fact that an error isn't thrown.
             fprintf('  VERIFICATION INFO: Line colors are expected to match the ''%s'' palette. Visual check required.\n', current_palette_name);
             if colors_changed
-                 fprintf('    Basic check: First two line colors are different, suggesting palette application.\n');
+                fprintf('    Basic check: First two line colors are different, suggesting palette application.\n');
             else
-                 fprintf('    Basic check WARN: First two line colors are the same. Palette may not have applied as expected or has few unique colors.\n');
+                fprintf('    Basic check WARN: First two line colors are the same. Palette may not have applied as expected or has few unique colors.\n');
             end
         elseif num_lines_palette_test == 1
-             fprintf('  VERIFICATION INFO: Single line plotted. Visual check required for ''%s'' palette color.\n', current_palette_name);
+            fprintf('  VERIFICATION INFO: Single line plotted. Visual check required for ''%s'' palette color.\n', current_palette_name);
         end
-        
+
         save_comparison_figure_new(fig_palette, test_name_current_palette, 'beautified', output_dir_new);
         fprintf('  Applied beautify_figure with %s palette. Visually inspect line colors.\n', current_palette_name);
     catch ME_test_palette
@@ -1113,12 +1113,12 @@ try
     params_force_latex_true.figure_handle = fig_force_latex_true;
     beautify_figure(params_force_latex_true);
     title([test_name_force_latex_true ' Beautified (Force LaTeX True)'], 'Interpreter', 'none'); % Set main title for image
-    
+
     ax_after_true = gca;
     title_interpreter_after_true = get(ax_after_true.Title, 'Interpreter');
     xlabel_interpreter_after_true = get(ax_after_true.XLabel, 'Interpreter');
     passed_force_true = true;
-    
+
     if ~strcmp(title_interpreter_after_true, 'latex')
         fprintf('  VERIFICATION FAIL (Force True): Title interpreter is "%s", expected "latex".\n', title_interpreter_after_true);
         passed_force_true = false;
@@ -1158,12 +1158,12 @@ try
     params_force_latex_false.figure_handle = fig_force_latex_false;
     beautify_figure(params_force_latex_false);
     title([test_name_force_latex_false ' Beautified (Force LaTeX False)'], 'Interpreter', 'none'); % Set main title for image
-    
+
     ax_after_false = gca;
     title_interpreter_after_false = get(ax_after_false.Title, 'Interpreter');
     xlabel_interpreter_after_false = get(ax_after_false.XLabel, 'Interpreter');
     passed_force_false = true;
-    
+
     if ~strcmp(title_interpreter_after_false, 'tex')
         fprintf('  VERIFICATION FAIL (Force False): Title interpreter is "%s", expected "tex".\n', title_interpreter_after_false);
         passed_force_false = false;
