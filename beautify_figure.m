@@ -36,10 +36,7 @@ function beautify_figure(params_or_fig_handle)
 %   - axis_to_plot_linewidth_ratio: Ratio of axis line width to plot line width.
 %   - marker_size: Base marker size.
 %   - color_palette: Name of a color palette ('default_matlab', 'lines', 'parula',
-%                    'viridis', 'turbo', 'cividis', 'cbrewer_qual_Set1', etc.) or an Nx3 RGB matrix.
-%   - view_preset_3d: ('none') Applies predefined 3D views. Options:
-%     'none' (no change), 'iso' (isometric), 'top' (top-down, view(0,90)),
-%     'front' (view(0,0)), 'side_left' (view(-90,0)), 'side_right' (view(90,0)).
+%                    'viridis', 'turbo', 'cividis', etc.) or an Nx3 RGB matrix.
 %   - cycle_marker_styles: 'auto' (default), true, false. Controls marker cycling.
 %   - cycle_line_styles: 'auto' (default), true, false. Controls line style cycling.
 %   - grid_density: 'normal' (default), 'major_only', 'none'.
@@ -49,25 +46,8 @@ function beautify_figure(params_or_fig_handle)
 %   - smart_legend_display: true (default). Avoids unnecessary legends.
 %   - interactive_legend: true (default). Enables clickable legend items.
 %   - log_level: 0 (silent), 1 (normal), 2 (detailed - default).
-%   - export_settings: Structure for controlling figure export:
-%     - enabled: (false) Set to true to export the figure.
-%     - filename: ('beautified_figure') Base name for the exported file.
-%     - format: ('png') Export format (e.g., 'png', 'jpeg', 'pdf', 'eps', 'svg', 'tiff').
-%     - resolution: (300) Resolution in DPI for raster formats, also influences vector quality.
-%     - open_exported_file: (false) If true, attempts to open the file after export.
-%     - renderer: ('painters') Renderer to use. For `print`: 'painters', 'opengl', 'vector'. `exportgraphics` usually manages this automatically or via content type.
-%     - ui: (false) If true and `exportgraphics` is available (R2020a+), it's preferred. Otherwise, `print` is used. Set to false to force `print -noui`.
-%   - stats_overlay: (struct) Settings for statistical data overlay.
-%     - enabled: (false) Set to true to enable statistical overlay.
-%     - statistics: ({'mean', 'std'}) Cell array of stats to display, e.g., 'min', 'max', 'N', 'median', 'sum'.
-%     - position: ('northeast_inset') Position of the stats text box, e.g., 'northeast_inset', 'southwest_inset'.
-%     - precision: (2) Number of decimal places for displayed statistics.
-%     - target_plot_handle_tag: ('') Tag of a specific plot object to analyze. If empty, uses the first valid plot in the axes.
-%     - font_scale_factor: (0.9) Font size scale factor relative to label font size.
-%     - text_color: ([]) Stats text color (inherits from global text_color if empty).
-%     - font_name: ([]) Stats font name (inherits from global font_name if empty).
-%     - background_color: ([]) Background of the stats text box (e.g., [0.9 0.9 0.9], 'yellow', or 'figure'). Default is none.
-%     - edge_color: ([]) Edge color of the stats text box (e.g., [0.5 0.5 0.5], 'black', or 'axes'). Default is none.
+%   - export_settings: Structure for controlling figure export (see details below).
+%   - stats_overlay: (struct) Settings for statistical data overlay (see details below).
 %   ... and many more. Explore the default_params structure within the code.
 %
 % EXAMPLE:
@@ -87,7 +67,6 @@ function beautify_figure(params_or_fig_handle)
 
 % --- Default Beautification Parameters ---
 % These are the master defaults. They can be overridden by user_params.
-default_params.theme = 'light';
 default_params.font_name = 'Swiss 721 BT'; % A common sans-serif, often needs to be installed or substituted
 default_params.base_font_size = 10;
 default_params.global_font_scale_factor = 1.0;
@@ -138,12 +117,6 @@ default_params.apply_to_polaraxes = true;
 default_params.apply_to_general_text = true;
 default_params.beautify_sgtitle = true;
 
-default_params.auto_latex_interpreter_for_labels = true;
-default_params.force_latex_if_dollar_present = true;
-
-default_params.exclude_object_tags = {};
-default_params.exclude_object_types = {'matlab.graphics.primitive.Light'}; % Lights are often problematic
-
 default_params.scaling_map = containers.Map(...
     {1,  2,  3,  4,  6,  8,  9,  12, 16, 20, 25}, ...
     {1.6,1.5,1.4,1.3,1.15,1.05,1.0,0.9,0.8,0.75,0.7} ...
@@ -174,8 +147,6 @@ default_params.stats_overlay.font_scale_factor = 0.9; % Relative to axes label f
 default_params.stats_overlay.background_color = []; % Default none. Can be 'figure' or a color spec.
 default_params.stats_overlay.edge_color = []; % Default none. Can be 'axes' or a color spec.
 default_params.stats_overlay.target_plot_handle_tag = ''; % Tag of specific plot to analyze, empty for first valid
-
-default_params.view_preset_3d = 'none'; % Options: 'none', 'iso', 'top', 'front', 'side_left', 'side_right'
 
 % --- Parameter Parsing and Initialization ---
 base_defaults = default_params; % Store original defaults
@@ -264,7 +235,6 @@ switch active_preset_name
         params.marker_size = 5;
         params.color_palette = 'lines'; % Often good for B&W, consider 'gray' or custom grayscale too
         params.grid_density = 'major_only';
-        params.theme = 'light';
         params.axis_color = [0 0 0]; % Black
         params.figure_background_color = [1 1 1]; % White
         params.text_color = [0 0 0]; % Black
@@ -273,30 +243,13 @@ switch active_preset_name
         params.axes_layer = 'bottom';
         params.legend_location = 'best';
 
-    case 'presentation_dark'
-        params.theme = 'dark';
-        params.font_name = 'Calibri';
-        params.base_font_size = 12;
-        params.global_font_scale_factor = 1.1;
-        params.plot_line_width = 2.0;
-        params.marker_size = 7;
-        params.color_palette = 'viridis';
-        params.grid_density = 'normal';
-        params.figure_background_color = [0.10 0.10 0.12];
-        params.axis_color = [0.9 0.9 0.9];
-        params.text_color = [0.95 0.95 0.95];
-        params.grid_color = [0.6 0.6 0.6];
-        params.grid_alpha = 0.25;
-        params.minor_grid_alpha = 0.15;
-
     case 'presentation_light'
-        params.theme = 'light';
         params.font_name = 'Calibri';
         params.base_font_size = 12;
         params.global_font_scale_factor = 1.1;
         params.plot_line_width = 1.8;
         params.marker_size = 6;
-        params.color_palette = 'cbrewer_qual_Set1';
+        params.color_palette = 'turbo'; % Changed from cbrewer_qual_Set1
         params.grid_density = 'normal';
         params.figure_background_color = [0.96 0.96 0.98];
         params.axis_color = [0.15 0.15 0.15];
@@ -306,7 +259,6 @@ switch active_preset_name
         params.minor_grid_alpha = 0.07;
 
     case 'minimalist'
-        params.theme = 'light';
         try % Helvetica Neue might not be available
             params.font_name = 'Helvetica Neue';
             listfonts; % check if it exists, dummy call
@@ -414,26 +366,6 @@ if ~(ischar(current_font_name_val) && (isvector(current_font_name_val) || isempt
 end
 
 % String enumerated parameters to validate
-% theme
-current_theme_val = params.theme;
-valid_themes = {'light', 'dark'};
-if ~ischar(current_theme_val) || ~isvector(current_theme_val) || isempty(current_theme_val)
-    val_str = beautify_fig_format_param_value_for_log(current_theme_val);
-    log_message(params, sprintf('Invalid type for theme: %s. Must be a character string. Resetting to default (%s).', ...
-        val_str, beautify_fig_format_param_value_for_log(base_defaults.theme)), 1, 'Warning');
-    params.theme = base_defaults.theme;
-else
-    match_idx_theme = find(strcmpi(current_theme_val, valid_themes), 1);
-    if isempty(match_idx_theme)
-        val_str = beautify_fig_format_param_value_for_log(current_theme_val);
-        log_message(params, sprintf('Invalid value for theme: %s. Allowed: %s. Resetting to default (%s).', ...
-            val_str, strjoin(valid_themes, ', '), beautify_fig_format_param_value_for_log(base_defaults.theme)), 1, 'Warning');
-        params.theme = base_defaults.theme;
-    else
-        params.theme = valid_themes{match_idx_theme}; % Ensure canonical (lowercase) form
-    end
-end
-
 % grid_density
 current_grid_density_val = params.grid_density;
 valid_grid_densities = {'normal', 'major_only', 'none'};
@@ -704,51 +636,6 @@ end
 log_message(params, 'Detailed sub-struct FIELD validation complete.', 2, 'Info');
 % --- END Sub-Struct Type and Field Validation ---
 
-% Apply theme defaults intelligently after presets and user params have been merged.
-original_light_theme_colors.axis_color = base_defaults.axis_color;
-original_light_theme_colors.text_color = base_defaults.text_color;
-original_light_theme_colors.grid_color = base_defaults.grid_color;
-original_light_theme_colors.figure_background_color = base_defaults.figure_background_color;
-
-dark_theme_generic_colors.axis_color = [0.85 0.85 0.85];
-dark_theme_generic_colors.text_color = [0.9 0.9 0.9];
-dark_theme_generic_colors.grid_color = [0.7 0.7 0.7];
-dark_theme_generic_colors.figure_background_color = [0.12 0.12 0.15];
-
-theme_changed_log_needed = false; % Changed variable name
-if strcmpi(params.theme, 'dark')
-    % Only apply dark theme generic colors if the user hasn't specified them AND
-    % the current color is still the original light theme default (meaning a preset didn't already set a specific dark theme color)
-    if ~isfield(user_provided_params_struct, 'axis_color') && isequal(params.axis_color, original_light_theme_colors.axis_color)
-        params.axis_color = dark_theme_generic_colors.axis_color; theme_changed_log_needed = true;
-    end
-    if ~isfield(user_provided_params_struct, 'text_color') && isequal(params.text_color, original_light_theme_colors.text_color)
-        params.text_color = dark_theme_generic_colors.text_color; theme_changed_log_needed = true;
-    end
-    if ~isfield(user_provided_params_struct, 'grid_color') && isequal(params.grid_color, original_light_theme_colors.grid_color)
-        params.grid_color = dark_theme_generic_colors.grid_color; theme_changed_log_needed = true;
-    end
-    if ~isfield(user_provided_params_struct, 'figure_background_color') && isequal(params.figure_background_color, original_light_theme_colors.figure_background_color)
-        params.figure_background_color = dark_theme_generic_colors.figure_background_color; theme_changed_log_needed = true;
-    end
-    if theme_changed_log_needed; log_message(params, 'Generic dark theme color defaults applied where not specified by preset or user.', 2, 'Info'); end
-else % Light theme is active
-    % If theme is light, but colors might be dark (e.g. from a dark preset then user changed theme to light), revert.
-    if ~isfield(user_provided_params_struct, 'axis_color') && isequal(params.axis_color, dark_theme_generic_colors.axis_color)
-        params.axis_color = original_light_theme_colors.axis_color; theme_changed_log_needed = true;
-    end
-    if ~isfield(user_provided_params_struct, 'text_color') && isequal(params.text_color, dark_theme_generic_colors.text_color)
-        params.text_color = original_light_theme_colors.text_color; theme_changed_log_needed = true;
-    end
-    if ~isfield(user_provided_params_struct, 'grid_color') && isequal(params.grid_color, dark_theme_generic_colors.grid_color)
-        params.grid_color = original_light_theme_colors.grid_color; theme_changed_log_needed = true;
-    end
-    if ~isfield(user_provided_params_struct, 'figure_background_color') && isequal(params.figure_background_color, dark_theme_generic_colors.figure_background_color)
-        params.figure_background_color = original_light_theme_colors.figure_background_color; theme_changed_log_needed = true;
-    end
-    if theme_changed_log_needed; log_message(params, 'Generic light theme color defaults applied/reverted where not specified by preset or user.', 2, 'Info'); end
-end
-
 % Calculate derived parameters
 params.axis_line_width = params.plot_line_width * params.axis_to_plot_linewidth_ratio;
 params.base_font_size = params.base_font_size * params.global_font_scale_factor; % Effective base font size
@@ -943,7 +830,7 @@ if ~isempty(parent_layout) && isvalid(parent_layout)
     try
         grid_size = parent_layout.GridSize;
         % Define tags/types to ignore when counting plottable axes within a layout
-        axes_to_ignore_for_scaling = [{'legend', 'Colorbar', 'ColormapPreview', 'scribeOverlay'}, params.exclude_object_tags];
+        axes_to_ignore_for_scaling = {'legend', 'Colorbar', 'ColormapPreview', 'scribeOverlay'};
         if ~params.apply_to_colorbars; axes_to_ignore_for_scaling{end+1} = 'Colorbar'; end % If colorbars not beautified, don't count them for scaling.
 
         % Count only valid, plottable axes children of this specific layout
@@ -963,7 +850,7 @@ if ~isempty(parent_layout) && isvalid(parent_layout)
 else % No parent_layout, might be a figure with multiple non-tiled subplots
     fig_parent = ancestor(ax_ref, 'figure');
     if ~isempty(fig_parent)
-        axes_to_ignore_for_scaling = [{'legend', 'Colorbar', 'ColormapPreview', 'scribeOverlay'}, params.exclude_object_tags];
+        axes_to_ignore_for_scaling = {'legend', 'Colorbar', 'ColormapPreview', 'scribeOverlay'};
         if ~params.apply_to_colorbars; axes_to_ignore_for_scaling{end+1} = 'Colorbar'; end
 
         all_axes_in_fig = get_axes_from_parent(fig_parent, params, axes_to_ignore_for_scaling);
@@ -1024,19 +911,6 @@ if ischar(palette_source) || isstring(palette_source)
             delete(ax_temp);
             if fig_valid_and_has_prop; safe_set(params, fig_handle,'HandleVisibility',original_visibility); end % Use safe_set
             if size(active_palette,1) < 2; active_palette = get(groot,'defaultAxesColorOrder'); end % Fallback if temp axes failed badly
-        case {'cbrewer_qual_set1', 'cbrewer_qual_set2', 'cbrewer_qual_set3', ...
-                'cbrewer_seq_blues', 'cbrewer_div_brbg'} % Add more as needed
-            if exist('cbrewer','file') == 2
-                try
-                    parts = strsplit(palette_source_char, '_'); ctype = parts{2}; cname = parts{3}; num_colors = 8;
-                    if length(parts) > 3 && ~isempty(str2double(parts{4})); num_colors = str2double(parts{4}); end
-                    active_palette = cbrewer(ctype, cname, max(3,num_colors)); % cbrewer needs at least 3 colors
-                catch ME_cbrewer
-                    log_message(params, sprintf('cbrewer palette "%s" failed: %s. Using "lines".', palette_source_char, ME_cbrewer.message), 1,'Warning'); active_palette = lines(7);
-                end
-            else
-                log_message(params,'"cbrewer" function not found. Using "lines".',1,'Warning'); active_palette = lines(7);
-            end
         case 'custom'
             if ~isempty(params.custom_color_palette) && isnumeric(params.custom_color_palette) && ndims(params.custom_color_palette) == 2 && size(params.custom_color_palette,2) == 3 && size(params.custom_color_palette,1) > 0
                 active_palette = params.custom_color_palette;
@@ -1056,7 +930,7 @@ end
 
 % --- Helper Function: Process a Container (Figure or Tab) ---
 function process_container(container_handle, params)
-axes_to_ignore_combined = [{'legend', 'Colorbar', 'ColormapPreview', 'scribeOverlay'}, params.exclude_object_tags];
+axes_to_ignore_combined = {'legend', 'Colorbar', 'ColormapPreview', 'scribeOverlay'};
 if ~params.apply_to_colorbars; axes_to_ignore_combined{end+1} = 'Colorbar'; end % Tag for colorbar axes is 'Colorbar'
 
 if params.beautify_sgtitle
@@ -1171,7 +1045,7 @@ end
 end
 
 % --- Helper Function: Get Plottable Axes from Parent ---
-function axes_handles = get_axes_from_parent(parent_handle, params, ignore_tags_combined)
+function axes_handles = get_axes_from_parent(parent_handle, params, ignore_tags_types_combined) % Renamed for clarity
 axes_handles = matlab.graphics.axis.Axes.empty; % Initialize with correct empty type
 if ~isvalid(parent_handle); return; end
 try
@@ -1199,14 +1073,13 @@ for k=1:length(potential_children)
             % Tag property might not exist or be accessible in rare edge cases
         end
 
-        is_ignored_by_tag = false;
-        if ~isempty(child_tag) && iscellstr(ignore_tags_combined) %#ok<ISCLSTR> compatibility
-            is_ignored_by_tag = any(strcmp(child_tag, ignore_tags_combined));
+        is_ignored_by_tag_or_type = false; % Simplified check
+        if ~isempty(child_tag) && iscellstr(ignore_tags_types_combined) %#ok<ISCLSTR>
+            is_ignored_by_tag_or_type = any(strcmp(child_tag, ignore_tags_types_combined));
         end
+        % Removed is_ignored_by_type check as params.exclude_object_types is gone
 
-        is_ignored_by_type = any(strcmp(class(child), params.exclude_object_types));
-
-        if ~is_ignored_by_tag && ~is_ignored_by_type
+        if ~is_ignored_by_tag_or_type
             % Explicitly check for ColorBar type if apply_to_colorbars is false
             if isa(child, 'matlab.graphics.illustration.ColorBar') && ~params.apply_to_colorbars
                 % Skip adding this colorbar to the list of axes to be beautified by beautify_single_axes
@@ -1402,22 +1275,7 @@ catch ME_axes_props
 end
 
 try; all_children_orig = get(ax, 'Children'); catch; all_children_orig = []; end
-all_children_filtered = [];
-for k_child = 1:length(all_children_orig)
-    child_obj = all_children_orig(k_child);
-    if ~isvalid(child_obj); continue; end
-    child_tag = ''; if isprop(child_obj,'Tag'); try child_tag = get(child_obj,'Tag'); catch; end; end
-
-    is_excluded_tag = false;
-    if ~isempty(child_tag) && iscellstr(params.exclude_object_tags)
-        is_excluded_tag = any(strcmp(child_tag, params.exclude_object_tags));
-    end
-    is_excluded_type = any(strcmp(class(child_obj), params.exclude_object_types));
-
-    if ~is_excluded_tag && ~is_excluded_type
-        all_children_filtered = [all_children_filtered; child_obj];
-    end
-end
+all_children_filtered = all_children_orig; % Simplified: No filtering based on exclude_object_tags/types
 
 color_idx = 0;
 num_marker_styles = length(params.marker_styles);
@@ -1546,11 +1404,7 @@ if params.apply_to_general_text
     for k_text = 1:length(text_children)
         txt_obj=text_children(k_text);
         if ~isvalid(txt_obj); continue; end
-        is_excluded_type = any(strcmp(class(txt_obj), params.exclude_object_types));
-        if is_excluded_type
-            log_message(params, sprintf('Skipping styling for general text object of excluded type: %s (Tag: %s)', class(txt_obj), txt_obj.Tag), 2, 'Debug');
-            continue;
-        end
+        % is_excluded_type check removed
         parent_of_text = [];
         try parent_of_text = get(txt_obj, 'Parent'); catch; end
         if isa(parent_of_text, 'matlab.graphics.illustration.ColorBar') && ~params.apply_to_colorbars
@@ -1578,30 +1432,6 @@ end
 
 beautify_legend(ax, params, plottable_children_for_legend, fs, alw);
 if params.apply_to_colorbars; beautify_colorbar(ax, params, fs, lfs, alw); end
-
-if isprop(ax, 'View') && ~isempty(params.view_preset_3d) && ~strcmpi(params.view_preset_3d, 'none')
-    is_intended_3d = false;
-    if diff(get(ax,'ZLim')) > 1e-9; is_intended_3d = true; end
-    if isprop(ax, 'ZLabel') && isvalid(ax.ZLabel) && ~isempty(ax.ZLabel.String); is_intended_3d = true; end
-    if ~is_intended_3d && isa(ax, 'matlab.graphics.axis.Axes')
-        log_message(params, sprintf('Axes (Tag: %s) appears 2D. Applying 3D view preset "%s" might be unexpected but will proceed.', ax.Tag, params.view_preset_3d), 2, 'Info');
-    end
-    current_view_preset = lower(params.view_preset_3d);
-    log_message(params, sprintf('Applying 3D view preset "%s" to Axes (Tag: %s).', current_view_preset, ax.Tag), 2, 'Info');
-    try
-        switch current_view_preset
-            case 'iso'; view(ax, 3);
-            case 'top'; view(ax, 0, 90);
-            case 'front'; view(ax, 0, 0);
-            case 'side_left'; view(ax, -90, 0);
-            case 'side_right'; view(ax, 90, 0);
-            otherwise
-                log_message(params, sprintf('Unknown 3D view preset: "%s". No view change applied.', params.view_preset_3d), 1, 'Warning');
-        end
-    catch ME_view
-        log_message(params, sprintf('Error applying 3D view preset "%s": %s', params.view_preset_3d, ME_view.message), 1, 'Warning');
-    end
-end
 
 if params.stats_overlay.enabled && isa(ax, 'matlab.graphics.axis.Axes')
     try
@@ -1783,20 +1613,7 @@ try
 
         current_interpreter = 'tex';
         if isprop(leg_handle_to_use, 'Interpreter') && isprop(leg_handle_to_use, 'String')
-            legend_strings = leg_handle_to_use.String;
-            if ~iscell(legend_strings); legend_strings = {legend_strings}; end
-
-            use_latex_for_legend_strings = false;
-            if params.auto_latex_interpreter_for_labels
-                for k_str = 1:numel(legend_strings)
-                    if ~isempty(legend_strings{k_str}) && contains_latex_chars(legend_strings{k_str}, params)
-                        use_latex_for_legend_strings = true;
-                        break;
-                    end
-                end
-            end
-            if use_latex_for_legend_strings; current_interpreter = 'latex'; end
-            leg_props.Interpreter = current_interpreter;
+            leg_props.Interpreter = 'tex'; % Default to TeX for legends
         end
 
         if isprop(leg_handle_to_use,'Title') && isvalid(leg_handle_to_use.Title)
@@ -1866,8 +1683,7 @@ end
 end
 
 % --- Helper Function: Process Text Properties (Title, Labels, etc.) ---
-function process_text_prop(text_handle, original_str, font_size, font_weight, color, font_name, params, force_latex_off_for_this)
-if nargin < 8; force_latex_off_for_this = false; end
+function process_text_prop(text_handle, original_str, font_size, font_weight, color, font_name, params)
 if isempty(text_handle) || ~isvalid(text_handle); return; end
 
 try
@@ -1885,83 +1701,31 @@ try
         if isprop(text_handle,'Visible'); safe_set(params, text_handle,'Visible','on'); end
     end
 
-    % --- Start of replaceable block ---
-    chosen_interpreter = 'tex'; % Default interpreter
+    chosen_interpreter = 'tex'; % Default to TeX interpreter
+    fixed_str = final_str; % final_str comes from format_text_string
 
-    if force_latex_off_for_this
-        chosen_interpreter = 'none';
-        % fixed_str (which is final_str) remains as is from format_text_string
-    elseif params.auto_latex_interpreter_for_labels
-        if contains_latex_chars(fixed_str, params) % Check the formatted string with the new contains_latex_chars
-            chosen_interpreter = 'latex';
-            % fixed_str remains as is, assuming it's valid LaTeX
-        else % TeX is sufficient, or string is plain
-            chosen_interpreter = 'tex';
-            % Escape characters for TeX interpreter
-            if contains(fixed_str, '_'); fixed_str = strrep(fixed_str, '_', '\_'); end
-            if contains(fixed_str, '^'); fixed_str = strrep(fixed_str, '^', '\^'); end
-        end
-    else % auto_latex_interpreter_for_labels is false (user wants TeX or plain)
-        chosen_interpreter = 'tex';
+    % Escape TeX special characters if using TeX interpreter
+    if strcmp(chosen_interpreter, 'tex')
         if contains(fixed_str, '_'); fixed_str = strrep(fixed_str, '_', '\_'); end
         if contains(fixed_str, '^'); fixed_str = strrep(fixed_str, '^', '\^'); end
+        % Note: Backslashes are generally handled by TeX itself, or would need more complex positive lookbehind if attempting to escape them for literal display.
+        % Forcing dollars to be literal if not intended for math mode:
+        % if contains(fixed_str, '$'); fixed_str = strrep(fixed_str, '$', '\$'); end
+        % The above line for $ is optional - TeX usually handles $ for math mode. If literal $ is often needed, this can be useful.
+        % Given the removal of auto-LaTeX, users wanting math mode will use $...$.
     end
 
-    % Single call to safe_set for atomic update of relevant properties
-    % Ensure font_size, font_weight, color, font_name are defined in the scope of process_text_prop
     safe_set(params, text_handle, ...
         'Interpreter', chosen_interpreter, ...
-        'String', fixed_str, ... % Use the (potentially modified) fixed_str
+        'String', fixed_str, ...
         'FontName', font_name, ...
         'FontSize', max(1, font_size), ...
         'FontWeight', font_weight, ...
         'Color', color);
-    % --- End of replaceable block ---
 catch ME_text_prop
     str_preview = char(original_str); if length(str_preview) > 30; str_preview = [str_preview(1:27) '...']; end
     log_message(params, sprintf('Error setting text property (String: "%s"): %s', str_preview, ME_text_prop.message), 1, 'Warning');
 end
-end
-
-% --- Helper Function: Check if String Contains LaTeX Characters ---
-function tf = contains_latex_chars(str_in, params)
-tf = false; % Default to false (TeX is sufficient or no special chars)
-if isempty(str_in) || (~ischar(str_in) && ~isstring(str_in) && ~iscell(str_in)); return; end
-
-str_in_char = '';
-if iscell(str_in)
-    non_empty_cells = str_in(~cellfun('isempty',str_in));
-    if isempty(non_empty_cells)
-        return; % tf is false
-    end
-    str_in_char = strjoin(non_empty_cells,' ');
-else
-    str_in_char = char(str_in);
-    if size(str_in_char,1) > 1 % If it was a column vector of chars or string array
-        str_in_char = strjoin(cellstr(str_in_char), ' ');
-    end
-end
-if isempty(str_in_char); return; end % tf is false
-
-% Rule 1: Unambiguous LaTeX command (e.g., lpha, eta, rac - sequence of backslash and multiple letters)
-if ~isempty(regexp(str_in_char, '\\[a-zA-Z]{2,}', 'once')); % Matches \command with 2+ letters
-    tf = true;
-    return;
-end
-
-if params.force_latex_if_dollar_present
-    % Rule 2: Unescaped $ sign, if force_latex_if_dollar_present is true
-    if ~isempty(regexp(str_in_char, '(?<!\\)\$', 'once'));  % Looks for $ not preceded by \
-        tf = true;
-        return;
-    end
-    % Rule 3: If forcing based on dollar, also consider single \, _, ^ as needing LaTeX
-    if contains(str_in_char, '\\'); tf = true; return; end % literal \ (e.g. in \$, or just a path)
-    if contains(str_in_char, '_'); tf = true; return; end
-    if contains(str_in_char, '^'); tf = true; return; end
-end
-% If not force_latex_if_dollar_present, then only unambiguous LaTeX (Rule 1) makes tf=true.
-% Otherwise (e.g. string has only _ or ^, and force_latex_if_dollar_present is false), tf remains false.
 end
 
 % --- Helper Function: Format Multi-line/Cell Strings ---
@@ -2453,21 +2217,6 @@ switch lower(so_params.position)
         text_x_norm = 1 - x_text_offset_norm; text_y_norm = 1 - y_text_offset_norm; horz_align = 'right'; vert_align = 'top';
 end
 
-fprintf('[DEBUG Stats Overlay] Checking stats_str_lines. IsCell: %d, IsEmpty: %d\n', iscell(stats_str_lines), isempty(stats_str_lines));
-if ~isempty(stats_str_lines) && iscell(stats_str_lines)
-    for i_debug_line = 1:numel(stats_str_lines)
-        if ischar(stats_str_lines{i_debug_line})
-            fprintf('[DEBUG Stats Overlay] stats_str_lines{%d} (char): "%s"\n', i_debug_line, stats_str_lines{i_debug_line});
-        else
-            fprintf('[DEBUG Stats Overlay] stats_str_lines{%d} is NOT CHAR, it is %s.\n', i_debug_line, class(stats_str_lines{i_debug_line}));
-        end
-    end
-else
-    if ~iscell(stats_str_lines) && ~isempty(stats_str_lines) % Should not happen if logic is correct
-        fprintf('[DEBUG Stats Overlay] stats_str_lines is NOT a cell AND not empty. Class: %s\n', class(stats_str_lines));
-    end
-end
-
 text_props = {
     'Units', 'normalized', 'String', stats_str_lines, 'FontName', stats_font_name, ... % Changed full_stats_str to stats_str_lines
     'FontSize', stats_fs, 'Color', stats_text_color, 'HorizontalAlignment', horz_align, ...
@@ -2521,41 +2270,30 @@ else
     log_message(params, 'Stats Overlay Debug: stats_str_lines is empty.', 2, 'Debug');
 end
 log_message(params, sprintf('Stats Overlay Debug: stats_font_name class: %s, value: "%s"', class(stats_font_name), stats_font_name), 2, 'Debug');
-% log_message(params, sprintf('Stats Overlay Debug: stats_fs class: %s, value: %s', class(stats_fs), beautify_fig_format_param_value_for_log(stats_fs)), 2, 'Debug'); % COMMENTED OUT
-% log_message(params, sprintf('Stats Overlay Debug: stats_text_color class: %s, value: %s', class(stats_text_color), beautify_fig_format_param_value_for_log(stats_text_color)), 2, 'Debug'); % COMMENTED OUT
 log_message(params, sprintf('Stats Overlay Debug: horz_align class: %s, value: "%s"', class(horz_align), horz_align), 2, 'Debug');
 log_message(params, sprintf('Stats Overlay Debug: vert_align class: %s, value: "%s"', class(vert_align), vert_align), 2, 'Debug');
 
 if exist('has_background','var') && has_background
-    % log_message(params, sprintf('Stats Overlay Debug: bg_color_final class: %s, value: %s', class(bg_color_final), beautify_fig_format_param_value_for_log(bg_color_final)), 2, 'Debug'); % COMMENTED OUT
+    log_message(params, sprintf('Stats Overlay Debug: BackgroundColor is being set. Value class: %s', class(bg_color_final)), 2, 'Debug');
 else
     log_message(params, 'Stats Overlay Debug: No BackgroundColor being set or bg_color_final is ''none''.', 2, 'Debug');
 end
 
 if exist('has_edge','var') && has_edge
-    % log_message(params, sprintf('Stats Overlay Debug: edge_color_final class: %s, value: %s', class(edge_color_final), beautify_fig_format_param_value_for_log(edge_color_final)), 2, 'Debug'); % COMMENTED OUT
+    log_message(params, sprintf('Stats Overlay Debug: EdgeColor is being set. Value class: %s', class(edge_color_final)), 2, 'Debug');
 else
     log_message(params, 'Stats Overlay Debug: No EdgeColor being set or edge_color_final is ''none''.', 2, 'Debug');
 end
 
 if exist('has_background','var') && exist('has_edge','var') && (has_background || has_edge)
-    % margin_val = stats_fs*0.3; % This is how it's calculated for text_props
-    % log_message(params, sprintf('Stats Overlay Debug: Margin class: %s, value: %s', class(margin_val), beautify_fig_format_param_value_for_log(margin_val)), 2, 'Debug'); % COMMENTED OUT
+    log_message(params, 'Stats Overlay Debug: Margin is being set.', 2, 'Debug');
 else
     log_message(params, 'Stats Overlay Debug: No Margin being set.', 2, 'Debug');
 end
 
-% log_message(params, sprintf('Stats Overlay Debug: text_props contents before call: %s', beautify_fig_format_param_value_for_log(text_props)), 2, 'Debug'); % COMMENTED OUT
 % --- End Debugging Logs for text_props ---
 
 log_message(params, sprintf('Attempting to create stats overlay text object in axes (Tag: %s)...', ax.Tag), 2, 'Info');
-log_message(params, sprintf('Stats Overlay VAL: stats_fs (FontSize) = %s (class %s, size %s)', num2str(stats_fs), class(stats_fs), mat2str(size(stats_fs))), 2, 'Debug');
-log_message(params, sprintf('Stats Overlay VAL: stats_text_color (Color) = %s (class %s, size %s)', mat2str(stats_text_color), class(stats_text_color), mat2str(size(stats_text_color))), 2, 'Debug');
-log_message(params, sprintf('Stats Overlay VAL: stats_str_lines isempty: %d',isempty(stats_str_lines)), 2, 'Debug');
-log_message(params, sprintf('Stats Overlay VAL: stats_font_name isempty: %d',isempty(stats_font_name)), 2, 'Debug');
-log_message(params, sprintf('Stats Overlay VAL: horz_align isempty: %d',isempty(horz_align)), 2, 'Debug');
-log_message(params, sprintf('Stats Overlay VAL: vert_align isempty: %d',isempty(vert_align)), 2, 'Debug');
-
 % Log all text_props before the call
 props_str_for_log = '{';
 for k_tp = 1:length(text_props)
