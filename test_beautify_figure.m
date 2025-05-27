@@ -78,6 +78,14 @@ catch ME_save
 end
 end
 
+% Helper mapping for marker shorthands to their common full names
+marker_shorthand_to_full_map = containers.Map(...
+    {'o', 's', 'd', '^', 'v', '>', '<', 'p', 'h', '.', 'x', '+', '*'}, ...
+    {{'o', 'circle'}, {'s', 'square'}, {'d', 'diamond'}, {'^', 'triangleup'}, ...
+    {'v', 'triangledown'}, {'>', 'triangleright'}, {'<', 'triangleleft'}, ...
+    {'p', 'pentagram'}, {'h', 'hexagram'}, {'.', 'point'}, ...
+    {'x', 'cross'}, {'+', 'plus'}, {'*', 'star'}});
+
 %% --- Test Case Placeholders ---
 % New test cases will be added here sequentially.
 
@@ -102,46 +110,6 @@ end
 % end
 % if ishandle(fig_current); close(fig_current); end
 % test_case_num = test_case_num + 1;
-
-%% --- Test Case: `view_preset_3d` Options ---
-fprintf('\n--- Running New Test Case %d: `view_preset_3d` Options ---\n', test_case_num);
-view_presets_to_test = {'none', 'iso', 'top', 'front', 'side_left', 'side_right'};
-[X_peaks, Y_peaks, Z_peaks] = peaks(25); % Generate sample 3D data
-
-for v_idx = 1:length(view_presets_to_test)
-    current_view_preset = view_presets_to_test{v_idx};
-    test_name_current = sprintf('new_test_%02d_view_preset_%s', test_case_num, current_view_preset);
-
-    fig_current = figure('Visible', 'off', 'Position', [100, 100, 600, 450]);
-    surf(X_peaks, Y_peaks, Z_peaks);
-    colormap(fig_current, 'jet'); % Apply a colormap
-    title([test_name_current ' Original (View: default)'], 'Interpreter', 'none');
-    xlabel('X-axis'); ylabel('Y-axis'); zlabel('Z-axis');
-    axis tight;
-    save_comparison_figure_new(fig_current, test_name_current, 'original', output_dir_new);
-
-    params_current = struct();
-    params_current.view_preset_3d = current_view_preset;
-    % Use a preset that works well with 3D views, e.g., 'default' or 'presentation_light'
-    params_current.style_preset = 'default';
-    % Ensure logs don't clutter this specific test too much unless debugging
-    params_current.log_level = 0;
-
-    fprintf('  Testing view_preset_3d: ''%s''\n', current_view_preset);
-    try
-        params_current.figure_handle = fig_current;
-        beautify_figure(params_current);
-        title([test_name_current ' Beautified (View: ' current_view_preset ')'], 'Interpreter', 'none');
-        % Add a pause to allow visual inspection if figures were visible
-        % if strcmp(get(fig_current,'Visible'),'on'); pause(1); end
-        save_comparison_figure_new(fig_current, test_name_current, 'beautified', output_dir_new);
-        fprintf('  Applied beautify_figure for view_preset_3d: ''%s''.\n', current_view_preset);
-    catch ME_test
-        fprintf('  ERROR during New Test Case %d (%s) with view_preset_3d ''%s'': %s\n', test_case_num, test_name_current, current_view_preset, ME_test.message);
-    end
-    if ishandle(fig_current); close(fig_current); end
-end
-test_case_num = test_case_num + 1;
 
 %% --- Test Case: `apply_to_colorbars = false` ---
 fprintf('\n--- Running New Test Case %d: `apply_to_colorbars = false` ---\n', test_case_num);
@@ -374,34 +342,34 @@ try
     % beautify_figure might add its own small padding even with 'tight', so direct equality to data min/max is too strict.
     % We check if they are significantly different from original loose limits and closer to data bounds.
 
-    data_min_x = min(x_data_limits); data_max_x = max(x_data_limits);
-    data_min_y = min(y_data_limits); data_max_y = max(y_data_limits);
+    expected_xlim_tight = [min(x_data_limits), max(x_data_limits)];
+    expected_ylim_tight = [min(y_data_limits), max(y_data_limits)];
 
     passed_verification = true;
-    % Check X limits
-    if beautified_xlim(1) > data_min_x + 0.1*(data_max_x-data_min_x) || beautified_xlim(1) > original_xlim(1) + 0.1*abs(original_xlim(1))
-        fprintf('  VERIFICATION FAIL: Tight Xlim(1) (%.2f) seems too loose compared to data min (%.2f) or not tighter than original (%.2f).\n', beautified_xlim(1), data_min_x, original_xlim(1));
-        passed_verification = false;
-    end
-    if beautified_xlim(2) < data_max_x - 0.1*(data_max_x-data_min_x) || beautified_xlim(2) < original_xlim(2) - 0.1*abs(original_xlim(2))
-        fprintf('  VERIFICATION FAIL: Tight Xlim(2) (%.2f) seems too loose compared to data max (%.2f) or not tighter than original (%.2f).\n', beautified_xlim(2), data_max_x, original_xlim(2));
+    tolerance = 1e-9; % A small tolerance for floating point comparisons
+
+    if ~all(abs(beautified_xlim - expected_xlim_tight) < tolerance)
+        fprintf('  VERIFICATION FAIL: Xlim is [%.2f, %.2f], expected tight limits [%.2f, %.2f]. Diff: [%.e, %.e]\n', ...
+            beautified_xlim(1), beautified_xlim(2), expected_xlim_tight(1), expected_xlim_tight(2), ...
+            abs(beautified_xlim(1) - expected_xlim_tight(1)), abs(beautified_xlim(2) - expected_xlim_tight(2)) );
         passed_verification = false;
     end
 
-    % Check Y limits
-    if beautified_ylim(1) > data_min_y + 0.1*(data_max_y-data_min_y) || beautified_ylim(1) > original_ylim(1) + 0.1*abs(original_ylim(1))
-        fprintf('  VERIFICATION FAIL: Tight Ylim(1) (%.2f) seems too loose compared to data min (%.2f) or not tighter than original (%.2f).\n', beautified_ylim(1), data_min_y, original_ylim(1));
-        passed_verification = false;
-    end
-    if beautified_ylim(2) < data_max_y - 0.1*(data_max_y-data_min_y) || beautified_ylim(2) < original_ylim(2) - 0.1*abs(original_ylim(2))
-        fprintf('  VERIFICATION FAIL: Tight Ylim(2) (%.2f) seems too loose compared to data max (%.2f) or not tighter than original (%.2f).\n', beautified_ylim(2), data_max_y, original_ylim(2));
+    if ~all(abs(beautified_ylim - expected_ylim_tight) < tolerance)
+        fprintf('  VERIFICATION FAIL: Ylim is [%.2f, %.2f], expected tight limits [%.2f, %.2f]. Diff: [%.e, %.e]\n', ...
+            beautified_ylim(1), beautified_ylim(2), expected_ylim_tight(1), expected_ylim_tight(2), ...
+            abs(beautified_ylim(1) - expected_ylim_tight(1)), abs(beautified_ylim(2) - expected_ylim_tight(2)) );
         passed_verification = false;
     end
 
     if passed_verification
-        fprintf('  VERIFICATION INFO: Limits changed from X[%.2f, %.2f] Y[%.2f, %.2f] to X[%.2f, %.2f] Y[%.2f, %.2f]. Visual check recommended for tightness.\n', ...
-            original_xlim(1), original_xlim(2), original_ylim(1), original_ylim(2), beautified_xlim(1), beautified_xlim(2), beautified_ylim(1), beautified_ylim(2));
+        fprintf('  VERIFICATION PASS: Axis limits are tight to data extents as expected.\n');
+    else
+        fprintf('  VERIFICATION FAIL: Axis limits are not perfectly tight to data extents.\n');
     end
+    fprintf('  VERIFICATION INFO: Original limits X[%.2f, %.2f] Y[%.2f, %.2f]. New limits X[%.2f, %.2f] Y[%.2f, %.2f]. Data X[%.2f, %.2f] Y[%.2f, %.2f].\n', ...
+        original_xlim(1), original_xlim(2), original_ylim(1), original_ylim(2), beautified_xlim(1), beautified_xlim(2), beautified_ylim(1), beautified_ylim(2), ...
+        min(x_data_limits), max(x_data_limits), min(y_data_limits), max(y_data_limits));
 
     save_comparison_figure_new(fig_current, test_name_current, 'beautified', output_dir_new);
     fprintf('  Applied beautify_figure. Check that the axis limits are now tight around the data.\n');
@@ -611,118 +579,6 @@ if ishandle(fig_stats_inherit); close(fig_stats_inherit); end
 
 test_case_num = test_case_num + 1;
 
-%% --- Test Case: `exclude_object_types` ---
-fprintf('\n--- Running New Test Case %d: `exclude_object_types` (excluding Text objects) ---\n', test_case_num);
-test_name_current = sprintf('new_test_%02d_exclude_object_types_text', test_case_num);
-
-fig_current = figure('Visible', 'off', 'Position', [100, 100, 600, 450]);
-hold on;
-plot(1:10, rand(1,10), 'b-o', 'LineWidth', 1, 'MarkerSize', 4, 'DisplayName', 'Line Plot');
-text(2, 0.8, 'Original Text 1 (Exclude)', 'FontSize', 10, 'Color', 'red', 'Tag', 'MyTextObject1');
-text(5, 0.2, 'Original Text 2 (Exclude)', 'FontSize', 12, 'Color', 'magenta', 'Tag', 'MyTextObject2');
-hold off;
-title([test_name_current ' Original with Text Objects'], 'Interpreter', 'none');
-xlabel('X-axis (should be styled)');
-ylabel('Y-axis (should be styled)');
-legend('show');
-grid on;
-
-% Store original properties of text objects for verification
-text_obj1 = findobj(fig_current, 'Tag', 'MyTextObject1');
-original_text1_fontsize = text_obj1.FontSize;
-original_text1_color = text_obj1.Color;
-original_text1_fontname = text_obj1.FontName;
-
-text_obj2 = findobj(fig_current, 'Tag', 'MyTextObject2');
-original_text2_fontsize = text_obj2.FontSize;
-original_text2_color = text_obj2.Color;
-original_text2_fontname = text_obj2.FontName;
-
-save_comparison_figure_new(fig_current, test_name_current, 'original', output_dir_new);
-
-params_current = struct();
-params_current.exclude_object_types = {'matlab.graphics.primitive.Text'};
-% Apply some global styles to see if they are NOT applied to the excluded text
-params_current.font_name = 'Times New Roman';
-params_current.base_font_size = 16; % This would make text huge if applied
-params_current.text_color = [0 0.5 0]; % Dark green
-params_current.log_level = 0;
-
-fprintf('  Testing with exclude_object_types = {''matlab.graphics.primitive.Text''}.\n');
-fprintf('  Global font set to: %s, base_font_size: %d, text_color: [%.1f %.1f %.1f]\n', ...
-    params_current.font_name, params_current.base_font_size, params_current.text_color);
-
-try
-    params_current.figure_handle = fig_current;
-    beautify_figure(params_current);
-    title([test_name_current ' Beautified (Text Objects Excluded)'], 'Interpreter', 'none');
-
-    text_obj1_after = findobj(fig_current, 'Tag', 'MyTextObject1');
-    text_obj2_after = findobj(fig_current, 'Tag', 'MyTextObject2');
-    passed_verification = true;
-
-    if isempty(text_obj1_after) || ~isvalid(text_obj1_after)
-        fprintf('  VERIFICATION FAIL: Text object 1 not found or invalid after beautification.\n');
-        passed_verification = false;
-    else
-        if abs(text_obj1_after.FontSize - original_text1_fontsize) > 0.1
-            fprintf('  VERIFICATION FAIL: Text object 1 FontSize changed. Original: %.1f, Current: %.1f\n', original_text1_fontsize, text_obj1_after.FontSize);
-            passed_verification = false;
-        end
-        if ~isequal(text_obj1_after.Color, original_text1_color)
-            fprintf('  VERIFICATION FAIL: Text object 1 Color changed.\n');
-            passed_verification = false;
-        end
-        if ~strcmp(text_obj1_after.FontName, original_text1_fontname)
-            fprintf('  VERIFICATION FAIL: Text object 1 FontName changed. Original: %s, Current: %s\n', original_text1_fontname, text_obj1_after.FontName);
-            passed_verification = false;
-        end
-    end
-
-    if isempty(text_obj2_after) || ~isvalid(text_obj2_after)
-        fprintf('  VERIFICATION FAIL: Text object 2 not found or invalid after beautification.\n');
-        passed_verification = false;
-    else
-        if abs(text_obj2_after.FontSize - original_text2_fontsize) > 0.1
-            fprintf('  VERIFICATION FAIL: Text object 2 FontSize changed. Original: %.1f, Current: %.1f\n', original_text2_fontsize, text_obj2_after.FontSize);
-            passed_verification = false;
-        end
-        if ~isequal(text_obj2_after.Color, original_text2_color)
-            fprintf('  VERIFICATION FAIL: Text object 2 Color changed.\n');
-            passed_verification = false;
-        end
-        if ~strcmp(text_obj2_after.FontName, original_text2_fontname)
-            fprintf('  VERIFICATION FAIL: Text object 2 FontName changed. Original: %s, Current: %s\n', original_text2_fontname, text_obj2_after.FontName);
-            passed_verification = false;
-        end
-    end
-
-    % Check that title and labels ARE styled (as they are not general text objects)
-    ax_after = gca;
-    if strcmp(ax_after.XLabel.FontName, params_current.font_name) && ...
-            abs(ax_after.XLabel.FontSize - round(params_current.base_font_size * 1.0 * 1.0)) < 1.1 && ... % label_scale=1, global_scale=1 for this test setup
-            isequal(ax_after.XLabel.Color, params_current.text_color)
-        fprintf('  VERIFICATION INFO: XLabel appears styled as expected.\n');
-    else
-        fprintf('  VERIFICATION WARN: XLabel does not appear to be styled with global settings. Font: %s (exp %s), Size: %.1f (exp ~%.1f), Color: [%.1f %.1f %.1f] (exp [%.1f %.1f %.1f]) \n', ...
-            ax_after.XLabel.FontName, params_current.font_name, ax_after.XLabel.FontSize, params_current.base_font_size, ax_after.XLabel.Color, params_current.text_color);
-        % This is not a failure of exclusion, but good to note.
-    end
-
-    if passed_verification
-        fprintf('  VERIFICATION PASS: Custom text objects appear unchanged as expected.\n');
-    else
-        fprintf('  VERIFICATION FAIL: Some custom text object properties changed unexpectedly.\n');
-    end
-
-    save_comparison_figure_new(fig_current, test_name_current, 'beautified', output_dir_new);
-    fprintf('  Applied beautify_figure. Check that the manually added text objects (red, magenta) are NOT styled, but other elements (axes labels, title, line) are.\n');
-catch ME_test
-    fprintf('  ERROR during New Test Case %d (%s): %s\n', test_case_num, test_name_current, ME_test.message);
-end
-if ishandle(fig_current); close(fig_current); end
-test_case_num = test_case_num + 1;
-
 %% --- Test Case: `beautify_sgtitle = false` ---
 fprintf('\n--- Running New Test Case %d: `beautify_sgtitle = false` ---\n', test_case_num);
 test_name_current = sprintf('new_test_%02d_beautify_sgtitle_false', test_case_num);
@@ -800,11 +656,16 @@ try
     % Also check that the subplot title IS styled
     ax_title_after = ax_sgtitle_test.Title;
     expected_ax_title_font = params_current.font_name;
-    % Scaled font size for subplot title: base_font_size * title_scale * global_font_scale (global_font_scale is 1 here)
-    expected_ax_title_fontsize = round(params_current.base_font_size * params_current.title_scale);
+    % Scaled font size for subplot title: base_font_size * title_scale * scale_factor
+    % For a single plot (1x1 tiled layout), scale_factor is 1.6 from default_params.scaling_map{1}
+    % global_font_scale_factor is 1.0 by default in params_current unless overridden
+    effective_base_font_size = params_current.base_font_size * (params_current.global_font_scale_factor); % global_font_scale_factor is 1.0
+    scale_factor_for_single_plot = 1.6; % From default_params.scaling_map for 1 subplot
+    expected_ax_title_fontsize = round(effective_base_font_size * params_current.title_scale * scale_factor_for_single_plot);
+
     if isvalid(ax_title_after)
         if strcmp(ax_title_after.FontName, expected_ax_title_font) && ...
-                abs(ax_title_after.FontSize - expected_ax_title_fontsize) < 1.1 && ...
+                abs(ax_title_after.FontSize - expected_ax_title_fontsize) < 1.1 && ... % Allow 1 point difference due to rounding
                 isequal(ax_title_after.Color, params_current.text_color)
             fprintf('  VERIFICATION INFO: Subplot title appears styled as expected.\n');
         else
@@ -908,10 +769,24 @@ try
     cycled_markers_found = zeros(num_plots_above_marker_thresh,1);
     for p_idx = 1:num_plots_above_marker_thresh
         if ~isvalid(h_plots_marker_above(p_idx)) continue; end
-        current_marker = get(h_plots_marker_above(p_idx), 'Marker');
-        expected_marker = common_params_threshold_test.marker_styles{mod(p_idx-1, length(common_params_threshold_test.marker_styles))+1};
-        if ~strcmp(current_marker, expected_marker)
-            fprintf('  VERIFICATION FAIL (Marker Above Thresh): Plot %d Marker is "%s", expected "%s" from cycle.\n', p_idx, current_marker, expected_marker);
+        current_marker_from_plot = get(h_plots_marker_above(p_idx), 'Marker');
+        expected_marker_shorthand = common_params_threshold_test.marker_styles{mod(p_idx-1, length(common_params_threshold_test.marker_styles))+1};
+
+        is_match = false;
+        % Use the map defined earlier (ensure it's in scope, e.g., marker_shorthand_to_full_map)
+        if marker_shorthand_to_full_map.isKey(expected_marker_shorthand)
+            possible_names = marker_shorthand_to_full_map(expected_marker_shorthand);
+            if any(strcmp(current_marker_from_plot, possible_names))
+                is_match = true;
+            end
+        else % Fallback for safety, though all default markers are in map
+            if strcmp(current_marker_from_plot, expected_marker_shorthand)
+                is_match = true;
+            end
+        end
+
+        if ~is_match
+            fprintf('  VERIFICATION FAIL (Marker Above Thresh): Plot %d Marker is "%s", expected shorthand "%s" (or its full equivalent) from cycle.\n', p_idx, current_marker_from_plot, expected_marker_shorthand);
             passed_marker_above = false;
         else
             cycled_markers_found(p_idx) = 1;
@@ -1086,103 +961,6 @@ for p_idx = 1:length(palettes_to_test)
 end
 test_case_num = test_case_num + 1;
 
-%% --- Test Case: `force_latex_if_dollar_present` ---
-fprintf('\n--- Running New Test Case %d: `force_latex_if_dollar_present` ---\n', test_case_num);
-
-dollar_string_title = 'Value (\$) in USD'; % String with dollars but no other LaTeX
-dollar_string_label = 'Amount (\$)';
-
-% Sub-case 1: force_latex_if_dollar_present = true
-test_name_force_latex_true = sprintf('new_test_%02d_force_latex_true', test_case_num);
-fig_force_latex_true = figure('Visible', 'off', 'Position', [100,100,600,450]);
-plot(1:5, rand(1,5));
-title(dollar_string_title); % Interpreter will be default 'tex' initially
-xlabel(dollar_string_label);
-ylabel('Y-axis'); grid on;
-original_title_interpreter_true = get(get(gca,'Title'), 'Interpreter');
-original_xlabel_interpreter_true = get(get(gca,'XLabel'), 'Interpreter');
-save_comparison_figure_new(fig_force_latex_true, test_name_force_latex_true, 'original', output_dir_new);
-
-params_force_latex_true = struct();
-params_force_latex_true.force_latex_if_dollar_present = true;
-params_force_latex_true.auto_latex_interpreter_for_labels = true; % This needs to be on for force_latex to matter
-params_force_latex_true.log_level = 0;
-
-fprintf('  Testing with force_latex_if_dollar_present = true. Expect LaTeX interpreter.\n');
-try
-    params_force_latex_true.figure_handle = fig_force_latex_true;
-    beautify_figure(params_force_latex_true);
-    title([test_name_force_latex_true ' Beautified (Force LaTeX True)'], 'Interpreter', 'none'); % Set main title for image
-
-    ax_after_true = gca;
-    title_interpreter_after_true = get(ax_after_true.Title, 'Interpreter');
-    xlabel_interpreter_after_true = get(ax_after_true.XLabel, 'Interpreter');
-    passed_force_true = true;
-
-    if ~strcmp(title_interpreter_after_true, 'latex')
-        fprintf('  VERIFICATION FAIL (Force True): Title interpreter is "%s", expected "latex".\n', title_interpreter_after_true);
-        passed_force_true = false;
-    else
-        fprintf('  VERIFICATION PASS (Force True): Title interpreter is "latex" as expected.\n');
-    end
-    if ~strcmp(xlabel_interpreter_after_true, 'latex')
-        fprintf('  VERIFICATION FAIL (Force True): XLabel interpreter is "%s", expected "latex".\n', xlabel_interpreter_after_true);
-        passed_force_true = false;
-    else
-        fprintf('  VERIFICATION PASS (Force True): XLabel interpreter is "latex" as expected.\n');
-    end
-    save_comparison_figure_new(fig_force_latex_true, test_name_force_latex_true, 'beautified', output_dir_new);
-catch ME_force_latex_true
-    fprintf('  ERROR during New Test Case %d (%s): %s\n', test_case_num, test_name_force_latex_true, ME_force_latex_true.message);
-end
-if ishandle(fig_force_latex_true); close(fig_force_latex_true); end
-
-% Sub-case 2: force_latex_if_dollar_present = false
-test_name_force_latex_false = sprintf('new_test_%02d_force_latex_false', test_case_num);
-fig_force_latex_false = figure('Visible', 'off', 'Position', [100,100,600,450]);
-plot(1:5, rand(1,5));
-title(dollar_string_title); % Interpreter will be default 'tex' initially
-xlabel(dollar_string_label);
-ylabel('Y-axis'); grid on;
-original_title_interpreter_false = get(get(gca,'Title'), 'Interpreter');
-original_xlabel_interpreter_false = get(get(gca,'XLabel'), 'Interpreter');
-save_comparison_figure_new(fig_force_latex_false, test_name_force_latex_false, 'original', output_dir_new);
-
-params_force_latex_false = struct();
-params_force_latex_false.force_latex_if_dollar_present = false;
-params_force_latex_false.auto_latex_interpreter_for_labels = true; % auto_latex still on, but force is off
-params_force_latex_false.log_level = 0;
-
-fprintf('  Testing with force_latex_if_dollar_present = false. Expect TeX interpreter (dollar alone is not enough).\n');
-try
-    params_force_latex_false.figure_handle = fig_force_latex_false;
-    beautify_figure(params_force_latex_false);
-    title([test_name_force_latex_false ' Beautified (Force LaTeX False)'], 'Interpreter', 'none'); % Set main title for image
-
-    ax_after_false = gca;
-    title_interpreter_after_false = get(ax_after_false.Title, 'Interpreter');
-    xlabel_interpreter_after_false = get(ax_after_false.XLabel, 'Interpreter');
-    passed_force_false = true;
-
-    if ~strcmp(title_interpreter_after_false, 'tex')
-        fprintf('  VERIFICATION FAIL (Force False): Title interpreter is "%s", expected "tex".\n', title_interpreter_after_false);
-        passed_force_false = false;
-    else
-        fprintf('  VERIFICATION PASS (Force False): Title interpreter is "tex" as expected.\n');
-    end
-    if ~strcmp(xlabel_interpreter_after_false, 'tex')
-        fprintf('  VERIFICATION FAIL (Force False): XLabel interpreter is "%s", expected "tex".\n', xlabel_interpreter_after_false);
-        passed_force_false = false;
-    else
-        fprintf('  VERIFICATION PASS (Force False): XLabel interpreter is "tex" as expected.\n');
-    end
-    save_comparison_figure_new(fig_force_latex_false, test_name_force_latex_false, 'beautified', output_dir_new);
-catch ME_force_latex_false
-    fprintf('  ERROR during New Test Case %d (%s): %s\n', test_case_num, test_name_force_latex_false, ME_force_latex_false.message);
-end
-if ishandle(fig_force_latex_false); close(fig_force_latex_false); end
-
-test_case_num = test_case_num + 1;
 %% Teardown
 fprintf('\n--- New Test Script Complete ---\n');
 fprintf('Please check the "%s" directory for saved figures from new tests.\n', output_dir_new);

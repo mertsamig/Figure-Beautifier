@@ -239,7 +239,6 @@ switch active_preset_name
         params.figure_background_color = [1 1 1]; % White
         params.text_color = [0 0 0]; % Black
         params.grid_color = [0.5 0.5 0.5]; % Gray
-        params.auto_latex_interpreter_for_labels = true;
         params.axes_layer = 'bottom';
         params.legend_location = 'best';
 
@@ -261,7 +260,6 @@ switch active_preset_name
     case 'minimalist'
         try % Helvetica Neue might not be available
             params.font_name = 'Helvetica Neue';
-            listfonts; % check if it exists, dummy call
         catch
             params.font_name = 'Helvetica'; % Fallback
         end
@@ -504,7 +502,7 @@ log_message(params, 'Performing sub-struct validation (type checks, merging, fie
     end
 
 % Validate top-level structure types first
-sub_struct_names = {'export_settings', 'stats_overlay'}; % panel_labeling removed
+sub_struct_names = {'export_settings', 'stats_overlay'};
 for i = 1:length(sub_struct_names)
     ss_name = sub_struct_names{i};
     if isfield(params, ss_name) % It should be, from base_defaults
@@ -538,7 +536,6 @@ if isfield(user_provided_params_struct, 'stats_overlay') && isstruct(user_provid
         end
     end
 end
-% panel_labeling merge block removed
 log_message(params, 'Sub-struct field merging complete.', 2, 'Info');
 
 
@@ -630,8 +627,6 @@ else
     log_message(params, '''params.stats_overlay'' is unexpectedly not a struct before detailed field validation.', 0, 'Error');
     if isfield(base_defaults, 'stats_overlay'); params.stats_overlay = base_defaults.stats_overlay; end
 end
-
-% panel_labeling validation block removed
 
 log_message(params, 'Detailed sub-struct FIELD validation complete.', 2, 'Info');
 % --- END Sub-Struct Type and Field Validation ---
@@ -932,6 +927,10 @@ end
 function process_container(container_handle, params)
 axes_to_ignore_combined = {'legend', 'Colorbar', 'ColormapPreview', 'scribeOverlay'};
 if ~params.apply_to_colorbars; axes_to_ignore_combined{end+1} = 'Colorbar'; end % Tag for colorbar axes is 'Colorbar'
+if ~params.beautify_sgtitle
+    axes_to_ignore_combined{end+1} = 'sgtitle';
+    axes_to_ignore_combined{end+1} = 'suptitle'; % Common tag for super titles
+end
 
 if params.beautify_sgtitle
     % sgtitle applies to TiledChartLayout or Figure (if TiledChartLayout is direct child)
@@ -1147,56 +1146,41 @@ if ~isa(ax, 'matlab.graphics.illustration.ColorBar') && ~params.apply_to_colorba
         ax_tag_info = ''; if isprop(ax,'Tag'); ax_tag_info = ax.Tag; end
         log_message(params, sprintf('Storing original properties for colorbar of axes (Tag: %s) because apply_to_colorbars is false.', ax_tag_info), 2, 'Debug');
 
-        original_cb_label_interpreter = ''; % Initialize
-        if isprop(cb_handle_for_restore, 'Label') && isvalid(cb_handle_for_restore.Label) && isprop(cb_handle_for_restore.Label, 'Interpreter')
-            try % Nested try for interpreter operations, separate from main props
-                original_cb_label_interpreter = cb_handle_for_restore.Label.Interpreter;
-                safe_set(params, cb_handle_for_restore.Label, 'Interpreter', 'none');
-                log_message(params, sprintf('Temporarily set colorbar label interpreter to "none" for axes (Tag: %s). Original: "%s"', ax_tag_info, original_cb_label_interpreter), 2, 'Debug');
-            catch ME_interp_set
-                log_message(params, sprintf('Could not temporarily set colorbar label interpreter to "none" for axes (Tag: %s): %s', ax_tag_info, ME_interp_set.message), 1, 'Warning');
-            end
-        end
-
+        % original_cb_label_interpreter = ''; % Initialize NO LONGER NEEDED
         try
+            % Store direct properties of the colorbar itself first
             original_cb_props.FontName = cb_handle_for_restore.FontName;
             original_cb_props.FontSize = cb_handle_for_restore.FontSize;
             original_cb_props.Color = cb_handle_for_restore.Color;
             original_cb_props.LineWidth = cb_handle_for_restore.LineWidth;
             original_cb_props.TickDirection = cb_handle_for_restore.TickDirection;
 
+            % Then, store properties of the colorbar's Label
             if isprop(cb_handle_for_restore, 'Label') && isvalid(cb_handle_for_restore.Label)
-                % Label.String is read first as it might be empty, influencing other reads.
-                % Interpreter was already read and set to 'none' if possible.
                 original_cb_props.LabelString = cb_handle_for_restore.Label.String;
-                if ~isempty(original_cb_props.LabelString) % Only read other label props if string is not empty
+                if ~isempty(original_cb_props.LabelString) % Only store other label props if string is not empty
                     original_cb_props.LabelFontName = cb_handle_for_restore.Label.FontName;
                     original_cb_props.LabelFontSize = cb_handle_for_restore.Label.FontSize;
                     original_cb_props.LabelColor = cb_handle_for_restore.Label.Color;
-                    % original_cb_props.LabelInterpreter is now handled by original_cb_label_interpreter
+                    if isprop(cb_handle_for_restore.Label, 'Interpreter')
+                        original_cb_props.LabelInterpreter = cb_handle_for_restore.Label.Interpreter;
+                    else
+                        original_cb_props.LabelInterpreter = 'tex'; % Fallback if interpreter prop doesn't exist
+                    end
                 else
                     original_cb_props.LabelString = ''; % Ensure it's set if initially empty
+                    % If LabelString is empty, other label properties are less relevant to store/restore individually
                 end
             else
-                original_cb_props.LabelString = '';
+                original_cb_props.LabelString = ''; % Label does not exist or is invalid
             end
         catch ME_store_cb
             log_message(params, sprintf('Could not store all original colorbar properties: %s', ME_store_cb.message), 1, 'Warning');
             original_cb_props = []; % Clear if properties couldn't be stored
             cb_handle_for_restore = []; % Invalidate handle if storing failed critically
         end
-
-        % Restore interpreter if it was changed
-        if isprop(cb_handle_for_restore, 'Label') && isvalid(cb_handle_for_restore.Label) && isprop(cb_handle_for_restore.Label, 'Interpreter') && ~isempty(original_cb_label_interpreter)
-            try
-                safe_set(params, cb_handle_for_restore.Label, 'Interpreter', original_cb_label_interpreter);
-                log_message(params, sprintf('Restored colorbar label interpreter to "%s" for axes (Tag: %s).', original_cb_label_interpreter, ax_tag_info), 2, 'Debug');
-            catch ME_interp_restore
-                log_message(params, sprintf('Could not restore colorbar label interpreter to "%s" for axes (Tag: %s): %s', original_cb_label_interpreter, ax_tag_info, ME_interp_restore.message), 1, 'Warning');
-            end
-        end
     else
-        cb_handle_for_restore = [];
+        cb_handle_for_restore = []; % This was original, keep for safety, though cb_handle_for_restore should be [] if first if is false
     end
 end
 
@@ -1253,11 +1237,8 @@ try
                 expand_axis_lims(ax, 'ZLim', params.expand_axis_limits_factor, params);
             end
         elseif strcmpi(params.axis_limit_mode, 'tight')
-            try; axis(ax, 'tight');
-                if params.expand_axis_limits_factor > 0 && params.expand_axis_limits_factor < 0.015
-                    expand_axis_lims(ax, 'XLim', params.expand_axis_limits_factor*0.5, params);
-                    expand_axis_lims(ax, 'YLim', params.expand_axis_limits_factor*0.5, params);
-                end
+            try
+                axis(ax, 'tight');
             catch ME_tight
                 log_message(params, sprintf('Warning: "axis tight" failed for axes (Tag: %s): %s', ax.Tag, ME_tight.message),1,'Warning');
             end
@@ -1462,9 +1443,9 @@ if ~isempty(original_cb_props) && ~isempty(cb_handle_for_restore) && isvalid(cb_
                 'FontSize', original_cb_props.LabelFontSize, ...
                 'Color', original_cb_props.LabelColor, ...
                 'Visible', 'on');
-            % Interpreter is restored from original_cb_label_interpreter by the dedicated block above
-            if ~isempty(original_cb_label_interpreter) % Check again, as it might have failed to be set
-                safe_set(params, cb_handle_for_restore.Label, 'Interpreter', original_cb_label_interpreter);
+            % Restore Label Interpreter if it was stored
+            if isfield(original_cb_props, 'LabelInterpreter') && ~isempty(original_cb_props.LabelInterpreter)
+                safe_set(params, cb_handle_for_restore.Label, 'Interpreter', original_cb_props.LabelInterpreter);
             end
         elseif isfield(original_cb_props, 'LabelString') % Original label string was empty or only whitespace
             safe_set(params, cb_handle_for_restore.Label, 'String', '', 'Visible', 'off');
@@ -1570,26 +1551,47 @@ try
         end
     end
 
-    leg_handle_to_use = [];
+    leg_handle_to_use = []; % Initialize to ensure it's defined
     if should_show_legend
-        if ~isempty(existing_legend) && isvalid(existing_legend)
-            leg_handle_to_use = existing_legend;
-            log_message(params,sprintf('  Updating existing legend for Axes (Tag: %s).',ax.Tag),2,'Info');
-        else % Create new legend if no valid one exists and we decided to show one
-            if ~isempty(plottable_children_for_legend)
-                valid_plot_children_for_leg_creation = plottable_children_for_legend(arrayfun(@(h) isvalid(h) && is_legend_candidate_check(h), plottable_children_for_legend));
-                if ~isempty(valid_plot_children_for_leg_creation)
-                    try
-                        leg_handle_to_use = legend(ax, valid_plot_children_for_leg_creation);
-                        log_message(params,sprintf('  Created new legend for Axes (Tag: %s).',ax.Tag),2,'Info');
-                    catch ME_leg_create
-                        log_message(params,sprintf('  Could not create legend for Axes (Tag: %s): %s',ax.Tag,ME_leg_create.message),1,'Warning');
-                    end
-                else
-                    log_message(params,sprintf('  No valid plot children with display names found to create legend for Axes (Tag: %s).', ax.Tag),2,'Info');
+        % valid_plot_children_for_leg_creation is derived from plottable_children_for_legend,
+        % which already has the correct order from beautify_single_axes based on params.legend_reverse_order.
+        valid_plot_children_for_leg_creation = []; % Initialize
+        if ~isempty(plottable_children_for_legend) % Check if there are any candidates at all
+            valid_indices = arrayfun(@(h) isvalid(h) && is_legend_candidate_check(h), plottable_children_for_legend);
+            valid_plot_children_for_leg_creation = plottable_children_for_legend(valid_indices);
+        end
+
+        if ~isempty(valid_plot_children_for_leg_creation)
+            % If an old legend exists, delete it first to ensure the new order and set of items are applied.
+            if ~isempty(existing_legend) && isvalid(existing_legend)
+                try
+                    delete(existing_legend);
+                    log_message(params,sprintf('  Deleted existing legend to re-apply order/items for Axes (Tag: %s).',ax.Tag),2,'Debug');
+                catch ME_del_leg
+                    log_message(params,sprintf('  Could not delete existing legend for Axes (Tag: %s): %s. Order may not update correctly.',ax.Tag, ME_del_leg.message),1,'Warning');
                 end
             end
+
+            % Create the legend with the (potentially re-ordered) valid plot children.
+            try
+                leg_handle_to_use = legend(ax, valid_plot_children_for_leg_creation);
+                log_message(params,sprintf('  Created/Recreated legend for Axes (Tag: %s) with specified order/items.',ax.Tag),2,'Info');
+            catch ME_leg_create
+                log_message(params,sprintf('  Could not create/recreate legend for Axes (Tag: %s): %s',ax.Tag,ME_leg_create.message),1,'Warning');
+                leg_handle_to_use = []; % Ensure it's empty if creation fails
+            end
+        else
+            % No valid children to create a legend for. If an old one exists, hide it.
+            log_message(params,sprintf('  No valid plot children with display names found to create/recreate legend for Axes (Tag: %s). Hiding existing if any.', ax.Tag),2,'Info');
+            if ~isempty(existing_legend) && isvalid(existing_legend)
+                safe_set(params, existing_legend, 'Visible', 'off');
+            end
+            leg_handle_to_use = [];
         end
+    elseif ~isempty(existing_legend) && isvalid(existing_legend)
+        % If should_show_legend is false (e.g. 'none' location, or smart display rules), hide existing.
+        safe_set(params, existing_legend, 'Visible', 'off');
+        leg_handle_to_use = []; % Ensure it's cleared
     end
 
     if ~isempty(leg_handle_to_use) && isvalid(leg_handle_to_use)
@@ -1611,7 +1613,6 @@ try
             leg_props.NumColumns = params.legend_num_columns;
         end
 
-        current_interpreter = 'tex';
         if isprop(leg_handle_to_use, 'Interpreter') && isprop(leg_handle_to_use, 'String')
             leg_props.Interpreter = 'tex'; % Default to TeX for legends
         end
@@ -1869,8 +1870,21 @@ try
         end
 
         if is_currently_isolated_object % Clicked on the already isolated object with Ctrl/Cmd -> unisolate
-            for k=1:length(all_legend_plots)
-                if k <= length(original_vis_states); safe_set(params, all_legend_plots(k),'Visible',original_vis_states{k}); end
+            if ~isempty(original_vis_states)
+                for k_vis = 1:length(all_legend_plots) % Renamed loop variable for clarity
+                    if k_vis <= length(original_vis_states) && ~isempty(original_vis_states{k_vis})
+                        safe_set(params, all_legend_plots(k_vis),'Visible',original_vis_states{k_vis});
+                    else
+                        % Fallback for this specific plot if its original state is missing
+                        safe_set(params, all_legend_plots(k_vis),'Visible','on');
+                    end
+                end
+            else
+                % Fallback if OriginalVisibilityStates was never set or is entirely empty
+                log_message(params, 'Interactive Legend: OriginalVisibilityStates empty during unisolate, making all plot children visible.', 2, 'Debug');
+                for k_vis = 1:length(all_legend_plots) % Renamed loop variable
+                    safe_set(params, all_legend_plots(k_vis),'Visible','on');
+                end
             end
             setappdata(legend_handle,'IsolationModeActive',false);
             if isappdata(legend_handle,'IsolatedObject'); rmappdata(legend_handle,'IsolatedObject'); end
@@ -1890,8 +1904,21 @@ try
         end
     else % Normal click (no Ctrl/Cmd) -> toggle visibility
         if isolation_active % If something was isolated, first unisolate everything
-            for k=1:length(all_legend_plots)
-                if k <= length(original_vis_states); safe_set(params, all_legend_plots(k),'Visible',original_vis_states{k}); end
+            if ~isempty(original_vis_states)
+                for k_vis = 1:length(all_legend_plots) % Renamed loop variable for clarity
+                    if k_vis <= length(original_vis_states) && ~isempty(original_vis_states{k_vis})
+                        safe_set(params, all_legend_plots(k_vis),'Visible',original_vis_states{k_vis});
+                    else
+                        % Fallback for this specific plot if its original state is missing
+                        safe_set(params, all_legend_plots(k_vis),'Visible','on');
+                    end
+                end
+            else
+                % Fallback if OriginalVisibilityStates was never set or is entirely empty
+                log_message(params, 'Interactive Legend: OriginalVisibilityStates empty during unisolate, making all plot children visible.', 2, 'Debug');
+                for k_vis = 1:length(all_legend_plots) % Renamed loop variable
+                    safe_set(params, all_legend_plots(k_vis),'Visible','on');
+                end
             end
             setappdata(legend_handle,'IsolationModeActive',false);
             if isappdata(legend_handle,'IsolatedObject'); rmappdata(legend_handle,'IsolatedObject'); end
@@ -2084,23 +2111,6 @@ if current_log_level >= level
 end
 end
 
-% --- Helper Function: Convert Number to Roman Numeral String ---
-function str = local_roman_numeral(n_in) % Renamed input arg
-if ~isnumeric(n_in) || ~isscalar(n_in) || n_in <= 0 || n_in >= 4000 || floor(n_in) ~= n_in
-    str = num2str(n_in); % Fallback for invalid input
-    return;
-end
-map_values = [1000, 900, 500, 400, 100, 90, 50, 40, 10, 9, 5, 4, 1];
-map_symbols = {'M', 'CM', 'D', 'CD', 'C', 'XC', 'L', 'XL', 'X', 'IX', 'V', 'IV', 'I'};
-str = '';
-for i_roman = 1:length(map_values)
-    while n_in >= map_values(i_roman)
-        str = [str, map_symbols{i_roman}]; %#ok<AGROW>
-        n_in = n_in - map_values(i_roman);
-    end
-end
-end
-
 % --- Helper Function: Apply Stats Overlay ---
 function apply_stats_overlay(ax, params, scale_factor)
 so_params = params.stats_overlay;
@@ -2263,53 +2273,29 @@ end
 old_stats_text = findobj(ax, 'Type', 'text', 'Tag', 'BeautifyFig_StatsOverlay');
 if ~isempty(old_stats_text); delete(old_stats_text); end
 
-% --- Start Debugging Logs for text_props ---
-if ~isempty(stats_str_lines)
-    log_message(params, sprintf('Stats Overlay Debug: stats_str_lines (cell array, %d lines). First line: "%s"', numel(stats_str_lines), stats_str_lines{1}), 2, 'Debug');
-else
-    log_message(params, 'Stats Overlay Debug: stats_str_lines is empty.', 2, 'Debug');
+% Defensive checks before text() call
+if isempty(stats_font_name)
+    log_message(params, 'Stats Overlay: stats_font_name was unexpectedly empty, defaulting to Helvetica.', 1, 'Warning');
+    stats_font_name = 'Helvetica';
 end
-log_message(params, sprintf('Stats Overlay Debug: stats_font_name class: %s, value: "%s"', class(stats_font_name), stats_font_name), 2, 'Debug');
-log_message(params, sprintf('Stats Overlay Debug: horz_align class: %s, value: "%s"', class(horz_align), horz_align), 2, 'Debug');
-log_message(params, sprintf('Stats Overlay Debug: vert_align class: %s, value: "%s"', class(vert_align), vert_align), 2, 'Debug');
-
-if exist('has_background','var') && has_background
-    log_message(params, sprintf('Stats Overlay Debug: BackgroundColor is being set. Value class: %s', class(bg_color_final)), 2, 'Debug');
-else
-    log_message(params, 'Stats Overlay Debug: No BackgroundColor being set or bg_color_final is ''none''.', 2, 'Debug');
+if isempty(stats_text_color)
+    log_message(params, 'Stats Overlay: stats_text_color was unexpectedly empty, defaulting to black.', 1, 'Warning');
+    stats_text_color = [0 0 0]; % Default to black
 end
-
-if exist('has_edge','var') && has_edge
-    log_message(params, sprintf('Stats Overlay Debug: EdgeColor is being set. Value class: %s', class(edge_color_final)), 2, 'Debug');
-else
-    log_message(params, 'Stats Overlay Debug: No EdgeColor being set or edge_color_final is ''none''.', 2, 'Debug');
+if isempty(horz_align)
+    log_message(params, 'Stats Overlay: horz_align was unexpectedly empty, defaulting to left.', 1, 'Warning');
+    horz_align = 'left';
 end
-
-if exist('has_background','var') && exist('has_edge','var') && (has_background || has_edge)
-    log_message(params, 'Stats Overlay Debug: Margin is being set.', 2, 'Debug');
-else
-    log_message(params, 'Stats Overlay Debug: No Margin being set.', 2, 'Debug');
+if isempty(vert_align)
+    log_message(params, 'Stats Overlay: vert_align was unexpectedly empty, defaulting to bottom.', 1, 'Warning');
+    vert_align = 'bottom';
 end
-
-% --- End Debugging Logs for text_props ---
+if isempty(stats_str_lines) % text() might handle cell(1,0) but not a truly empty [] for 'String'
+    log_message(params, 'Stats Overlay: stats_str_lines was unexpectedly empty, defaulting to an empty cell string.', 1, 'Warning');
+    stats_str_lines = {''}; % Use a single empty string to be safe if text() fails with {} for String via {:}
+end
 
 log_message(params, sprintf('Attempting to create stats overlay text object in axes (Tag: %s)...', ax.Tag), 2, 'Info');
-% Log all text_props before the call
-props_str_for_log = '{';
-for k_tp = 1:length(text_props)
-    current_text_prop_val = text_props{k_tp};
-    if ischar(current_text_prop_val)
-        props_str_for_log = [props_str_for_log '''' current_text_prop_val ''', '];
-    elseif isnumeric(current_text_prop_val)
-        props_str_for_log = [props_str_for_log mat2str(current_text_prop_val) ', '];
-    else
-        props_str_for_log = [props_str_for_log class(current_text_prop_val) ', '];
-    end
-end
-if length(props_str_for_log) > 1; props_str_for_log = props_str_for_log(1:end-2); end % Remove trailing comma space
-props_str_for_log = [props_str_for_log '}'];
-log_message(params, sprintf('Stats Overlay TXTPROPS: %s', props_str_for_log), 2, 'Debug');
-
 text_handle_stats_overlay = text(ax, text_x_norm, text_y_norm, 0, text_props{:}); % Add Z=0 for 2D text
 log_message(params, sprintf('Stats overlay text object created. Handle valid: %s. Tag: %s', num2str(isvalid(text_handle_stats_overlay)), get(text_handle_stats_overlay,'Tag')), 2, 'Info');
 
