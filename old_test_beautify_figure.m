@@ -1,50 +1,6 @@
 % Test script for beautify_figure.m
 % This script will test various functionalities of beautify_figure.m
 % and allow for visual comparison of figures before and after beautification.
-% -------------------------------------------------------------------------
-% USER INSTRUCTIONS:
-%
-% Purpose:
-%   This script tests the functionalities of `beautify_figure.m`.
-%   It generates various plots, applies different beautification settings,
-%   and saves 'original' and 'beautified' versions of these plots as PNG
-%   images for visual comparison.
-%
-% Prerequisites:
-%   1. Ensure `beautify_figure.m` is on the MATLAB path or in the same
-%      directory as this test script. If not, you may need to use `addpath`.
-%   2. If you have the 'cbrewer' package for color palettes, some tests
-%      might implicitly use it if `beautify_figure` is configured to do so,
-%      but it's not a hard requirement for this test script itself to run.
-%
-% How to Run:
-%   1. Open this file (`test_beautify_figure.m`) in the MATLAB Editor.
-%   2. Click the "Run" button, or type `test_beautify_figure` in the
-%      MATLAB Command Window and press Enter.
-%
-% What to Expect:
-%   - The script will execute a series of test cases. Console messages
-%     will indicate the progress and which test case is running.
-%   - For the Log Level Control test case (now Test Case 6), you will be prompted to press Enter
-%     to continue. Observe the MATLAB Command Window for differences in
-%     output verbosity from `beautify_figure.m` during this test.
-%   - "Original" and "Beautified" figures for each test case (or sub-case)
-%     will be saved as PNG images in a subdirectory named 'test_beautify_output'
-%     (created in the same directory where this script is run).
-%   - At the end, a "Test Script Complete" message will be displayed. You can
-%     then inspect the generated images in the 'test_beautify_output' folder.
-%   - Figures generated during the tests are closed automatically after each
-%     test case or sub-case to avoid clutter.
-%
-% Interpreting Results:
-%   - Visually compare the 'original' and 'beautified' PNG images for each
-%     test case in the 'test_beautify_output' directory.
-%   - Check for any error messages in the MATLAB Command Window.
-%   - For the Export Functionality test case (now Test Case 4), verify that additional .png
-%     and .pdf files (e.g., 'exported_figure_case_04.png', 
-%     'exported_figure_case_04.pdf') are created in the output directory.
-%
-% -------------------------------------------------------------------------
 
 %% Setup
 % Add necessary paths (if beautify_figure.m is not in the current path)
@@ -103,6 +59,117 @@ save_comparison_figure(fig1, test_name_case1, 'original', output_dir);
 
 try
     beautify_figure(fig1); 
+
+    % --- Start Programmatic Checks for Test Case 1 ---
+    ax1 = gca; % Get current axes
+    line_obj = findobj(ax1, 'Type', 'line'); % Get line object
+
+    % Define Expected Default Values (from beautify_figure.m defaults)
+    expected_font_name = 'Swiss 721 BT';
+    base_font_size = 10;
+    global_font_scale_factor = 1.0;
+    title_scale = 1.2;
+    label_scale = 1.0;
+    % For a single plot, scale_factor from get_scale_factor(1,...) is 1.6
+    % (based on default_params.scaling_map key 1 value)
+    subplot_scale_factor = 1.6;
+
+    effective_base_font_size = base_font_size * global_font_scale_factor;
+    expected_title_fontsize = round(effective_base_font_size * title_scale * subplot_scale_factor);
+    expected_label_fontsize = round(effective_base_font_size * label_scale * subplot_scale_factor);
+    expected_axes_fontsize = round(effective_base_font_size * subplot_scale_factor); % Axes font size itself
+
+    default_plot_line_width = 1.5; % from default_params.plot_line_width
+    expected_plot_line_width = default_plot_line_width * subplot_scale_factor;
+
+    expected_axis_color = [0.15 0.15 0.15]; % from default_params.axis_color
+
+    default_axis_to_plot_linewidth_ratio = 0.5; % from default_params.axis_to_plot_linewidth_ratio
+    base_axis_lw = default_plot_line_width * default_axis_to_plot_linewidth_ratio;
+    expected_axis_line_width = base_axis_lw * subplot_scale_factor;
+
+    expected_grid_visibility = 'on'; % for default_params.grid_density = 'normal'
+
+    verification_passed_case1 = true;
+
+    % Title Assertions
+    if ~strcmp(ax1.Title.FontName, expected_font_name)
+        fprintf('  VERIFICATION FAIL (Test Case 1): Title FontName mismatch. Expected: %s, Got: %s\n', expected_font_name, ax1.Title.FontName);
+        verification_passed_case1 = false;
+    end
+    if abs(ax1.Title.FontSize - expected_title_fontsize) >= 0.5 % Allow for rounding by comparing difference
+        fprintf('  VERIFICATION FAIL (Test Case 1): Title FontSize mismatch. Expected: %d, Got: %.1f\n', expected_title_fontsize, ax1.Title.FontSize);
+        verification_passed_case1 = false;
+    end
+
+    % XLabel Assertions
+    if ~strcmp(ax1.XLabel.FontName, expected_font_name)
+        fprintf('  VERIFICATION FAIL (Test Case 1): XLabel FontName mismatch. Expected: %s, Got: %s\n', expected_font_name, ax1.XLabel.FontName);
+        verification_passed_case1 = false;
+    end
+    if abs(ax1.XLabel.FontSize - expected_label_fontsize) >= 0.5
+        fprintf('  VERIFICATION FAIL (Test Case 1): XLabel FontSize mismatch. Expected: %d, Got: %.1f\n', expected_label_fontsize, ax1.XLabel.FontSize);
+        verification_passed_case1 = false;
+    end
+
+    % YLabel Assertions
+    if ~strcmp(ax1.YLabel.FontName, expected_font_name)
+        fprintf('  VERIFICATION FAIL (Test Case 1): YLabel FontName mismatch. Expected: %s, Got: %s\n', expected_font_name, ax1.YLabel.FontName);
+        verification_passed_case1 = false;
+    end
+    if abs(ax1.YLabel.FontSize - expected_label_fontsize) >= 0.5
+        fprintf('  VERIFICATION FAIL (Test Case 1): YLabel FontSize mismatch. Expected: %d, Got: %.1f\n', expected_label_fontsize, ax1.YLabel.FontSize);
+        verification_passed_case1 = false;
+    end
+
+    % Axes Fontsize (direct property of axes)
+    if abs(ax1.FontSize - expected_axes_fontsize) >= 0.5
+        fprintf('  VERIFICATION FAIL (Test Case 1): Axes FontSize mismatch. Expected: %d, Got: %.1f\n', expected_axes_fontsize, ax1.FontSize);
+        verification_passed_case1 = false;
+    end
+
+    % Plotted Line Assertions
+    if ~isempty(line_obj)
+        if abs(line_obj(1).LineWidth - expected_plot_line_width) >= 1e-6
+            fprintf('  VERIFICATION FAIL (Test Case 1): Plotted LineWidth mismatch. Expected: %.2f, Got: %.2f\n', expected_plot_line_width, line_obj(1).LineWidth);
+            verification_passed_case1 = false;
+        end
+    else
+        fprintf('  VERIFICATION WARN (Test Case 1): No line object found for assertions.\n');
+        verification_passed_case1 = false; % If no line, it's a failure of this specific check's intent
+    end
+
+    % Axes Color & LineWidth Assertions
+    if ~isequal(round(ax1.XColor*1000)/1000, round(expected_axis_color*1000)/1000) % Compare with tolerance for RGB
+        fprintf('  VERIFICATION FAIL (Test Case 1): Axes XColor mismatch. Expected: [%.2f %.2f %.2f], Got: [%.2f %.2f %.2f]\n', expected_axis_color, ax1.XColor);
+        verification_passed_case1 = false;
+    end
+    if ~isequal(round(ax1.YColor*1000)/1000, round(expected_axis_color*1000)/1000)
+        fprintf('  VERIFICATION FAIL (Test Case 1): Axes YColor mismatch. Expected: [%.2f %.2f %.2f], Got: [%.2f %.2f %.2f]\n', expected_axis_color, ax1.YColor);
+        verification_passed_case1 = false;
+    end
+    if abs(ax1.LineWidth - expected_axis_line_width) >= 1e-6
+        fprintf('  VERIFICATION FAIL (Test Case 1): Axes LineWidth mismatch. Expected: %.2f, Got: %.2f\n', expected_axis_line_width, ax1.LineWidth);
+        verification_passed_case1 = false;
+    end
+
+    % Grid Assertions
+    if ~strcmp(ax1.XGrid, expected_grid_visibility)
+        fprintf('  VERIFICATION FAIL (Test Case 1): XGrid visibility mismatch. Expected: %s, Got: %s\n', expected_grid_visibility, ax1.XGrid);
+        verification_passed_case1 = false;
+    end
+    if ~strcmp(ax1.YGrid, expected_grid_visibility)
+        fprintf('  VERIFICATION FAIL (Test Case 1): YGrid visibility mismatch. Expected: %s, Got: %s\n', expected_grid_visibility, ax1.YGrid);
+        verification_passed_case1 = false;
+    end
+
+    if verification_passed_case1
+        fprintf('  TEST RESULT (Test Case 1 - Default Beautification Verification): PASS - All programmatic checks passed.\n');
+    else
+        fprintf('  TEST RESULT (Test Case 1 - Default Beautification Verification): FAIL - Some programmatic checks failed.\n');
+    end
+    % --- End Programmatic Checks ---
+
     title([test_name_case1 ' Beautified'], 'Interpreter', 'none'); 
     fprintf('Applied beautify_figure() with default settings.\n');
     save_comparison_figure(fig1, test_name_case1, 'beautified', output_dir);
@@ -176,7 +243,7 @@ end
 if ishandle(fig3); close(fig3); end
 test_case_idx = test_case_idx + 1;
 
-% Test Case 4 (Original Test Case 5): Statistics Overlay
+% Test Case 4: Statistics Overlay
 fprintf('\n--- Running Test Case %d: Statistics Overlay ---\n', test_case_idx);
 test_name_case4_stats = sprintf('test_case_%02d_stats_overlay', test_case_idx); % Renamed from test_name_case5
 
@@ -210,7 +277,7 @@ end
 if ishandle(fig4_stats); close(fig4_stats); end
 test_case_idx = test_case_idx + 1;
 
-% Test Case 5 (Original Test Case 6): Export Functionality
+% Test Case 5: Export Functionality
 fprintf('\n--- Running Test Case %d: Export Functionality ---\n', test_case_idx);
 test_name_case5_export = sprintf('test_case_%02d_export', test_case_idx); % Renamed
 export_filename_base_case5 = fullfile(output_dir, sprintf('exported_figure_case_%02d', test_case_idx)); % Renamed
@@ -267,7 +334,7 @@ end
 if ishandle(fig5_export); close(fig5_export); end
 test_case_idx = test_case_idx + 1;
 
-% Test Case 6 (Original Test Case 8): Log Level Control
+% Test Case 6: Log Level Control
 fprintf('\n--- Running Test Case %d: Log Level Control ---\n', test_case_idx);
 
 test_name_case6_silent = sprintf('test_case_%02d_loglevel_0_silent', test_case_idx); % Renamed
@@ -310,7 +377,7 @@ if ishandle(fig6_detailed); close(fig6_detailed); end
 fprintf('  Test Case %d (Log Level Control) complete. Please review command window output for verbosity differences.\n', test_case_idx);
 test_case_idx = test_case_idx + 1;
 
-% Test Case 7 (Original Test Case 9): Different Plot Types
+% Test Case 7: Different Plot Types
 fprintf('\n--- Running Test Case %d: Different Plot Types ---\n', test_case_idx);
 
 test_name_case7_errorbar = sprintf('test_case_%02d_errorbar_plot', test_case_idx); % Renamed
@@ -351,7 +418,7 @@ if ishandle(fig7_histogram); close(fig7_histogram); end
 fprintf('  Test Case %d (Different Plot Types) complete.\n', test_case_idx);
 test_case_idx = test_case_idx + 1;
 
-% Test Case 8 (Original Test Case 10): Advanced Line Plot Features
+% Test Case 8: Advanced Line Plot Features
 fprintf('\n--- Running Test Case %d: Advanced Line Plot Features ---\n', test_case_idx);
 
 test_name_case8_styles = sprintf('test_case_%02d_adv_line_styles_palette', test_case_idx); % Renamed
@@ -422,7 +489,7 @@ end
 if ishandle(fig8_fontscale2); close(fig8_fontscale2); end
 test_case_idx = test_case_idx + 1;
 
-% Test Case 9 (Original Test Case 11): Axes Styling Options
+% Test Case 9: Axes Styling Options
 fprintf('\n--- Running Test Case %d: Axes Styling Options ---\n', test_case_idx);
 
 test_name_case9_box_off = sprintf('test_case_%02d_axes_box_off', test_case_idx); % Renamed
@@ -471,7 +538,7 @@ end
 if ishandle(fig9_layer_bottom); close(fig9_layer_bottom); end
 test_case_idx = test_case_idx + 1;
 
-% Test Case 10 (Original Test Case 12): Legend Specifics
+% Test Case 10: Legend Specifics
 fprintf('\n--- Running Test Case %d: Legend Specifics ---\n', test_case_idx);
 
 test_name_case10_location = sprintf('test_case_%02d_legend_location_interactive', test_case_idx); % Renamed
@@ -520,7 +587,7 @@ end
 if ishandle(fig10_smart); close(fig10_smart); end
 test_case_idx = test_case_idx + 1;
 
-% Test Case 11 (Original Test Case 13): Plot with Colorbar
+% Test Case 11: Plot with Colorbar
 test_name_case11_colorbar = sprintf('test_case_%02d_plot_with_colorbar', test_case_idx); % Renamed
 fprintf('\n--- Running Test Case %d: Plot with Colorbar (Default Beautification) ---\n', test_case_idx);
 fig11_cb = figure('Visible', 'off'); % Renamed
@@ -543,7 +610,7 @@ end
 if ishandle(fig11_cb); close(fig11_cb); end
 test_case_idx = test_case_idx + 1;
 
-% Test Case 12 (Original Test Case 14): Polar Plot
+% Test Case 12: Polar Plot
 test_name_case12_polar = sprintf('test_case_%02d_polar_plot', test_case_idx); % Renamed
 fprintf('\n--- Running Test Case %d: Polar Plot (Default Beautification) ---\n', test_case_idx);
 fig12_polar = figure('Visible', 'off'); % Renamed
@@ -565,7 +632,7 @@ end
 if ishandle(fig12_polar); close(fig12_polar); end
 test_case_idx = test_case_idx + 1;
 
-% Test Case 13 (Original Test Case 15): LaTeX in Labels
+% Test Case 13: LaTeX in Labels
 test_name_case13_latex = sprintf('test_case_%02d_latex_labels', test_case_idx); % Renamed
 fprintf('\n--- Running Test Case %d: LaTeX in Labels (Default Beautification) ---\n', test_case_idx);
 fig13_latex = figure('Visible', 'off'); % Renamed
@@ -600,7 +667,7 @@ end
 if ishandle(fig13_latex); close(fig13_latex); end
 test_case_idx = test_case_idx + 1;
 
-% Test Case 14 (Original Test Case 16): Object Exclusion
+% Test Case 14: Object Exclusion
 test_name_case14_exclusion = sprintf('test_case_%02d_object_exclusion', test_case_idx); % Renamed
 fprintf('\n--- Running Test Case %d: Object Exclusion by Tag ---\n', test_case_idx);
 fig14_exclude = figure('Visible', 'off'); % Renamed
@@ -629,9 +696,9 @@ try
        abs(line2_tc14.LineWidth - original_line2_lw_tc14) < 1e-6 && ...
        isequal(line2_tc14.Color, original_line2_color_tc14) && ...
        strcmp(line2_tc14.Marker, original_line2_marker_tc14)
-        fprintf('  TEST RESULT (Test Case %d - Object Exclusion Verification): PASS - Tagged line correctly retained its original style.\n', test_case_idx);
+        fprintf('  TEST RESULT (Test Case 14 - Object Exclusion Verification): PASS - Tagged line correctly retained its original style.\n');
     else
-        fprintf('  TEST RESULT (Test Case %d - Object Exclusion Verification): FAIL - Tagged line style changed or handle is invalid.\n', test_case_idx);
+        fprintf('  TEST RESULT (Test Case 14 - Object Exclusion Verification): FAIL - Tagged line style changed or handle is invalid.\n');
         if ~isvalid(line2_tc14)
             fprintf('    ERROR: Handle for line2_tc14 became invalid after beautification.\n');
         else
@@ -653,7 +720,7 @@ end
 if ishandle(fig14_exclude); close(fig14_exclude); end
 test_case_idx = test_case_idx + 1;
 
-% Test Case 15 (Original Test Case 17): Empty Figure
+% Test Case 15: Empty Figure
 fprintf('\n--- Running Test Case %d: Empty Figure ---\n', test_case_idx);
 test_name_case15_empty = sprintf('test_case_%02d_empty_figure', test_case_idx); % Renamed
 fig15_empty = figure('Visible', 'off'); % Renamed
@@ -676,7 +743,7 @@ end
 if ishandle(fig15_empty); close(fig15_empty); end
 test_case_idx = test_case_idx + 1;
 
-% Test Case 16 (Original Test Case 18): Figure with UI Tabs
+% Test Case 16: Figure with UI Tabs
 fprintf('\n--- Running Test Case %d: Figure with UI Tabs ---\n', test_case_idx);
 test_name_case16_uitabs = sprintf('test_case_%02d_uitabs_figure', test_case_idx); % Renamed
 fig16_tabs = figure('Visible', 'off', 'Position', [100, 100, 700, 500]); % Renamed
@@ -714,7 +781,7 @@ end
 if ishandle(fig16_tabs); close(fig16_tabs); end
 test_case_idx = test_case_idx + 1;
 
-% Test Case 17 (Original Test Case 19): Invalid Parameters
+% Test Case 17: Invalid Parameters
 fprintf('\n--- Running Test Case %d: Invalid Parameters ---\n', test_case_idx);
 test_name_case17_invalid = sprintf('test_case_%02d_invalid_params', test_case_idx); % Renamed
 fig17_invalid = figure('Visible', 'off'); % Renamed
@@ -787,9 +854,9 @@ if ishandle(fig17_invalid); close(fig17_invalid); end
 
 all_warnings_detected_tc17 = all(struct2array(expected_warnings_found_tc17)); % Renamed
 if error_occurred_invalid_params_test_tc17
-    fprintf('  TEST RESULT (Test Case %d - Invalid Parameters): FAIL - beautify_figure crashed.\n', test_case_idx);
+    fprintf('  TEST RESULT (Test Case 17 - Invalid Parameters): FAIL - beautify_figure crashed.\n');
 elseif ~all_warnings_detected_tc17
-    fprintf('  TEST RESULT (Test Case %d - Invalid Parameters): FAIL - beautify_figure did not crash, but some expected warnings were NOT found.\n', test_case_idx);
+    fprintf('  TEST RESULT (Test Case 17 - Invalid Parameters): FAIL - beautify_figure did not crash, but some expected warnings were NOT found.\n');
     warning_fields_tc17 = fieldnames(expected_warnings_found_tc17); % Renamed
     for k_wf = 1:length(warning_fields_tc17)
         if ~expected_warnings_found_tc17.(warning_fields_tc17{k_wf})
@@ -799,7 +866,7 @@ elseif ~all_warnings_detected_tc17
     end
     fprintf('  Captured console output for review:\n%s\n', console_output_tc17);
 else
-    fprintf('  TEST RESULT (Test Case %d - Invalid Parameters): PASS - beautify_figure did not crash and all expected warnings were found.\n', test_case_idx);
+    fprintf('  TEST RESULT (Test Case 17 - Invalid Parameters): PASS - beautify_figure did not crash and all expected warnings were found.\n');
     fprintf('  Captured console output (contains expected warnings):\n%s\n', console_output_tc17);
 end
 test_case_idx = test_case_idx + 1;
@@ -807,7 +874,7 @@ test_case_idx = test_case_idx + 1;
 %% Teardown
 fprintf('\n--- Test Script Complete ---\n');
 fprintf('Please check the "%s" directory for saved figures.\n', output_dir);
-fprintf('For Test Case 6 (Log Level), please check the MATLAB command window output during the test run.\n'); % Updated TC number
+fprintf('For Test Case 6 (Log Level Control), please check the MATLAB command window output during the test run.\n');
 
 % Close all figures
 % close all; 
