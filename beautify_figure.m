@@ -257,6 +257,21 @@ switch active_preset_name
         params.grid_alpha = 0.15;
         params.minor_grid_alpha = 0.07;
 
+    case 'presentation_dark'
+        params.font_name = 'Calibri';
+        params.base_font_size = 14;
+        params.global_font_scale_factor = 1.15;
+        params.plot_line_width = 2.0;
+        params.marker_size = 7;
+        params.color_palette = 'viridis';
+        params.figure_background_color = [0.1 0.1 0.15];
+        params.axis_color = [0.9 0.9 0.9];
+        params.text_color = [0.9 0.9 0.9];
+        params.grid_color = [0.7 0.7 0.7];
+        params.grid_alpha = 0.2;
+        params.axes_layer = 'top';
+        params.grid_density = 'normal'; % Ensure grid is visible
+
     case 'minimalist'
         try % Helvetica Neue might not be available
             params.font_name = 'Helvetica Neue';
@@ -403,6 +418,27 @@ else
         params.axis_box_style = valid_axis_box_styles{match_idx_box}; % Ensure canonical form
     end
 end
+
+% axes_layer validation
+current_axes_layer_val = params.axes_layer;
+valid_axes_layers = {'top', 'bottom'};
+if ~ischar(current_axes_layer_val) || ~isvector(current_axes_layer_val) || isempty(current_axes_layer_val)
+    val_str = beautify_fig_format_param_value_for_log(current_axes_layer_val);
+    log_message(params, sprintf('Invalid type for axes_layer: %s. Must be a character string. Resetting to default (%s).', ...
+        val_str, beautify_fig_format_param_value_for_log(base_defaults.axes_layer)), 1, 'Warning');
+    params.axes_layer = base_defaults.axes_layer;
+else
+    match_idx_layer = find(strcmpi(current_axes_layer_val, valid_axes_layers), 1);
+    if isempty(match_idx_layer)
+        val_str = beautify_fig_format_param_value_for_log(current_axes_layer_val);
+        log_message(params, sprintf('Invalid value for axes_layer: %s. Allowed: %s. Resetting to default (%s).', ...
+            val_str, strjoin(valid_axes_layers, ', '), beautify_fig_format_param_value_for_log(base_defaults.axes_layer)), 1, 'Warning');
+        params.axes_layer = base_defaults.axes_layer;
+    else
+        params.axes_layer = valid_axes_layers{match_idx_layer}; % Ensure canonical form
+    end
+end
+
 log_message(params, 'Critical parameter validation complete.', 2, 'Info');
 % --- END Critical Parameter Validation ---
 
@@ -556,6 +592,18 @@ if isstruct(params.export_settings) % Should be true due to earlier type check
                 if ~isfield(params.export_settings, fn) || ~ischar(params.export_settings.(fn))
                     log_message(params, sprintf('Field export_settings.%s is missing or not a string. Resetting to default (%s).', fn, beautify_fig_format_param_value_for_log(base_defaults.export_settings.(fn))), 1, 'Warning');
                     params.export_settings.(fn) = base_defaults.export_settings.(fn);
+                elseif strcmp(fn, 'renderer') % Specific validation for renderer
+                    current_renderer_val = params.export_settings.(fn);
+                    valid_renderers = {'painters', 'opengl', 'vector', 'auto', 'zbuffer'};
+                    match_idx_renderer = find(strcmpi(current_renderer_val, valid_renderers), 1);
+                    if isempty(match_idx_renderer)
+                        val_str = beautify_fig_format_param_value_for_log(current_renderer_val);
+                        log_message(params, sprintf('Invalid value for export_settings.renderer: %s. Allowed: %s. Resetting to default (%s).', ...
+                            val_str, strjoin(valid_renderers, ', '), beautify_fig_format_param_value_for_log(base_defaults.export_settings.(fn))), 1, 'Warning');
+                        params.export_settings.(fn) = base_defaults.export_settings.(fn);
+                    else
+                        params.export_settings.(fn) = valid_renderers{match_idx_renderer}; % Ensure canonical form
+                    end
                 end
             otherwise % Unknown field in defaults, internal issue
                 log_message(params, sprintf('Unhandled default field in export_settings: %s', fn), 1, 'Warning');
@@ -582,10 +630,27 @@ if isstruct(params.stats_overlay)
             case 'precision'; params = validate_numeric_scalar_field(params, base_defaults, 'stats_overlay', fn, true, false, true);
             case 'enabled'; params = validate_logical_field(params, base_defaults, 'stats_overlay', fn);
             case 'statistics'; params = validate_cell_array_of_strings_field(params, base_defaults, 'stats_overlay', fn);
-            case {'position', 'target_plot_handle_tag'} % String fields
+            case {'target_plot_handle_tag'} % String fields (position handled separately)
                 if ~isfield(params.stats_overlay, fn) || ~ischar(params.stats_overlay.(fn))
                     log_message(params, sprintf('Field stats_overlay.%s is missing or not a string. Resetting to default (%s).', fn, beautify_fig_format_param_value_for_log(base_defaults.stats_overlay.(fn))), 1, 'Warning');
                     params.stats_overlay.(fn) = base_defaults.stats_overlay.(fn);
+                end
+            case 'position' % Specific validation for stats_overlay.position
+                if ~isfield(params.stats_overlay, fn) || ~ischar(params.stats_overlay.(fn))
+                    log_message(params, sprintf('Field stats_overlay.position is missing or not a string. Resetting to default (%s).', beautify_fig_format_param_value_for_log(base_defaults.stats_overlay.position)), 1, 'Warning');
+                    params.stats_overlay.position = base_defaults.stats_overlay.position;
+                else
+                    current_pos_val = params.stats_overlay.position;
+                    valid_stat_positions = {'northeast_inset', 'northwest_inset', 'southwest_inset', 'southeast_inset'}; % Add more if your apply_stats_overlay supports them
+                    match_idx_pos = find(strcmpi(current_pos_val, valid_stat_positions), 1);
+                    if isempty(match_idx_pos)
+                        val_str = beautify_fig_format_param_value_for_log(current_pos_val);
+                        log_message(params, sprintf('Invalid value for stats_overlay.position: %s. Allowed: %s. Resetting to default (%s).', ...
+                            val_str, strjoin(valid_stat_positions, ', '), beautify_fig_format_param_value_for_log(base_defaults.stats_overlay.position)), 1, 'Warning');
+                        params.stats_overlay.position = base_defaults.stats_overlay.position;
+                    else
+                        params.stats_overlay.position = valid_stat_positions{match_idx_pos}; % Ensure canonical form
+                    end
                 end
             case 'font_name' % Specifically for stats_overlay.font_name
                 if ~isfield(params.stats_overlay, fn)
@@ -1366,7 +1431,9 @@ for i = 1:length(processed_children_order)
                 safe_set(params, child, 'EdgeColor', params.axis_color*0.5);
             end
         elseif isa(child, 'matlab.graphics.chart.primitive.ErrorBar')
-            safe_set(params, child, 'LineWidth', actual_plot_lw*0.8, 'MarkerSize', ms*0.8, 'CapSize', actual_plot_lw*params.errorbar_cap_size_scale*6);
+            base_cap_size_for_errorbar = params.marker_size * 0.8; % Base cap size relative to unscaled base marker size (params.marker_size is before subplot scaling)
+            scaled_cap_size = base_cap_size_for_errorbar * params.errorbar_cap_size_scale * scale_factor; % Apply user scale and general subplot scale
+            safe_set(params, child, 'LineWidth', actual_plot_lw*0.8, 'MarkerSize', ms*0.8, 'CapSize', max(1, scaled_cap_size)); % Ensure capsize is at least 1
             if ~isempty(current_color_to_apply); safe_set(params, child,'Color',current_color_to_apply); end
             if ~strcmpi(current_marker_style_name, 'none'); safe_set(params, child, 'Marker', current_marker_style_name); end
         elseif isa(child,'matlab.graphics.primitive.Surface') || ...
@@ -1551,7 +1618,7 @@ try
         end
     end
 
-    leg_handle_to_use = []; % Initialize to ensure it's defined
+    leg_handle_to_use = []; % Initialize leg_handle_to_use
     if should_show_legend
         % valid_plot_children_for_leg_creation is derived from plottable_children_for_legend,
         % which already has the correct order from beautify_single_axes based on params.legend_reverse_order.
@@ -1561,7 +1628,13 @@ try
             valid_plot_children_for_leg_creation = plottable_children_for_legend(valid_indices);
         end
 
-        if ~isempty(valid_plot_children_for_leg_creation)
+        if isempty(valid_plot_children_for_leg_creation)
+            log_message(params, sprintf('  No valid plot children with display names found to create/recreate legend for Axes (Tag: %s). Legend will remain hidden/absent.', ax.Tag), 2, 'Info');
+            leg_handle_to_use = []; % Ensure it's empty, and effectively skips legend creation
+            if ~isempty(existing_legend) && isvalid(existing_legend) % Also hide any pre-existing legend
+                safe_set(params, existing_legend, 'Visible', 'off');
+            end
+        else
             % If an old legend exists, delete it first to ensure the new order and set of items are applied.
             if ~isempty(existing_legend) && isvalid(existing_legend)
                 try
@@ -1580,18 +1653,10 @@ try
                 log_message(params,sprintf('  Could not create/recreate legend for Axes (Tag: %s): %s',ax.Tag,ME_leg_create.message),1,'Warning');
                 leg_handle_to_use = []; % Ensure it's empty if creation fails
             end
-        else
-            % No valid children to create a legend for. If an old one exists, hide it.
-            log_message(params,sprintf('  No valid plot children with display names found to create/recreate legend for Axes (Tag: %s). Hiding existing if any.', ax.Tag),2,'Info');
-            if ~isempty(existing_legend) && isvalid(existing_legend)
-                safe_set(params, existing_legend, 'Visible', 'off');
-            end
-            leg_handle_to_use = [];
         end
-    elseif ~isempty(existing_legend) && isvalid(existing_legend)
-        % If should_show_legend is false (e.g. 'none' location, or smart display rules), hide existing.
+    elseif ~isempty(existing_legend) && isvalid(existing_legend) % should_show_legend is false
         safe_set(params, existing_legend, 'Visible', 'off');
-        leg_handle_to_use = []; % Ensure it's cleared
+        leg_handle_to_use = [];
     end
 
     if ~isempty(leg_handle_to_use) && isvalid(leg_handle_to_use)
@@ -1707,13 +1772,20 @@ try
 
     % Escape TeX special characters if using TeX interpreter
     if strcmp(chosen_interpreter, 'tex')
-        if contains(fixed_str, '_'); fixed_str = strrep(fixed_str, '_', '\_'); end
-        if contains(fixed_str, '^'); fixed_str = strrep(fixed_str, '^', '\^'); end
-        % Note: Backslashes are generally handled by TeX itself, or would need more complex positive lookbehind if attempting to escape them for literal display.
-        % Forcing dollars to be literal if not intended for math mode:
-        % if contains(fixed_str, '$'); fixed_str = strrep(fixed_str, '$', '\$'); end
-        % The above line for $ is optional - TeX usually handles $ for math mode. If literal $ is often needed, this can be useful.
-        % Given the removal of auto-LaTeX, users wanting math mode will use $...$.
+        % Order of replacement matters, especially for backslash
+        fixed_str = strrep(fixed_str, '\', '\textbackslash{}'); % Replace backslash first
+        fixed_str = strrep(fixed_str, '{', '\{');
+        fixed_str = strrep(fixed_str, '}', '\}');
+        fixed_str = strrep(fixed_str, '%', '\%');
+        fixed_str = strrep(fixed_str, '&', '\&');
+        fixed_str = strrep(fixed_str, '#', '\#');
+        fixed_str = strrep(fixed_str, '$', '\$');
+        fixed_str = strrep(fixed_str, '_', '\_');
+        fixed_str = strrep(fixed_str, '^', '\^');
+        fixed_str = strrep(fixed_str, '~', '\textasciitilde{}'); % Or \~{} if issues with textasciitilde
+        % Note: Forcing dollars to be literal. Users wanting math mode should use $...$
+        % which will be correctly interpreted by TeX. If beautify_figure were to
+        % automatically try to detect and preserve math mode, it would be more complex.
     end
 
     safe_set(params, text_handle, ...
@@ -2147,7 +2219,34 @@ else % Tag is empty, find first suitable plot
     end
     if isempty(target_plot_obj)
         log_message(params, 'Stats Overlay: No suitable (Line/Scatter, visible, YData) plot found in current axes.', 2, 'Info'); return;
+    else % A target_plot_obj was found
+        % Check if the selection was ambiguous (only if tag was empty)
+        if isempty(so_params.target_plot_handle_tag)
+            num_suitable_plots = 0;
+            for k_child = 1:length(ax_children)
+                child_check = ax_children(k_child);
+                 if (isa(child_check, 'matlab.graphics.chart.primitive.Line') || ...
+                     isa(child_check, 'matlab.graphics.chart.primitive.Scatter')) && ...
+                     isprop(child_check, 'YData') && ~isempty(child_check.YData) && ...
+                     isprop(child_check, 'Visible') && strcmp(get(child_check,'Visible'),'on')
+                    num_suitable_plots = num_suitable_plots + 1;
+                end
+            end
+            if num_suitable_plots > 1
+                target_tag_info = '';
+                if isprop(target_plot_obj, 'Tag') && ~isempty(get(target_plot_obj, 'Tag'))
+                    target_tag_info = sprintf('Tag: "%s"', get(target_plot_obj, 'Tag'));
+                else
+                    target_tag_info = sprintf('Type: %s (no Tag, index %d in children)', class(target_plot_obj), find(ax_children == target_plot_obj,1));
+                end
+                log_message(params, sprintf('Stats Overlay: target_plot_handle_tag was empty and %d suitable plots found. Auto-selected first suitable plot: %s.', num_suitable_plots, target_tag_info), 2, 'Info');
+            end
+        end
     end
+end
+
+if isempty(target_plot_obj) % Re-check, because it might be empty if tag was specified but not found
+    log_message(params, 'Stats Overlay: No target plot object found after checks. Cannot apply overlay.', 2, 'Info'); return;
 end
 
 if ~isprop(target_plot_obj, 'YData') % Should have YData based on above checks, but good to be safe
