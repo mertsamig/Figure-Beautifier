@@ -685,6 +685,7 @@ save_comparison_figure(fig14_exclude, test_name_case14_exclusion, 'original', ou
 exclude_params_tc14.exclude_object_tags = {'ExcludeThisLine'}; % Renamed
 exclude_params_tc14.plot_line_width = 0.5; 
 exclude_params_tc14.color_palette = 'lines';
+exclude_params_tc14.log_level = 0; % Suppress detailed log messages for this test
 fprintf('  Excluding objects with tag ''ExcludeThisLine''. Applying plot_line_width=0.5.\n');
 try
     exclude_params_tc14.figure_handle = fig14_exclude;

@@ -34,6 +34,7 @@
 %   - Visually compare the 'original' and 'beautified' PNG images for each
 %     test case in the 'test_beautify_output_new' directory.
 %   - Check for any error messages in the MATLAB Command Window.
+%   - To test font substitution warnings: Set a `font_name` in `params_current` for any test case to a font you know is unavailable on your system (e.g., `params_current.font_name = 'NonExistentFont123';`). Also, ensure `params_current.log_level` is set to 1 or 2. Run the test. You should see warning messages in the MATLAB console indicating that the font was not found and was substituted by MATLAB.
 %
 % -------------------------------------------------------------------------
 
@@ -961,8 +962,137 @@ for p_idx = 1:length(palettes_to_test)
 end
 test_case_num = test_case_num + 1;
 
+%% --- Test Case: Stats Overlay Default Interpreter ---
+fprintf('\n--- Running New Test Case %d: Stats Overlay Default Interpreter ---\n', test_case_num);
+test_name_stats_interpreter = sprintf('new_test_%02d_stats_interpreter', test_case_num);
+fig_stats_interpreter = figure('Visible', 'off', 'Position', [100, 100, 600, 450]);
+try
+    ax = axes(fig_stats_interpreter);
+    x_data_stats_interpreter = 1:10;
+    y_data_stats_interpreter = rand(1,10) * 5;
+    plot(ax, x_data_stats_interpreter, y_data_stats_interpreter, 'Tag', 'DataForStatsInterpreterTest', 'LineWidth', 1.5);
+    title(ax, [strrep(test_name_stats_interpreter, '_', '\_') ' Original'], 'Interpreter', 'tex');
+    xlabel(ax, 'X-axis'); ylabel(ax, 'Y-axis'); grid(ax, 'on');
+    save_comparison_figure_new(fig_stats_interpreter, test_name_stats_interpreter, 'original', output_dir_new);
+
+    params_stats_interpreter = struct();
+    params_stats_interpreter.stats_overlay.enabled = true;
+    params_stats_interpreter.stats_overlay.target_plot_handle_tag = 'DataForStatsInterpreterTest';
+    params_stats_interpreter.stats_overlay.statistics = {'mean', 'N'}; % Standard stats
+    params_stats_interpreter.log_level = 0; % Suppress beautify_figure's internal logs
+
+    fprintf('  Testing stats_overlay for default TeX interpreter behavior.\n');
+
+    params_stats_interpreter.figure_handle = fig_stats_interpreter;
+    beautify_figure(params_stats_interpreter); % Apply beautification
+
+    title(ax, [strrep(test_name_stats_interpreter, '_', '\_') ' Beautified (Stats Default Interpreter)'], 'Interpreter', 'tex');
+
+    stats_text_obj_interpreter = findobj(fig_stats_interpreter, 'Type', 'text', 'Tag', 'BeautifyFig_StatsOverlay');
+    passed_interpreter_verification = true;
+
+    if isempty(stats_text_obj_interpreter)
+        fprintf('  VERIFICATION FAIL (Stats Interpreter): Stats overlay text object not found.\n');
+        passed_interpreter_verification = false;
+    elseif ~isvalid(stats_text_obj_interpreter(1)) % Check if the first found object is valid
+        fprintf('  VERIFICATION FAIL (Stats Interpreter): Stats overlay text object handle is invalid.\n');
+        passed_interpreter_verification = false;
+    else
+        stats_text_obj_interpreter = stats_text_obj_interpreter(1); % Use the first valid object
+        actual_interpreter = get(stats_text_obj_interpreter, 'Interpreter');
+        if ~strcmp(actual_interpreter, 'tex')
+            fprintf('  VERIFICATION FAIL (Stats Interpreter): Interpreter is "%s", expected default "tex".\n', actual_interpreter);
+            passed_interpreter_verification = false;
+        else
+            fprintf('  VERIFICATION PASS (Stats Interpreter): Interpreter is "tex" as expected by default.\n');
+        end
+    end
+
+    if passed_interpreter_verification
+        fprintf('  Overall VERIFICATION PASS for stats overlay interpreter.\n');
+    else
+        fprintf('  Overall VERIFICATION FAIL for stats overlay interpreter.\n');
+    end
+
+    fprintf('  VERIFICATION INFO (Stats Interpreter): Visual check: If default stat labels (e.g., "Mean", "N") ever contained TeX characters like "_" or "^", they should render accordingly due to the default ''tex'' interpreter.\n');
+    save_comparison_figure_new(fig_stats_interpreter, test_name_stats_interpreter, 'beautified', output_dir_new);
+
+catch ME_test_stats_interpreter
+    fprintf('  ERROR during New Test Case %d (%s - Stats Interpreter): %s\n', test_case_num, test_name_stats_interpreter, ME_test_stats_interpreter.message);
+    if isprop(ME_test_stats_interpreter, 'stack') && ~isempty(ME_test_stats_interpreter.stack)
+        for k_stack = 1:length(ME_test_stats_interpreter.stack)
+            fprintf('    Error in %s (line %d)\n', ME_test_stats_interpreter.stack(k_stack).name, ME_test_stats_interpreter.stack(k_stack).line);
+        end
+    end
+end
+if ishandle(fig_stats_interpreter); close(fig_stats_interpreter); end
+test_case_num = test_case_num + 1;
+
+%% --- Test Case: Interactive Legend Recreation Robustness ---
+fprintf('\n--- Running New Test Case %d: Interactive Legend Recreation Robustness ---\n', test_case_num);
+test_name_current = sprintf('new_test_%02d_interactive_legend_recreation', test_case_num);
+fig_current = figure('Visible', 'off', 'Position', [100, 100, 700, 500]);
+ax_handle = axes(fig_current); % Get axes handle for plot modifications
+try
+    % Initial plot
+    hold(ax_handle, 'on');
+    h_plots = gobjects(2,1); % Pre-allocate for plot handles
+    h_plots(1) = plot(ax_handle, 1:10, rand(1,10), 'DisplayName', 'Series A - Original');
+    h_plots(2) = plot(ax_handle, 1:10, rand(1,10)+2, 'DisplayName', 'Series B - Original');
+    hold(ax_handle, 'off');
+    legend(ax_handle, 'show');
+    title(ax_handle, [strrep(test_name_current, '_', '\_') ' Original'], 'Interpreter', 'tex');
+    xlabel(ax_handle, 'X-axis'); ylabel(ax_handle, 'Y-axis'); grid(ax_handle, 'on');
+    save_comparison_figure_new(fig_current, test_name_current, 'original', output_dir_new);
+
+    % First call to beautify_figure
+    params_current = struct();
+    params_current.interactive_legend = true;
+    params_current.log_level = 0;
+    params_current.figure_handle = fig_current; % Explicitly pass figure handle
+
+    fprintf('  Calling beautify_figure (1st time) with interactive_legend = true.\n');
+    beautify_figure(params_current);
+    title(ax_handle, [strrep(test_name_current, '_', '\_') ' Beautified - First Call'], 'Interpreter', 'tex');
+    save_comparison_figure_new(fig_current, [test_name_current '_beautified_first_call'], 'beautified', output_dir_new);
+    fprintf('  First call to beautify_figure complete.\n');
+
+    % Modify the plot: delete one line, add another
+    fprintf('  Modifying plot elements before second call...\n');
+    if isvalid(h_plots(1)); delete(h_plots(1)); end % Delete Series A
+    hold(ax_handle, 'on');
+    plot(ax_handle, 1:10, rand(1,10)+5, 'DisplayName', 'Series C - New', 'LineWidth', 2, 'Color', 'green');
+    hold(ax_handle, 'off');
+    % Legend will be updated by the next beautify_figure call.
+
+    % Second call to beautify_figure on the same figure
+    fprintf('  Calling beautify_figure (2nd time) on the same figure with interactive_legend = true.\n');
+    beautify_figure(params_current); % Re-apply to the same fig_current
+    title(ax_handle, [strrep(test_name_current, '_', '\_') ' Beautified - Second Call'], 'Interpreter', 'tex');
+
+    fprintf('  VERIFICATION INFO: Interactive legend robustness test. Check %s_beautified_second_call.png.\n', test_name_current);
+    fprintf('  Manual interaction with legend (clicking items, ctrl-clicking) in MATLAB environment should work without errors if possible.\n');
+    fprintf('  Test primarily ensures no crash during repeated calls with plot modifications.\n');
+    save_comparison_figure_new(fig_current, [test_name_current '_beautified_second_call'], 'beautified', output_dir_new);
+    fprintf('  Second call to beautify_figure complete. Test passed if no errors occurred.\n');
+
+catch ME_test
+    fprintf('  ERROR during New Test Case %d (%s): %s\n', test_case_num, test_name_current, ME_test.message);
+    if isprop(ME_test, 'stack') && ~isempty(ME_test.stack)
+        for k_stack = 1:length(ME_test.stack)
+            fprintf('    Error in %s (line %d)\n', ME_test.stack(k_stack).name, ME_test.stack(k_stack).line);
+        end
+    end
+end
+if ishandle(fig_current); close(fig_current); end
+test_case_num = test_case_num + 1;
+
 %% Teardown
-fprintf('\n--- New Test Script Complete ---\n');
-fprintf('Please check the "%s" directory for saved figures from new tests.\n', output_dir_new);
+fprintf('
+--- New Test Script Complete ---
+');
+fprintf('Please check the "%s" directory for saved figures from new tests.
+', output_dir_new);
 % close all; % Optional: close all figures at the very end
-fprintf('Done with new tests.\n');
+fprintf('Done with new tests.
+');

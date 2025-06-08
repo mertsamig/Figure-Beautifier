@@ -147,6 +147,7 @@ default_params.stats_overlay.font_scale_factor = 0.9; % Relative to axes label f
 default_params.stats_overlay.background_color = []; % Default none. Can be 'figure' or a color spec.
 default_params.stats_overlay.edge_color = []; % Default none. Can be 'axes' or a color spec.
 default_params.stats_overlay.target_plot_handle_tag = ''; % Tag of specific plot to analyze, empty for first valid
+default_params.exclude_object_tags = {}; % Cell array of strings (tags) to exclude
 
 % --- Parameter Parsing and Initialization ---
 base_defaults = default_params; % Store original defaults
@@ -437,6 +438,15 @@ else
     else
         params.axes_layer = valid_axes_layers{match_idx_layer}; % Ensure canonical form
     end
+end
+
+% exclude_object_tags validation
+current_exclude_tags_val = params.exclude_object_tags;
+if ~iscell(current_exclude_tags_val) || (~isempty(current_exclude_tags_val) && ~iscellstr(current_exclude_tags_val)) %#ok<ISCLSTR>
+    val_str = beautify_fig_format_param_value_for_log(current_exclude_tags_val);
+    log_message(params, sprintf('Invalid type for exclude_object_tags: %s. Must be a cell array of strings. Resetting to default (%s).', ...
+        val_str, beautify_fig_format_param_value_for_log(base_defaults.exclude_object_tags)), 1, 'Warning');
+    params.exclude_object_tags = base_defaults.exclude_object_tags;
 end
 
 log_message(params, 'Critical parameter validation complete.', 2, 'Info');
@@ -1321,7 +1331,32 @@ catch ME_axes_props
 end
 
 try; all_children_orig = get(ax, 'Children'); catch; all_children_orig = []; end
-all_children_filtered = all_children_orig; % Simplified: No filtering based on exclude_object_tags/types
+
+if ~isempty(params.exclude_object_tags) && iscellstr(params.exclude_object_tags) %#ok<ISCLSTR>
+    children_to_keep_indices = true(size(all_children_orig));
+    ax_tag_for_log = ''; % Initialize to empty
+    if isprop(ax, 'Tag') && ~isempty(ax.Tag); ax_tag_for_log = ax.Tag; end % Get Tag if exists
+
+    for child_idx = 1:length(all_children_orig)
+        obj = all_children_orig(child_idx);
+        if isprop(obj, 'Tag')
+            obj_tag = get(obj, 'Tag');
+            if ~isempty(obj_tag) && ismember(obj_tag, params.exclude_object_tags)
+                children_to_keep_indices(child_idx) = false;
+                % Ensure ax.Tag is valid or provide a placeholder if not for logging
+                if isempty(ax_tag_for_log)
+                    ax_identifier_for_log = sprintf('of type %s (no Tag)', class(ax));
+                else
+                    ax_identifier_for_log = sprintf('(Tag: %s)', ax_tag_for_log);
+                end
+                log_message(params, sprintf('  Excluding object with tag "%s" from beautification in axes %s.', obj_tag, ax_identifier_for_log), 2, 'Info');
+            end
+        end
+    end
+    all_children_filtered = all_children_orig(children_to_keep_indices);
+else
+    all_children_filtered = all_children_orig;
+end
 
 color_idx = 0;
 num_marker_styles = length(params.marker_styles);
@@ -1695,6 +1730,21 @@ try
         nv_pairs_for_legend = local_struct_to_nv_pairs(leg_props);
         safe_set(params, leg_handle_to_use, nv_pairs_for_legend{:});
 
+        % Clear potentially stale appdata before setting up new interactivity
+        if params.interactive_legend % Only bother if interactivity is enabled
+            appdata_names_to_clear = {'OriginalVisibilityStates', 'IsolationModeActive', 'IsolatedObject'};
+            ax_tag_for_log_msg = ''; % Default for log message
+            if isprop(ax, 'Tag') && ~isempty(ax.Tag); ax_tag_for_log_msg = ax.Tag; else; ax_tag_for_log_msg = sprintf('of type %s (no Tag)', class(ax)); end
+
+            for ad_idx = 1:length(appdata_names_to_clear)
+                current_ad_name = appdata_names_to_clear{ad_idx};
+                if isappdata(leg_handle_to_use, current_ad_name)
+                    rmappdata(leg_handle_to_use, current_ad_name);
+                    log_message(params, sprintf('Cleared stale %s appdata from legend (Axes: %s).', current_ad_name, ax_tag_for_log_msg), 2, 'Debug');
+                end
+            end
+        end
+
         if params.interactive_legend && isprop(leg_handle_to_use, 'ItemHitFcn') && verLessThan('matlab','9.7') == 0 % R2019b+
             try
                 if ~isempty(leg_handle_to_use.ItemHitFcn); leg_handle_to_use.ItemHitFcn=''; end % Clear previous
@@ -1720,6 +1770,15 @@ try
         end
         % After setting properties, update appearance based on visibility
         update_legend_item_appearance(leg_handle_to_use, params);
+
+        % Check for legend font substitution
+        if ~isempty(params.font_name) && isprop(leg_handle_to_use, 'FontName')
+            actual_legend_font_name = get(leg_handle_to_use, 'FontName');
+            if ~strcmpi(actual_legend_font_name, params.font_name)
+                log_message(params, sprintf('Font "%s" not fully matched for legend entries. MATLAB used "%s". Ensure font is installed.', ...
+                                          params.font_name, actual_legend_font_name), 1, 'Warning');
+            end
+        end
     end
 catch ME_legend
     log_message(params, sprintf('Error processing legend for Axes (Tag: %s): %s (Line: %d)', ax.Tag, ME_legend.message, ME_legend.stack(1).line), 1, 'Warning');
@@ -1742,6 +1801,17 @@ cb = find_associated_colorbar(ax, params); % Use the new helper
 if ~isempty(cb) && isvalid(cb)
     cb_to_style = cb(1); % Should only be one per axes
     safe_set(params, cb_to_style, 'FontSize', round(fs*0.9), 'LineWidth', alw*0.85, 'Color', params.axis_color, 'TickDirection', 'out', 'FontName', params.font_name);
+
+    % Check for colorbar font substitution (for tick labels)
+    if ~isempty(params.font_name) && isprop(cb_to_style, 'FontName')
+        actual_cb_font_name = get(cb_to_style, 'FontName');
+        if ~strcmpi(actual_cb_font_name, params.font_name)
+            cb_tag_info = ''; if isprop(cb_to_style, 'Tag'); cb_tag_info = cb_to_style.Tag; end
+            log_message(params, sprintf('Font "%s" not fully matched for colorbar (Tag: %s) tick labels. MATLAB used "%s". Ensure font is installed.', ...
+                                      params.font_name, cb_tag_info, actual_cb_font_name), 1, 'Warning');
+        end
+    end
+
     if isprop(cb_to_style,'Label') && isvalid(cb_to_style.Label)
         process_text_prop(cb_to_style.Label,cb_to_style.Label.String,lfs,'normal',params.text_color,params.font_name,params);
     end
@@ -1749,7 +1819,7 @@ end
 end
 
 % --- Helper Function: Process Text Properties (Title, Labels, etc.) ---
-function process_text_prop(text_handle, original_str, font_size, font_weight, color, font_name, params)
+function process_text_prop(text_handle, original_str, font_size, font_weight, color, requested_font_name, params) % Renamed font_name to requested_font_name
 if isempty(text_handle) || ~isvalid(text_handle); return; end
 
 try
@@ -1767,34 +1837,30 @@ try
         if isprop(text_handle,'Visible'); safe_set(params, text_handle,'Visible','on'); end
     end
 
-    chosen_interpreter = 'tex'; % Default to TeX interpreter
-    fixed_str = final_str; % final_str comes from format_text_string
-
-    % Escape TeX special characters if using TeX interpreter
-    if strcmp(chosen_interpreter, 'tex')
-        % Order of replacement matters, especially for backslash
-        fixed_str = strrep(fixed_str, '\', '\textbackslash{}'); % Replace backslash first
-        fixed_str = strrep(fixed_str, '{', '\{');
-        fixed_str = strrep(fixed_str, '}', '\}');
-        fixed_str = strrep(fixed_str, '%', '\%');
-        fixed_str = strrep(fixed_str, '&', '\&');
-        fixed_str = strrep(fixed_str, '#', '\#');
-        fixed_str = strrep(fixed_str, '$', '\$');
-        fixed_str = strrep(fixed_str, '_', '\_');
-        fixed_str = strrep(fixed_str, '^', '\^');
-        fixed_str = strrep(fixed_str, '~', '\textasciitilde{}'); % Or \~{} if issues with textasciitilde
-        % Note: Forcing dollars to be literal. Users wanting math mode should use $...$
-        % which will be correctly interpreted by TeX. If beautify_figure were to
-        % automatically try to detect and preserve math mode, it would be more complex.
-    end
+    % No more interpreter checking or TeX escaping.
+    % String is set as final_str directly.
 
     safe_set(params, text_handle, ...
-        'Interpreter', chosen_interpreter, ...
-        'String', fixed_str, ...
-        'FontName', font_name, ...
+        'String', final_str, ... % Set the string as formatted
+        'FontName', requested_font_name, ... % Attempt to set the requested font
         'FontSize', max(1, font_size), ...
         'FontWeight', font_weight, ...
         'Color', color);
+
+    % Check for font substitution
+    if ~isempty(requested_font_name) && isprop(text_handle, 'FontName')
+        actual_font_name_on_obj = get(text_handle, 'FontName');
+        if ~strcmpi(actual_font_name_on_obj, requested_font_name)
+            preview_str = char(original_str); % Use original_str for preview as final_str might be cell
+            if length(preview_str) > 20; preview_str = [preview_str(1:17) '...']; end
+            obj_tag_info = '';
+            if isprop(text_handle, 'Tag') && ~isempty(text_handle.Tag); obj_tag_info = ['Tag: ' text_handle.Tag];
+            else; obj_tag_info = ['Type: ' class(text_handle)]; end % Use type if no tag
+
+            log_message(params, sprintf('Font "%s" not fully matched for text object (%s, String: "%s"). MATLAB used "%s". Ensure font is installed.', ...
+                                      requested_font_name, obj_tag_info, strtrim(preview_str), actual_font_name_on_obj), 1, 'Warning');
+        end
+    end
 catch ME_text_prop
     str_preview = char(original_str); if length(str_preview) > 30; str_preview = [str_preview(1:27) '...']; end
     log_message(params, sprintf('Error setting text property (String: "%s"): %s', str_preview, ME_text_prop.message), 1, 'Warning');
@@ -2329,7 +2395,7 @@ end
 text_props = {
     'Units', 'normalized', 'String', stats_str_lines, 'FontName', stats_font_name, ... % Changed full_stats_str to stats_str_lines
     'FontSize', stats_fs, 'Color', stats_text_color, 'HorizontalAlignment', horz_align, ...
-    'VerticalAlignment', vert_align, 'Interpreter', 'tex', ... % Explicitly set interpreter
+    'VerticalAlignment', vert_align, ...
     'Tag', 'BeautifyFig_StatsOverlay' % Tag to identify/avoid re-processing
     };
 
@@ -2397,6 +2463,16 @@ end
 log_message(params, sprintf('Attempting to create stats overlay text object in axes (Tag: %s)...', ax.Tag), 2, 'Info');
 text_handle_stats_overlay = text(ax, text_x_norm, text_y_norm, 0, text_props{:}); % Add Z=0 for 2D text
 log_message(params, sprintf('Stats overlay text object created. Handle valid: %s. Tag: %s', num2str(isvalid(text_handle_stats_overlay)), get(text_handle_stats_overlay,'Tag')), 2, 'Info');
+
+    % Check for stats overlay font substitution
+    if isvalid(text_handle_stats_overlay) && ~isempty(stats_font_name) && isprop(text_handle_stats_overlay, 'FontName')
+        actual_stats_font_name = get(text_handle_stats_overlay, 'FontName');
+        if ~strcmpi(actual_stats_font_name, stats_font_name)
+            ax_tag_info = ''; if isprop(ax, 'Tag') && ~isempty(ax.Tag); ax_tag_info = ax.Tag; else ax_tag_info = sprintf('Type %s', class(ax)); end
+            log_message(params, sprintf('Font "%s" not fully matched for stats overlay on axes %s. MATLAB used "%s". Ensure font is installed.', ...
+                                      stats_font_name, ax_tag_info, actual_stats_font_name), 1, 'Warning');
+        end
+    end
 
 safe_set(params, ax, 'Units', original_axes_units); % Restore original units
 end
