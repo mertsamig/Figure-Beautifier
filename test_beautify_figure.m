@@ -1087,6 +1087,117 @@ end
 if ishandle(fig_current); close(fig_current); end
 test_case_num = test_case_num + 1;
 
+%% --- Test Case: Stats Overlay on Visible Data Only ---
+fprintf('\n--- Running New Test Case %d: Stats Overlay on Visible Data Only ---\n', test_case_num);
+test_name_current = sprintf('new_test_%02d_stats_visible_data', test_case_num);
+fig_current = figure('Visible', 'off', 'Position', [100, 100, 700, 500]);
+ax_h = axes(fig_current);
+
+% Define full data
+full_x_data = 1:20;
+full_y_data = [1, 2, 3, 4, 5, 10, 11, 12, 13, 14, 20, 21, 22, 23, 24, 30, 31, 32, 33, 34];
+plot(ax_h, full_x_data, full_y_data, 'b-o', 'Tag', 'VisibleStatsData', 'DisplayName', 'Full Data');
+title(ax_h, [strrep(test_name_current, '_', '\_') ' Original Full View'], 'Interpreter', 'tex');
+xlabel(ax_h, 'X-values'); ylabel(ax_h, 'Y-values'); grid(ax_h, 'on');
+save_comparison_figure_new(fig_current, [test_name_current '_original_full'], 'original', output_dir_new);
+
+% Define visible range and expected stats for that range
+visible_xlim = [5.5, 15.5]; % X values from 6 to 15 should be visible
+% Corresponding Y data for X in [6, 15]:
+% Indices for XData from 6 to 15 are 6 to 15 as XData is 1:20
+% YData: 10, 11, 12, 13, 14, 20, 21, 22, 23, 24
+visible_y_subset = full_y_data(full_x_data >= visible_xlim(1) & full_x_data <= visible_xlim(2));
+expected_mean_visible = mean(visible_y_subset);
+expected_n_visible = numel(visible_y_subset);
+expected_std_visible = std(visible_y_subset);
+
+fprintf('  Full Y data mean: %.2f, N: %d\n', mean(full_y_data), numel(full_y_data));
+fprintf('  Visible Y data subset (X in [%.1f, %.1f]): %s\n', visible_xlim(1), visible_xlim(2), mat2str(visible_y_subset));
+fprintf('  Expected stats for visible: Mean=%.4f, N=%d, Std=%.4f\n', expected_mean_visible, expected_n_visible, expected_std_visible);
+
+% Apply zoom
+xlim(ax_h, visible_xlim);
+title(ax_h, [strrep(test_name_current, '_', '\_') ' Original Zoomed View'], 'Interpreter', 'tex');
+save_comparison_figure_new(fig_current, [test_name_current '_original_zoomed'], 'original', output_dir_new);
+
+params_current = struct();
+params_current.stats_overlay.enabled = true;
+params_current.stats_overlay.target_plot_handle_tag = 'VisibleStatsData';
+params_current.stats_overlay.statistics = {'mean', 'N', 'std'};
+params_current.stats_overlay.precision = 4; % For better comparison
+params_current.stats_overlay.position = 'northwest_inset';
+params_current.log_level = 2; % Enable detailed logging to see how data is filtered
+params_current.figure_handle = fig_current;
+
+fprintf('  Applying beautify_figure to zoomed plot. Expecting stats for visible data only.\n');
+try
+    beautify_figure(params_current);
+    title(ax_h, [strrep(test_name_current, '_', '\_') ' Beautified (Stats for Visible)'], 'Interpreter', 'tex');
+
+    stats_text_obj = findobj(fig_current, 'Type', 'text', 'Tag', 'BeautifyFig_StatsOverlay');
+    passed_verification = true;
+    if isempty(stats_text_obj)
+        fprintf('  VERIFICATION FAIL: Stats overlay text object not found.\n');
+        passed_verification = false;
+    else
+        stats_text_obj = stats_text_obj(1);
+        actual_stats_string_cell = get(stats_text_obj, 'String'); % Returns a cell array
+
+        % Parse the string to extract values
+        % Example string: {'Mean: 17.0000', 'N: 10', 'Std Dev: 5.3385'}
+        parsed_mean = NaN; parsed_n = NaN; parsed_std = NaN;
+        for line_idx = 1:length(actual_stats_string_cell)
+            line_str = actual_stats_string_cell{line_idx};
+            if contains(line_str, 'Mean:')
+                val_str = extractAfter(line_str, 'Mean:');
+                parsed_mean = str2double(val_str);
+            elseif contains(line_str, 'N:')
+                val_str = extractAfter(line_str, 'N:');
+                parsed_n = str2double(val_str);
+            elseif contains(line_str, 'Std Dev:') % Label is 'Std Dev'
+                val_str = extractAfter(line_str, 'Std Dev:');
+                parsed_std = str2double(val_str);
+            end
+        end
+
+        fprintf('  Parsed from overlay: Mean=%.4f, N=%d, Std=%.4f\n', parsed_mean, parsed_n, parsed_std);
+
+        mean_tol = 1e-3; % Tolerance for floating point comparison
+        std_tol = 1e-3;
+
+        if abs(parsed_mean - expected_mean_visible) > mean_tol
+            fprintf('  VERIFICATION FAIL: Mean is %.4f, expected %.4f (for visible data).\n', parsed_mean, expected_mean_visible);
+            passed_verification = false;
+        end
+        if parsed_n ~= expected_n_visible
+            fprintf('  VERIFICATION FAIL: N is %d, expected %d (for visible data).\n', parsed_n, expected_n_visible);
+            passed_verification = false;
+        end
+        if abs(parsed_std - expected_std_visible) > std_tol
+            fprintf('  VERIFICATION FAIL: Std is %.4f, expected %.4f (for visible data).\n', parsed_std, expected_std_visible);
+            passed_verification = false;
+        end
+    end
+
+    if passed_verification
+        fprintf('  VERIFICATION PASS: Stats overlay correctly reflects only visible data.\n');
+    else
+        fprintf('  VERIFICATION FAIL: Stats overlay does NOT correctly reflect only visible data.\n');
+    end
+    save_comparison_figure_new(fig_current, test_name_current, 'beautified', output_dir_new);
+
+catch ME_test
+    fprintf('  ERROR during New Test Case %d (%s): %s\n', test_case_num, test_name_current, ME_test.message);
+    if isprop(ME_test, 'stack') && ~isempty(ME_test.stack)
+        for k_stack = 1:length(ME_test.stack)
+            fprintf('    Error in %s (line %d)\n', ME_test.stack(k_stack).name, ME_test.stack(k_stack).line);
+        end
+    end
+end
+if ishandle(fig_current); close(fig_current); end
+test_case_num = test_case_num + 1;
+
+
 %% Teardown
 fprintf('
 --- New Test Script Complete ---

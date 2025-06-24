@@ -48,6 +48,7 @@ function beautify_figure(params_or_fig_handle)
 %   - log_level: 0 (silent), 1 (normal), 2 (detailed - default).
 %   - export_settings: Structure for controlling figure export (see details below).
 %   - stats_overlay: (struct) Settings for statistical data overlay (see details below).
+%     - Note: Statistics are calculated based on the data currently visible within the axes limits (e.g., after zooming).
 %   ... and many more. Explore the default_params structure within the code.
 %
 % EXAMPLE:
@@ -2315,16 +2316,43 @@ if isempty(target_plot_obj) % Re-check, because it might be empty if tag was spe
     log_message(params, 'Stats Overlay: No target plot object found after checks. Cannot apply overlay.', 2, 'Info'); return;
 end
 
-if ~isprop(target_plot_obj, 'YData') % Should have YData based on above checks, but good to be safe
-    log_message(params, 'Stats Overlay: Target plot object does not have YData.', 2, 'Info'); return;
+if ~isprop(target_plot_obj, 'XData') || ~isprop(target_plot_obj, 'YData')
+    log_message(params, 'Stats Overlay: Target plot object does not have XData or YData.', 2, 'Info'); return;
 end
+
+x_data_raw = get(target_plot_obj, 'XData');
 y_data_raw = get(target_plot_obj, 'YData');
-if isempty(y_data_raw) || ~isnumeric(y_data_raw)
-    log_message(params, 'Stats Overlay: YData is empty or non-numeric.', 2, 'Info'); return;
+
+if isempty(x_data_raw) || ~isnumeric(x_data_raw) || isempty(y_data_raw) || ~isnumeric(y_data_raw)
+    log_message(params, 'Stats Overlay: XData or YData is empty or non-numeric.', 2, 'Info'); return;
 end
-y_data = y_data_raw(isfinite(y_data_raw(:))); % Ensure column vector and finite
+
+if length(x_data_raw) ~= length(y_data_raw)
+    log_message(params, 'Stats Overlay: XData and YData lengths do not match.', 1, 'Warning'); return;
+end
+
+% Get current axis limits
+current_xlim = get(ax, 'XLim');
+% current_ylim = get(ax, 'YLim'); % YLim filtering might be added later if necessary for specific stats
+
+% Filter data based on current XLim
+% Ensure x_data_raw and y_data_raw are column vectors for consistent indexing
+x_data_col = x_data_raw(:);
+y_data_col = y_data_raw(:);
+
+visible_indices = (x_data_col >= current_xlim(1)) & (x_data_col <= current_xlim(2));
+
+% Further filter out non-finite Y values from the visible portion
+y_data_visible_potentially_nonfinite = y_data_col(visible_indices);
+finite_y_indices_in_visible = isfinite(y_data_visible_potentially_nonfinite);
+
+y_data = y_data_visible_potentially_nonfinite(finite_y_indices_in_visible);
+% x_data_for_stats = x_data_col(visible_indices); % X data corresponding to y_data, if needed for future stats
+% x_data_for_stats = x_data_for_stats(finite_y_indices_in_visible);
+
+
 if isempty(y_data)
-    log_message(params, 'Stats Overlay: No finite YData available for statistics.', 2, 'Info'); return;
+    log_message(params, sprintf('Stats Overlay: No finite YData available within the current XLim [%.2f, %.2f] for statistics.', current_xlim(1), current_xlim(2)), 2, 'Info'); return;
 end
 
 stats_str_lines = cell(1,0); % Initialize as row cell
