@@ -1196,6 +1196,102 @@ end
 sf = max(min_scale_factor, min(max_scale_factor, sf)); % Clamp to global min/max scale factors
 end
 
+% --- START OF CHILD STYLING HELPERS ---
+
+function style_line(child, params, scaled_sizes, style_props)
+    props_to_set = {'LineWidth', scaled_sizes.actual_plot_line_width, 'MarkerSize', scaled_sizes.marker_size_scaled};
+    if ~isempty(style_props.color); props_to_set = [props_to_set, {'Color', style_props.color}]; end
+    if ~isempty(style_props.line_style); props_to_set = [props_to_set, {'LineStyle', style_props.line_style}]; end
+    if ~strcmpi(style_props.marker, 'none')
+        props_to_set = [props_to_set, {'Marker', style_props.marker}];
+        if ~strcmpi(style_props.marker, '.') && ~isempty(style_props.color)
+            props_to_set = [props_to_set, {'MarkerFaceColor', style_props.color, 'MarkerEdgeColor', style_props.color*0.7}];
+        elseif strcmpi(style_props.marker, '.') && ~isempty(style_props.color)
+            props_to_set = [props_to_set, {'MarkerEdgeColor', style_props.color, 'MarkerFaceColor', 'none'}];
+        end
+    elseif ~strcmpi(child.Marker,'none') && ~isempty(style_props.color)
+        if isprop(child,'MarkerFaceColor') && ~ischar(child.MarkerFaceColor) && ~any(strcmpi(child.MarkerFaceColor,{'auto','none'}))
+            props_to_set = [props_to_set, {'MarkerFaceColor',style_props.color}];
+        end
+        if isprop(child,'MarkerEdgeColor') && ~ischar(child.MarkerEdgeColor) && ~any(strcmpi(child.MarkerEdgeColor,{'auto','none'}))
+            props_to_set = [props_to_set, {'MarkerEdgeColor',style_props.color*0.7}];
+        end
+    end
+    safe_set(params, child, props_to_set{:});
+end
+
+function style_scatter(child, params, scaled_sizes, style_props)
+    props_to_set = {'SizeData', scaled_sizes.marker_size_scaled^2, 'LineWidth', scaled_sizes.actual_plot_line_width*0.5};
+    if ~isempty(style_props.color)
+        if isprop(child, 'MarkerFaceColor') && ~(ischar(child.MarkerFaceColor) && any(strcmpi(child.MarkerFaceColor,{'none','flat'})))
+            props_to_set = [props_to_set, {'MarkerFaceColor', style_props.color}];
+        end
+        if isprop(child, 'MarkerEdgeColor') && ~(ischar(child.MarkerEdgeColor) && strcmpi(child.MarkerEdgeColor,'none'))
+            props_to_set = [props_to_set, {'MarkerEdgeColor', style_props.color*0.75}];
+        end
+    end
+    if ~strcmpi(style_props.marker, 'none'); props_to_set = [props_to_set, {'Marker', style_props.marker}]; end
+    safe_set(params, child, props_to_set{:});
+end
+
+function style_bar(child, params, scaled_sizes, style_props)
+    props_to_set = {'LineWidth', scaled_sizes.axis_line_width_scaled*0.9};
+    if ~isempty(style_props.color)
+        if isprop(child, 'FaceColor') && (~ischar(child.FaceColor) || ~strcmpi(child.FaceColor,'flat'))
+            props_to_set = [props_to_set, {'FaceColor', style_props.color}];
+        end
+        edge_color = style_props.color * 0.7;
+        if isequal(edge_color, [0 0 0]); edge_color = params.axis_color*0.5; end
+        props_to_set = [props_to_set, {'EdgeColor', edge_color}];
+    else
+        props_to_set = [props_to_set, {'EdgeColor', params.axis_color*0.7}];
+    end
+    safe_set(params, child, props_to_set{:});
+end
+
+function style_histogram(child, params, scaled_sizes, style_props)
+    props_to_set = {'LineWidth', scaled_sizes.axis_line_width_scaled*0.8, 'FaceAlpha', 0.7};
+    if ~isempty(style_props.color)
+        props_to_set = [props_to_set, {'FaceColor', style_props.color, 'EdgeColor', style_props.color*0.5}];
+    else
+        props_to_set = [props_to_set, {'EdgeColor', params.axis_color*0.5}];
+    end
+    safe_set(params, child, props_to_set{:});
+end
+
+function style_errorbar(child, params, scaled_sizes, style_props)
+    base_cap_size_for_error_bar = params.marker_size * 0.8;
+    scaled_cap_size = base_cap_size_for_error_bar * params.errorbar_cap_size_scale * scaled_sizes.font_size / params.base_font_size;
+    props_to_set = {'LineWidth', scaled_sizes.actual_plot_line_width*0.8, 'MarkerSize', scaled_sizes.marker_size_scaled*0.8, 'CapSize', max(1, scaled_cap_size)};
+    if ~isempty(style_props.color); props_to_set = [props_to_set, {'Color',style_props.color}]; end
+    if ~strcmpi(style_props.marker, 'none'); props_to_set = [props_to_set, {'Marker', style_props.marker}]; end
+    safe_set(params, child, props_to_set{:});
+end
+
+function style_surface(child, params, scaled_sizes)
+    props_to_set = {'EdgeColor', params.axis_color*0.6, 'LineWidth', scaled_sizes.axis_line_width_scaled*0.7};
+    safe_set(params, child, props_to_set{:});
+end
+
+function style_heatmap(child, params, scaled_sizes)
+    props_to_set = {'FontName', params.font_name, 'FontSize', scaled_sizes.font_size, 'FontColor', params.text_color};
+    if strcmpi(params.grid_density, 'none')
+        props_to_set = [props_to_set, {'GridVisible', 'off'}];
+    else
+        props_to_set = [props_to_set, {'GridVisible', 'on', 'GridColor', params.grid_color}];
+    end
+    safe_set(params, child, props_to_set{:});
+
+    process_text_prop(child.Title, child.Title.String, scaled_sizes.title_font_size, 'bold', params.text_color, params.font_name, params);
+    process_text_prop(child.XLabel, child.XLabel.String, scaled_sizes.label_font_size, 'normal', params.text_color, params.font_name, params);
+    process_text_prop(child.YLabel, child.YLabel.String, scaled_sizes.label_font_size, 'normal', params.text_color, params.font_name, params);
+    if params.apply_to_colorbars && isprop(child, 'Colorbar') && isvalid(child.Colorbar)
+        beautify_colorbar(child, params, scaled_sizes.font_size, scaled_sizes.label_font_size, scaled_sizes.axis_line_width_scaled);
+    end
+end
+
+% --- END OF CHILD STYLING HELPERS ---
+
 % --- Core Function: Beautify a Single Axes Object ---
 function beautify_single_axes(ax, params, scale_factor, ~) % axes_idx not used currently
 if ~isvalid(ax); return; end
@@ -1423,85 +1519,36 @@ for i = 1:length(processed_children_order)
         end
 
         props_to_set = {};
+        % Package style properties for the helper functions
+        style_props.color = current_color_to_apply;
+        style_props.marker = current_marker_style_name;
+        style_props.line_style = current_line_style_name;
+
+        % Create a struct for scaled sizes to pass to helpers
+        scaled_sizes_struct.actual_plot_line_width = actual_plot_line_width;
+        scaled_sizes_struct.marker_size_scaled = marker_size_scaled;
+        scaled_sizes_struct.axis_line_width_scaled = axis_line_width_scaled;
+        scaled_sizes_struct.font_size = font_size;
+        scaled_sizes_struct.title_font_size = title_font_size;
+        scaled_sizes_struct.label_font_size = label_font_size;
+
         if isa(child, 'matlab.graphics.chart.primitive.Line')
-            props_to_set = {'LineWidth', actual_plot_line_width, 'MarkerSize', marker_size_scaled};
-            if ~isempty(current_color_to_apply); props_to_set = [props_to_set, {'Color', current_color_to_apply}]; end
-            if ~isempty(current_line_style_name); props_to_set = [props_to_set, {'LineStyle', current_line_style_name}]; end
-            if ~strcmpi(current_marker_style_name, 'none')
-                props_to_set = [props_to_set, {'Marker', current_marker_style_name}];
-                if ~strcmpi(current_marker_style_name, '.') && ~isempty(current_color_to_apply)
-                    props_to_set = [props_to_set, {'MarkerFaceColor', current_color_to_apply, 'MarkerEdgeColor', current_color_to_apply*0.7}];
-                elseif strcmpi(current_marker_style_name, '.') && ~isempty(current_color_to_apply)
-                    props_to_set = [props_to_set, {'MarkerEdgeColor', current_color_to_apply, 'MarkerFaceColor', 'none'}];
-                end
-            elseif ~strcmpi(child.Marker,'none') && ~isempty(current_color_to_apply)
-                if isprop(child,'MarkerFaceColor') && ~ischar(child.MarkerFaceColor) && ~any(strcmpi(child.MarkerFaceColor,{'auto','none'}))
-                    props_to_set = [props_to_set, {'MarkerFaceColor',current_color_to_apply}];
-                end
-                if isprop(child,'MarkerEdgeColor') && ~ischar(child.MarkerEdgeColor) && ~any(strcmpi(child.MarkerEdgeColor,{'auto','none'}))
-                    props_to_set = [props_to_set, {'MarkerEdgeColor',current_color_to_apply*0.7}];
-                end
-            end
+            style_line(child, params, scaled_sizes_struct, style_props);
         elseif isa(child, 'matlab.graphics.chart.primitive.Scatter')
-            props_to_set = {'SizeData', marker_size_scaled^2, 'LineWidth', actual_plot_line_width*0.5};
-            if ~isempty(current_color_to_apply)
-                if isprop(child, 'MarkerFaceColor') && ~(ischar(child.MarkerFaceColor) && any(strcmpi(child.MarkerFaceColor,{'none','flat'})))
-                    props_to_set = [props_to_set, {'MarkerFaceColor', current_color_to_apply}];
-                end
-                if isprop(child, 'MarkerEdgeColor') && ~(ischar(child.MarkerEdgeColor) && strcmpi(child.MarkerEdgeColor,'none'))
-                    props_to_set = [props_to_set, {'MarkerEdgeColor', current_color_to_apply*0.75}];
-                end
-            end
-            if ~strcmpi(current_marker_style_name, 'none'); props_to_set = [props_to_set, {'Marker', current_marker_style_name}]; end
+            style_scatter(child, params, scaled_sizes_struct, style_props);
         elseif isa(child, 'matlab.graphics.chart.primitive.Bar')
-            props_to_set = {'LineWidth', axis_line_width_scaled*0.9};
-            if ~isempty(current_color_to_apply)
-                if isprop(child, 'FaceColor') && (~ischar(child.FaceColor) || ~strcmpi(child.FaceColor,'flat'))
-                    props_to_set = [props_to_set, {'FaceColor', current_color_to_apply}];
-                end
-                edge_color = current_color_to_apply * 0.7;
-                if isequal(edge_color, [0 0 0]); edge_color = params.axis_color*0.5; end
-                props_to_set = [props_to_set, {'EdgeColor', edge_color}];
-            else
-                props_to_set = [props_to_set, {'EdgeColor', params.axis_color*0.7}];
-            end
+            style_bar(child, params, scaled_sizes_struct, style_props);
         elseif isa(child, 'matlab.graphics.chart.primitive.Histogram')
-            props_to_set = {'LineWidth', axis_line_width_scaled*0.8, 'FaceAlpha', 0.7};
-            if ~isempty(current_color_to_apply)
-                props_to_set = [props_to_set, {'FaceColor', current_color_to_apply, 'EdgeColor', current_color_to_apply*0.5}];
-            else
-                props_to_set = [props_to_set, {'EdgeColor', params.axis_color*0.5}];
-            end
+            style_histogram(child, params, scaled_sizes_struct, style_props);
         elseif isa(child, 'matlab.graphics.chart.primitive.ErrorBar')
-            base_cap_size_for_error_bar = params.marker_size * 0.8;
-            scaled_cap_size = base_cap_size_for_error_bar * params.errorbar_cap_size_scale * scale_factor;
-            props_to_set = {'LineWidth', actual_plot_line_width*0.8, 'MarkerSize', marker_size_scaled*0.8, 'CapSize', max(1, scaled_cap_size)};
-            if ~isempty(current_color_to_apply); props_to_set = [props_to_set, {'Color',current_color_to_apply}]; end
-            if ~strcmpi(current_marker_style_name, 'none'); props_to_set = [props_to_set, {'Marker', current_marker_style_name}]; end
+            style_errorbar(child, params, scaled_sizes_struct, style_props);
         elseif isa(child,'matlab.graphics.primitive.Surface') || ...
                 isa(child,'matlab.graphics.chart.primitive.Surface') || ...
                 isa(child,'matlab.graphics.primitive.Patch')
-            props_to_set = {'EdgeColor', params.axis_color*0.6, 'LineWidth', axis_line_width_scaled*0.7};
+            style_surface(child, params, scaled_sizes_struct);
         elseif isa(child, 'matlab.graphics.chart.HeatmapChart')
-            props_to_set = {'FontName', params.font_name, 'FontSize', font_size, 'FontColor', params.text_color};
-            if strcmpi(params.grid_density, 'none')
-                props_to_set = [props_to_set, {'GridVisible', 'off'}];
-            else
-                props_to_set = [props_to_set, {'GridVisible', 'on', 'GridColor', params.grid_color}];
-            end
-            % Heatmap color data is left untouched as it's specific and not a simple palette
-
-            % Style the integrated labels and title of the heatmap chart
-            process_text_prop(child.Title, child.Title.String, title_font_size, 'bold', params.text_color, params.font_name, params);
-            process_text_prop(child.XLabel, child.XLabel.String, label_font_size, 'normal', params.text_color, params.font_name, params);
-            process_text_prop(child.YLabel, child.YLabel.String, label_font_size, 'normal', params.text_color, params.font_name, params);
-
-            % Also handle its colorbar if present and enabled
-            if params.apply_to_colorbars && isprop(child, 'Colorbar') && isvalid(child.Colorbar)
-                beautify_colorbar(child, params, font_size, label_font_size, axis_line_width_scaled);
-            end
+            style_heatmap(child, params, scaled_sizes_struct);
         end
-        if ~isempty(props_to_set); safe_set(params, child, props_to_set{:}); end
 
     catch me_child
         child_tag_display = ''; if isprop(child,'Tag'); child_tag_display = child.Tag; end
@@ -1633,17 +1680,24 @@ try
     end
 
     % Fallback for older MATLAB or cases where Legend property might not be populated
-    if isempty(existing_legend) && isfield(params, 'all_legends_in_fig')
-        all_legends_in_fig = params.all_legends_in_fig;
+    if isempty(existing_legend) && isfield(params, 'all_legends_in_fig') && ~isempty(params.all_legends_in_fig)
+        all_legends_in_fig = params.all_legends_in_fig; % Use the cached handles
         for k_leg = 1:numel(all_legends_in_fig)
             current_legend = all_legends_in_fig(k_leg);
             if ~isvalid(current_legend); continue; end
+
+            % Determine the axes associated with this legend
             associated_axes = [];
-            if isprop(current_legend, 'Axes') % R2022a+
-                associated_axes = current_legend.Axes;
-            elseif isprop(current_legend, 'Axle') && isprop(current_legend.Axle, 'Peer') % Older versions
-                associated_axes = current_legend.Axle.Peer;
+            try
+                if isprop(current_legend, 'Axes') % R2022a+
+                    associated_axes = current_legend.Axes;
+                elseif isprop(current_legend, 'Axle') && isprop(current_legend.Axle, 'Peer') % Older versions
+                    associated_axes = current_legend.Axle.Peer;
+                end
+            catch
+                % In very old versions, direct property access might fail.
             end
+
             if isequal(associated_axes, ax)
                 existing_legend = current_legend;
                 break;

@@ -9,22 +9,22 @@ t = tiledlayout(5, 5, 'TileSpacing', 'compact', 'Padding', 'compact');
 title(t, 'Complex Figure for Performance Test');
 
 % Populate the subplots
-for i = 1:25
+for k_subplot = 1:25
     nexttile;
     hold on;
     % Add multiple plot elements to each subplot
     plot(rand(10, 3), 'LineWidth', 0.5); % 3 lines
     scatter(rand(20, 1), rand(20, 1), 'filled'); % 1 scatter plot
     bar(rand(1, 5)); % 1 bar plot
-    if mod(i, 2) == 0
-        title(['Subplot ' num2str(i)]);
+    if mod(k_subplot, 2) == 0
+        title(['Subplot ' num2str(k_subplot)]);
         xlabel('X-axis');
         ylabel('Y-axis');
     end
-    if mod(i, 5) == 0
+    if mod(k_subplot, 5) == 0
         legend('Line A', 'Line B', 'Line C', 'Data points', 'Bar data', 'Location', 'northeastoutside');
     end
-    if mod(i, 3) == 0
+    if mod(k_subplot, 3) == 0
         colorbar;
     end
 end
