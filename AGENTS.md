@@ -1,32 +1,41 @@
-# Instructions for AI Agents
+# Agent Instructions
 
-This document provides guidelines for AI agents contributing to the **OpenVSP-MATLAB-Clone** repository. Adherence to these instructions is mandatory to ensure code quality, consistency, and alignment with the project's objectives.
+## General Context
 
-## 1. General Context
+This repository contains a MATLAB script for enhancing the visual aesthetics of figures, named `beautify_figure.m`. The script is designed to be a single, self-contained file with nested helper functions. It uses MATLAB's `inputParser` for handling a wide range of customizable parameters.
 
-This repository contains the **MATLAB Figure Beautifier**, an open-source tool for enhancing the aesthetics of MATLAB figures, implemented entirely in **MATLAB**. The current implementation is focused on providing a programmatic interface (`beautify_figure.m`) and a graphical user interface (GUI) for applying visual styles to figures, making them suitable for presentations and publications. All AI-generated code must strictly follow the conventions established in this codebase.
+## Key Files
 
-## 2. Programming Style Guidelines
+-   `beautify_figure.m`: The main and only MATLAB script file.
+-   `README.md`: Provides an overview of the project.
+-   `LICENSE.md`: The license for the project.
 
-All code contributions must align with the existing coding style and structure. Follow these rules:
+## Development Rules
 
-- **File Structure**: The project must be contained within a single script file, `beautify_figure.m`. All helper functions should be implemented as nested functions within this main script. Do not create separate files for helpers. Use **four spaces** for indentation (no tabs).
-- **Naming Conventions**:
-    - **Classes**: `PascalCase` (e.g., `AerodynamicModel`).
-    - **Functions & Variables**: `snake_case` (e.g., `flutter_analysis`, `vlm_results`). New contributions must use `snake_case` for consistency. Do not use capital letters in function or variable names.
-- **Code Comments**: Place a one-line comment above each distinct block of code to explain its purpose. Comments must always be on the line(s) immediately preceding the code they describe.
-- **Function Documentation**: Every function file must start with a documentation block explaining its purpose, syntax, inputs, and outputs. Refer to `beautify_figure.m` for the required format.
-- **Input Validation**: All non-trivial public functions must use MATLAB's `inputParser` class for input argument validation to ensure correct type, shape, and value.
-- **Operator Spacing**: Always use spaces around binary arithmetic and logical operators (e.g., `a = b + c * d`).
-- **Variable Names**: Use clear, descriptive variable names. Avoid vague names, with the exception of simple loop indices (e.g., `n`, `k`). Do not use `i` or `j` as variable names to prevent confusion with imaginary units.
-- **General Formatting**: For all other style aspects (e.g., parentheses, line breaks), mimic the existing code in `beautify_figure.m`.
+### Coding Style
 
-## 3. Execution Policies
+-   **Variable Naming:** All variable names must be in `snake_case`. This is a strict requirement.
+-   **Loop Variables:** Do not use `i` as a loop variable. Use `k`, `idx`, or a more descriptive name (e.g., `k_param`).
+-   **Function Naming:** Function names should also be in `snake_case`.
+-   **Line Length:** Keep lines of code under 100 characters.
+-   **Comments:** Add comments to explain complex or non-obvious parts of the code.
 
-- **Accuracy**: Never fabricate information, code, or documentation. All generated content must be accurate and directly supported by the codebase or user instructions. If unsure, ask for clarification.
-- **Follow Instructions**: Execute all user instructions precisely and produce all requested outputs. Do not ignore any part of a request.
-- **Complete All Tasks**: Do not terminate work prematurely. If multiple files or sections are requested, generate all of them before finishing.
-- **Verify Your Work**: After generating output, proactively double-check it against the user's instructions and these guidelines. If anything is missing or incorrect, you must fix it.
-- **Feature Proposals**: Do not add any new features without first proposing a detailed plan and receiving approval.
-- **Testing Limitation**: AI agents cannot run MATLAB-based tests. Code modifications should be based on visual inspection and logical analysis.
-- **Code Submission**: **Do not solely depend on code reviewer.** Check yourself too based on feedback. If there is something wrong with submission, report to the user, do not take any action in this case.
+### File Structure
+
+-   The script `beautify_figure.m` must remain a single file. Do not create a `src` directory or separate files for helper functions. All helper functions must be nested within the main function.
+
+### Input Handling
+
+-   All input parameters must be handled through MATLAB's `inputParser`. The old style of using `nargin` and `isstruct` for parsing is deprecated and should not be used.
+
+### Error Handling
+
+-   Use `try-catch` blocks to handle potential errors gracefully. When catching an exception, name the `MException` object `me_...` (e.g., `me_figure_color`).
+
+## Verification
+
+Before submitting any changes, ensure the following:
+1.  The `beautify_figure.m` script can be executed without errors.
+2.  All variable and function names adhere to the `snake_case` convention.
+3.  The file structure rules are followed.
+4.  The script correctly uses `inputParser` for all parameter handling.
