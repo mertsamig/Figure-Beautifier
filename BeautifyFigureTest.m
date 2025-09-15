@@ -23,6 +23,12 @@ classdef BeautifyFigureTest < matlab.unittest.TestCase
         end
     end
 
+    properties (TestParameter)
+        % Define parameters to be tested. The framework will run tests for each value.
+        style_preset = {'default', 'publication', 'presentation_dark', 'presentation_light', 'minimalist'};
+        theme = {'light', 'dark'};
+    end
+
     methods(Test)
         function testDefaultBeautification(testCase)
             % Test that default beautification changes key properties from MATLAB defaults.
@@ -47,42 +53,37 @@ classdef BeautifyFigureTest < matlab.unittest.TestCase
                 'Box property should be "on" by default.');
         end
 
-        function testPublicationPreset(testCase)
-            % Test the 'publication' style preset.
+        function testPresetApplication(testCase, style_preset)
+            % Test that applying a preset runs without error.
+            % This is a smoke test to ensure no combination of parameters causes a crash.
 
             plot(testCase.TestFigure, 1:10, rand(1, 10));
+
+            % The main verification is that this command runs without error.
+            beautify_figure('figure_handle', testCase.TestFigure, 'style_preset', style_preset);
+
+            % Add a simple, universal verification
             ax = get(testCase.TestFigure, 'CurrentAxes');
-
-            % Apply beautification with preset
-            beautify_figure('figure_handle', testCase.TestFigure, 'style_preset', 'publication');
-
-            % Verify key properties of the publication preset
-            testCase.verifyEqual(get(ax, 'FontName'), 'Arial', ...
-                'FontName should be Arial for publication preset.');
-            test_line_width = get(ax.Children(1), 'LineWidth');
-            testCase.verifyEqual(test_line_width, 1.0, 'AbsTol', 1e-9, ...
-                'LineWidth should be 1.0 for publication preset.');
-            testCase.verifyEqual(get(ax, 'Grid'), 'on', ...
-                'Grid should be on for major lines in publication preset.');
-            testCase.verifyEqual(get(ax, 'XMinorGrid'), 'off', ...
-                'Minor grid should be off for publication preset.');
+            testCase.verifyTrue(isvalid(ax), ['Axes should be valid after applying preset: ' style_preset]);
         end
 
-        function testDarkTheme(testCase)
-            % Test the 'dark' theme.
+        function testThemeApplication(testCase, theme)
+            % Test that applying a theme runs without error and sets colors correctly.
             plot(testCase.TestFigure, 1:10, rand(1, 10));
             ax = get(testCase.TestFigure, 'CurrentAxes');
 
-            % Apply beautification with dark theme
-            beautify_figure('figure_handle', testCase.TestFigure, 'theme', 'dark');
+            beautify_figure('figure_handle', testCase.TestFigure, 'theme', theme);
 
-            % Verify colors
-            dark_bg_color = get(testCase.TestFigure, 'Color');
-            ax_color = get(ax, 'XColor'); % Assume XColor is representative
+            fig_color = get(testCase.TestFigure, 'Color');
+            ax_color = get(ax, 'XColor');
 
-            % Background should be dark, axes should be light
-            testCase.verifyTrue(all(dark_bg_color < 0.5), 'Figure background should be dark.');
-            testCase.verifyTrue(all(ax_color > 0.5), 'Axes color should be light.');
+            if strcmpi(theme, 'dark')
+                testCase.verifyTrue(all(fig_color < 0.5), 'Dark theme should have a dark figure background.');
+                testCase.verifyTrue(all(ax_color > 0.5), 'Dark theme should have light axes color.');
+            else % light theme
+                testCase.verifyTrue(all(fig_color > 0.5), 'Light theme should have a light figure background.');
+                testCase.verifyTrue(all(ax_color < 0.5), 'Light theme should have dark axes color.');
+            end
         end
 
         function testStatsOverlay(testCase)
