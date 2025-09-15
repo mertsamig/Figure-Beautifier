@@ -223,6 +223,16 @@ if ~any(strcmp(active_preset_name, known_presets))
 end
 
 % Helper to apply a value from a preset only if the user did not specify it.
+
+    %APPLY_PRESET_VALUE Applies a preset value if not overridden by the user.
+    %   This is a nested helper function that checks if a given parameter
+    %   is using its default value (i.e., was not specified by the user).
+    %   If it is, the function updates the 'params' struct in the parent
+    %   workspace with the new value from the style preset.
+    %
+    %   INPUTS:
+    %       param_name: (char/string) The name of the parameter.
+    %       value:      (any) The value to apply from the preset.
     function apply_preset_value(param_name, value)
         if ismember(param_name, p.UsingDefaults)
             params.(param_name) = value;
@@ -305,6 +315,18 @@ end
 log_message(params, 'Performing critical parameter validation...', 2, 'Info');
 
 % Helper function to format value for logging
+
+    %BEAUTIFY_FIG_FORMAT_PARAM_VALUE_FOR_LOG Formats a variable for console logging.
+    %   This is a nested helper function that converts a variable of any
+    %   type into a compact, human-readable string representation suitable
+    %   for printing to the console as part of a log message. It handles
+    %   common data types like numeric, char, string, cell, and struct.
+    %
+    %   INPUTS:
+    %       val: (any) The input variable to format.
+    %
+    %   OUTPUTS:
+    %       val_str: (char) The formatted string.
     function val_str = beautify_fig_format_param_value_for_log(val)
         if isnumeric(val)
             if isscalar(val)
@@ -448,6 +470,23 @@ log_message(params, 'Critical parameter validation complete.', 2, 'Info');
 log_message(params, 'Performing sub-struct validation (type checks, merging, field checks)...', 2, 'Info');
 
 % Helper function to validate a numeric scalar field within a sub-struct
+
+    %VALIDATE_NUMERIC_SCALAR_FIELD Validates a numeric scalar field in a struct.
+    %   Checks if a given field in a sub-struct of 'params' is a real,
+    %   numeric scalar. It can also perform additional checks. If validation
+    %   fails, the field is reset to its value from 'base_defaults'.
+    %
+    %   INPUTS:
+    %       params: (struct) The main parameters struct, which is modified.
+    %       base_defaults: (struct) The master defaults struct for fallback values.
+    %       struct_name: (char) The name of the sub-struct within params.
+    %       field_name: (char) The name of the field to validate.
+    %       allow_non_negative: (logical) If true, checks value is >= 0.
+    %       allow_positive: (logical) If true, checks value is > 0.
+    %       require_integer: (logical) If true, checks if value is an integer.
+    %
+    %   OUTPUTS:
+    %       params: (struct) The potentially modified parameters struct.
     function params = validate_numeric_scalar_field(params, base_defaults, struct_name, field_name, allow_non_negative, allow_positive, require_integer)
         default_value = base_defaults.(struct_name).(field_name);
         % Check if field exists in current params, if not, it means user struct didn't have it, so use default
@@ -484,6 +523,19 @@ log_message(params, 'Performing sub-struct validation (type checks, merging, fie
     end
 
 % Helper function to validate a logical/boolean field within a sub-struct
+
+    %VALIDATE_LOGICAL_FIELD Validates a logical field in a struct.
+    %   Checks if a given field is a logical scalar (true/false) or can
+    %   be cast from a numeric 0 or 1. Resets to default if validation fails.
+    %
+    %   INPUTS:
+    %       params: (struct) The main parameters struct, which is modified.
+    %       base_defaults: (struct) The master defaults for fallback values.
+    %       struct_name: (char) The name of the sub-struct within params.
+    %       field_name: (char) The name of the field to validate.
+    %
+    %   OUTPUTS:
+    %       params: (struct) The potentially modified parameters struct.
     function params = validate_logical_field(params, base_defaults, struct_name, field_name)
         default_value = base_defaults.(struct_name).(field_name);
         if ~isfield(params.(struct_name), field_name)
@@ -508,6 +560,19 @@ log_message(params, 'Performing sub-struct validation (type checks, merging, fie
     end
 
 % Helper function to validate a cell array of char row vectors
+
+    %VALIDATE_CELL_ARRAY_OF_STRINGS_FIELD Validates a cell array of strings.
+    %   Checks if a given field is a cell array where each element is a
+    %   character row vector. Resets to default if validation fails.
+    %
+    %   INPUTS:
+    %       params: (struct) The main parameters struct, which is modified.
+    %       base_defaults: (struct) The master defaults for fallback values.
+    %       struct_name: (char) The name of the sub-struct within params.
+    %       field_name: (char) The name of the field to validate.
+    %
+    %   OUTPUTS:
+    %       params: (struct) The potentially modified parameters struct.
     function params = validate_cell_array_of_strings_field(params, base_defaults, struct_name, field_name)
         default_value = base_defaults.(struct_name).(field_name);
         if ~isfield(params.(struct_name), field_name)
@@ -885,6 +950,20 @@ end
 % function tf = is_valid_axes_handle_array(h_array) ... (entire function removed)
 
 % --- Helper Function: Get Scale Basis for an Axes ---
+
+%GET_SCALE_BASIS_FOR_AXES Determines the subplot count for scaling.
+%   This is a nested helper function that calculates the number of
+%   plottable axes within a given layout (tiled or simple subplots)
+%   to serve as a basis for calculating the overall scaling factor for
+%   figure elements.
+%
+%   INPUTS:
+%       ax_ref: (handle) A handle to one of the axes in the layout.
+%       parent_layout: (handle) Handle to a TiledChartLayout, if one exists.
+%       params: (struct) The main parameters struct.
+%
+%   OUTPUTS:
+%       num_to_scale_by: (numeric) The number of subplots to use for scaling.
 function num_to_scale_by = get_scale_basis_for_axes(ax_ref, parent_layout, params)
 % ax_ref is one of the axes in the layout, or the single axes if no layout.
 num_to_scale_by = 1; % Default for standalone axes
@@ -991,6 +1070,16 @@ if isempty(active_palette); active_palette = lines(7); end % Final fallback
 end
 
 % --- Helper Function: Process a Container (Figure or Tab) ---
+
+%PROCESS_CONTAINER Applies beautification to all axes in a container.
+%   This is a nested helper function that serves as a high-level
+%   processor for a given container (like a figure or a UI tab). It
+%   finds all TiledChartLayouts and other plottable axes within the
+%   container and calls the appropriate beautification functions for them.
+%
+%   INPUTS:
+%       container_handle: (handle) The container to process.
+%       params: (struct) The main parameters struct.
 function process_container(container_handle, params)
 axes_to_ignore_combined = {'legend', 'Colorbar', 'ColormapPreview', 'scribeOverlay'};
 if ~params.apply_to_colorbars; axes_to_ignore_combined{end+1} = 'Colorbar'; end % Tag for colorbar axes is 'Colorbar'
@@ -1081,6 +1170,15 @@ end
 end
 
 % --- Helper Function: Beautify Super Title (sgtitle) ---
+
+%BEAUTIFY_SGTITLE_IF_EXISTS Styles the super title of a layout.
+%   Finds the super title object (sgtitle) associated with a given
+%   TiledChartLayout and applies font styling to it based on the main
+%   beautification parameters.
+%
+%   INPUTS:
+%       layout_or_fig_handle: (handle) The layout containing the title.
+%       params: (struct) The main parameters struct.
 function beautify_sgtitle_if_exists(layout_or_fig_handle, params)
 % layout_or_fig_handle can be a TiledChartLayout or a Figure
 try
@@ -1111,6 +1209,19 @@ end
 end
 
 % --- Helper Function: Get Plottable Axes from Parent ---
+
+%GET_AXES_FROM_PARENT Finds all plottable axes within a parent container.
+%   Searches the direct children of a given parent handle to find all
+%   valid axes objects suitable for beautification (Axes and PolarAxes).
+%   It excludes objects with specific tags (e.g., legends, colorbars).
+%
+%   INPUTS:
+%       parent_handle: (handle) The parent object to search within.
+%       params: (struct) The main parameters struct.
+%       ignore_tags_types_combined: (cellstr) Tags of objects to ignore.
+%
+%   OUTPUTS:
+%       axes_handles: (array of handles) Array of valid axes handles.
 function axes_handles = get_axes_from_parent(parent_handle, params, ignore_tags_types_combined) % Renamed for clarity
 axes_handles = matlab.graphics.axis.Axes.empty; % Initialize with correct empty type
 if ~isvalid(parent_handle); return; end
@@ -1194,6 +1305,17 @@ sf = max(min_sf, min(max_sf, sf)); % Clamp to global min/max scale factors
 end
 
 % --- Core Function: Beautify a Single Axes Object ---
+
+%BEAUTIFY_SINGLE_AXES Applies all styling rules to a single axes object.
+%   This is the core workhorse function that takes a single axes handle
+%   and applies all beautification rules to it and its children (lines,
+%   scatter plots, bars, text, labels, title, legend, etc.). It uses
+%   the provided parameters and scaling factor to set properties.
+%
+%   INPUTS:
+%       ax: (handle) The axes object to beautify.
+%       params: (struct) The main parameters struct with all settings.
+%       scale_factor: (numeric) The scaling factor for sizes and widths.
 function beautify_single_axes(ax, params, scale_factor, ~) % axes_idx not used currently
 if ~isvalid(ax); return; end
 
@@ -1552,6 +1674,17 @@ end % End of beautify_single_axes
 
 
 % --- Helper Function: Check if an object is a legend candidate ---
+
+%IS_LEGEND_CANDIDATE_CHECK Checks if a graphics object should have a legend entry.
+%   Determines if a given graphics object is a valid candidate for
+%   inclusion in a legend. The primary check is for a non-empty
+%   'DisplayName' property. It also checks for visibility.
+%
+%   INPUTS:
+%       obj_handle: (handle) The graphics object to check.
+%
+%   OUTPUTS:
+%       is_candidate: (logical) True if the object is a legend candidate.
 function is_candidate = is_legend_candidate_check(obj_handle)
 is_candidate = false;
 if ~isvalid(obj_handle) || ~isprop(obj_handle,'Visible') || ~strcmpi(get(obj_handle, 'Visible'), 'on'); return; end
@@ -1589,6 +1722,19 @@ end
 end
 
 % --- Helper Function: Beautify Legend ---
+
+%BEAUTIFY_LEGEND Creates, styles, and manages the legend for an axes.
+%   This function handles all aspects of the legend for a given axes.
+%   It decides whether to show a legend based on 'smart_legend_display',
+%   creates or recreates it to ensure item order, styles its text and
+%   box properties, and sets up interactive features if enabled.
+%
+%   INPUTS:
+%       ax: (handle) The axes to which the legend belongs.
+%       params: (struct) The main parameters struct.
+%       plottable_children_for_legend: (array of handles) Objects to include.
+%       fs: (numeric) The scaled font size for legend text.
+%       alw: (numeric) The scaled line width for the legend box.
 function beautify_legend(ax, params, plottable_children_for_legend, fs, alw)
 try
     existing_legend = [];
@@ -1778,6 +1924,18 @@ end
 end
 
 % --- Local Helper Function: Convert struct to name-value pairs ---
+
+%LOCAL_STRUCT_TO_NV_PAIRS Converts a struct to a name-value pair cell array.
+%   This utility function takes a scalar structure and converts it into a
+%   1x(2*N) cell array of name-value pairs, where N is the number of
+%   fields in the struct. This format is suitable for passing to functions
+%   like 'set' or other functions that accept name-value arguments.
+%
+%   INPUTS:
+%       s: (struct) The input scalar structure.
+%
+%   OUTPUTS:
+%       nv_pairs: (cell) The cell array of name-value pairs.
 function nv_pairs = local_struct_to_nv_pairs(s)
 fields = fieldnames(s);
 nv_pairs = cell(1, 2 * numel(fields));
@@ -1788,6 +1946,17 @@ end
 end
 
 % --- Helper Function: Beautify Colorbar ---
+
+%BEAUTIFY_COLORBAR Finds and styles the colorbar for an axes.
+%   Finds a colorbar associated with the given axes and applies styling
+%   to its font size, line width, tick direction, and label.
+%
+%   INPUTS:
+%       ax: (handle) The axes object that owns the colorbar.
+%       params: (struct) The main parameters struct.
+%       fs: (numeric) The scaled font size for tick labels.
+%       lfs: (numeric) The scaled font size for the label.
+%       alw: (numeric) The scaled line width for the box.
 function beautify_colorbar(ax, params, fs, lfs, alw)
 cb = find_associated_colorbar(ax, params); % Use the new helper
 if ~isempty(cb) && isvalid(cb)
@@ -1811,6 +1980,20 @@ end
 end
 
 % --- Helper Function: Process Text Properties (Title, Labels, etc.) ---
+
+%PROCESS_TEXT_PROP Styles a given text graphics object.
+%   Applies standard font styling (name, size, weight, color) to a
+%   given text object handle. It also formats multi-line cell/string
+%   arrays into a single string with newline characters.
+%
+%   INPUTS:
+%       text_handle: (handle) The text object to style.
+%       original_str: (char/string/cell) The text content.
+%       font_size: (numeric) The target font size.
+%       font_weight: (char) The target font weight ('normal', 'bold').
+%       color: (RGB triplet) The target text color.
+%       requested_font_name: (char) The desired font name.
+%       params: (struct) The main parameters struct (for logging).
 function process_text_prop(text_handle, original_str, font_size, font_weight, color, requested_font_name, params) % Renamed font_name to requested_font_name
 if isempty(text_handle) || ~isvalid(text_handle); return; end
 
@@ -1860,6 +2043,17 @@ end
 end
 
 % --- Helper Function: Format Multi-line/Cell Strings ---
+
+%FORMAT_TEXT_STRING Converts multi-line string/cell arrays to a single string.
+%   Takes a cell array of strings or a MATLAB string array and joins
+%   the elements into a single character vector separated by newline
+%   characters, suitable for use in multi-line text objects.
+%
+%   INPUTS:
+%       original_str: (char/string/cell) The input text.
+%
+%   OUTPUTS:
+%       fixed_str: (char) The formatted single-line string with newlines.
 function fixed_str = format_text_string(original_str)
 if iscell(original_str)
     non_empty_cells = original_str(~cellfun('isempty',original_str));
@@ -1881,6 +2075,18 @@ end
 end
 
 % --- Helper Function: Expand Axis Limits ---
+
+%EXPAND_AXIS_LIMS Adds padding to the limits of an axis.
+%   Expands the limits of a specified axis (X, Y, or Z) by a given
+%   factor to create a small amount of padding. This prevents data
+%   points from plotting directly on the figure borders. It correctly
+%   handles both linear and logarithmic scales.
+%
+%   INPUTS:
+%       ax: (handle) The axes object to modify.
+%       limit_prop_name: (char) The limit property to expand ('XLim', 'YLim', 'ZLim').
+%       factor: (numeric) The padding factor (e.g., 0.03 for 3%).
+%       params: (struct) The main parameters struct (for logging).
 function expand_axis_lims(ax,limit_prop_name,factor, params)
 try
     current_lim = get(ax,limit_prop_name);
@@ -1931,12 +2137,36 @@ end
 end
 
 % --- Helper Function: Check for Geographic Axes ---
+
+%ISGEOAXES Checks if an axes handle is for a geographic axes.
+%   Provides a compatibility check to determine if a given handle is a
+%   geographic axes, which may have different properties or behaviors
+%   than a standard Cartesian axes.
+%
+%   INPUTS:
+%       ax: (handle) The axes handle to check.
+%
+%   OUTPUTS:
+%       tf: (logical) True if 'ax' is a geographic axes.
 function tf = isgeoaxes(ax)
 tf = isa(ax,'matlab.graphics.axis.GeographicAxes') || ...
     (isprop(ax,'Type') && strcmp(ax.Type,'geoaxes')); % Older check
 end
 
 % --- Helper Function: Find Associated Colorbar ---
+
+%FIND_ASSOCIATED_COLORBAR Finds the colorbar associated with an axes.
+%   This helper function attempts to find the handle of a colorbar that
+%   is associated with the provided axes handle 'ax'. It uses both the
+%   modern 'Colorbar' property and older fallback methods to ensure
+%   compatibility across MATLAB versions.
+%
+%   INPUTS:
+%       ax: (handle) The axes object to find the colorbar for.
+%       params_for_log: (struct) The main parameters struct (for logging).
+%
+%   OUTPUTS:
+%       cb_handle: (handle) The handle of the associated colorbar, or [] if none.
 function cb_handle = find_associated_colorbar(ax, params_for_log)
 cb_handle = []; fig_handle = ancestor(ax, 'figure');
 if ~isvalid(fig_handle); return; end
@@ -1971,6 +2201,18 @@ end
 end
 
 % --- Helper Function: Advanced Interactive Legend Callback ---
+
+%TOGGLE_PLOT_VISIBILITY_ADV Callback for interactive legend functionality.
+%   This function is set as the 'ItemHitFcn' for the legend. It is
+%   triggered when a legend item is clicked. It toggles the visibility
+%   of the corresponding plot object and fades the legend item text/icon.
+%   It also supports isolating a single plot via Ctrl/Cmd-click.
+%
+%   INPUTS:
+%       legend_handle: (handle) The legend object.
+%       event_data: (eventdata) Contains the 'Peer' property, which is the
+%                   handle of the plot object associated with the clicked item.
+%       params: (struct) The main parameters struct (for logging).
 function toggle_plot_visibility_adv(legend_handle,event_data,params)
 try
     clicked_plot_object = event_data.Peer;
@@ -2080,6 +2322,16 @@ end
 end
 
 % --- Helper Function: Update Legend Item Appearance (Fade/Unfade) ---
+
+%UPDATE_LEGEND_ITEM_APPEARANCE Fades/unfades legend items based on plot visibility.
+%   This function iterates through the items in a legend and updates
+%   their appearance (e.g., text color, icon alpha) to visually
+%   indicate whether the corresponding plot object is currently visible
+%   or hidden.
+%
+%   INPUTS:
+%       legend_handle: (handle) The legend object to update.
+%       params: (struct) The main parameters struct.
 function update_legend_item_appearance(legend_handle,params)
 try
     if ~isprop(legend_handle,'PlotChildren') || isempty(legend_handle.PlotChildren) || ...
@@ -2173,6 +2425,17 @@ end
 end
 
 % --- Helper Function: Safely Set Graphics Property ---
+
+%SAFE_SET A wrapper for the 'set' function to prevent common errors.
+%   This helper function provides a safe way to set graphics object
+%   properties. It checks if the handle is valid and if the property
+%   exists before attempting to set it. It also only performs the 'set'
+%   operation if the new value is different from the current value.
+%
+%   INPUTS:
+%       params_for_log: (struct) The main parameters struct (for logging).
+%       handle_in: (handle) The graphics handle to modify.
+%       varargin: (cell) Name-value pairs of properties to set.
 function safe_set(params_for_log, handle_in, varargin)
 try
     if ~isvalid(handle_in); return; end % Early exit if handle is invalid
@@ -2206,6 +2469,16 @@ end
 end
 
 % --- Helper Function: Safely Hold Axes ---
+
+%SAFE_HOLD A wrapper for 'hold on'/'hold off' to prevent errors.
+%   This helper function provides a safe way to set the hold state of
+%   an axes by modifying its 'NextPlot' property. It checks if the
+%   handle is valid and if the property exists before acting.
+%
+%   INPUTS:
+%       params_for_log: (struct) The main parameters struct (for logging).
+%       ax_handle: (handle) The axes handle to modify.
+%       state: (char) The desired state: 'on' or 'off'.
 function safe_hold(params_for_log, ax_handle, state)
 try
     if isvalid(ax_handle) && isprop(ax_handle, 'NextPlot')
@@ -2242,6 +2515,17 @@ end
 end
 
 % --- Helper Function: Apply Stats Overlay ---
+
+%APPLY_STATS_OVERLAY Calculates and displays statistics on an axes.
+%   This function calculates basic statistics (e.g., mean, std, N) for
+%   a target plot object within the given axes. It then creates a text
+%   box on the axes to display these statistics, formatted according to
+%   the settings in the 'params.stats_overlay' struct.
+%
+%   INPUTS:
+%       ax: (handle) The axes object to add the overlay to.
+%       params: (struct) The main parameters struct.
+%       scale_factor: (numeric) The scaling factor for font size.
 function apply_stats_overlay(ax, params, scale_factor)
 so_params = params.stats_overlay;
 
