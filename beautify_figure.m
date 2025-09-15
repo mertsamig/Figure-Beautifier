@@ -1,28 +1,17 @@
-function beautify_figure(varargin)
+function beautify_figure(params_or_fig_handle)
 % BEAUTIFY_FIGURE Enhances the aesthetics of the current MATLAB figure.
 %
 % SYNTAX:
-%   beautify_figure('param1', value1, 'param2', value2, ...)
-%       Applies beautification settings to the current figure (gcf) using
-%       name-value pairs.
+%   beautify_figure()
+%       Applies default beautification settings to the current figure (gcf).
 %
-%   beautify_figure('figure_handle', fig_handle, 'param1', value1, ...)
-%       Applies beautification to the specified figure handle.
-%
-% DESCRIPTION:
-%   (The rest of the description is unchanged)
-%
-%   NOTE: The old calling syntaxes beautify_figure(fig_handle) and
-%   beautify_figure(params_struct) are deprecated in favor of name-value pairs.
-%
-% PARAMETERS (Name-Value Pairs):
-%   - 'figure_handle': (handle) A valid figure handle to target. Defaults to gcf.
-%   - 'style_preset': ('default') Predefined style set. Options:
-%     - 'default': Standard beautify_figure settings.
-%     - 'publication': Optimized for print publications (e.g., Arial font, black/white/gray, smaller markers).
-%     - 'presentation_dark': For dark background presentations (e.g., Calibri, larger fonts, vivid colors).
-%     - 'presentation_light': For light background presentations (e.g., Calibri, larger fonts, bright colors).
-%     - 'minimalist': Clean, minimal style with few distractions.
+%   beautify_figure(params_struct_or_fig_handle)
+%       If params_struct_or_fig_handle is a structure (params_struct):
+%           Applies beautification with custom settings defined in params_struct.
+%           If params_struct contains a valid 'figure_handle' field, that figure is targeted.
+%           Otherwise, the current figure (gcf) is targeted.
+%       If params_struct_or_fig_handle is a figure handle:
+%           Applies default beautification settings to the specified figure.
 %
 % DESCRIPTION:
 %   This function systematically modifies various properties of a MATLAB figure
@@ -162,143 +151,163 @@ default_params.stats_overlay.target_plot_handle_tag = ''; % Tag of specific plot
 default_params.exclude_object_tags = {}; % Cell array of strings (tags) to exclude
 
 % --- Parameter Parsing and Initialization ---
-p = inputParser;
+base_defaults = default_params; % Store original defaults
+params = base_defaults; % Initialize params
+user_provided_params_struct = struct();
+fig_handle_internal = []; % Internal variable for figure handle
 
-% Add figure_handle as an optional name-value pair
-addParameter(p, 'figure_handle', [], @(h) ishghandle(h) && isgraphics(h, 'figure') && isvalid(h));
-
-% Add all other parameters from the default_params struct
-default_param_names = fieldnames(default_params);
-for k_param = 1:length(default_param_names)
-    param_name = default_param_names{k_param};
-    default_value = default_params.(param_name);
-    addParameter(p, param_name, default_value);
-end
-
-% Parse the inputs
-parse(p, varargin{:});
-params = p.Results;
-
-% Handle the figure handle logic
-if isempty(params.figure_handle)
-    fig = gcf;
-else
-    fig = params.figure_handle;
-end
-
-% Check for valid figure handle one last time
-if isempty(fig) || ~isvalid(fig)
-    log_message(default_params, 'No valid figure available. Cannot proceed.', 0, 'Error');
+if nargin == 0
+    fig_handle_internal = gcf;
+    % user_provided_params_struct remains empty, so base_defaults will be used.
+elseif nargin == 1
+    arg1 = params_or_fig_handle; % Rename for clarity
+    if isstruct(arg1)
+        user_provided_params_struct = arg1;
+        % Check for figure_handle within the struct
+        if isfield(user_provided_params_struct, 'figure_handle')
+            fh_from_struct = user_provided_params_struct.figure_handle;
+            if ishghandle(fh_from_struct) && isgraphics(fh_from_struct, 'figure') && isvalid(fh_from_struct)
+                fig_handle_internal = fh_from_struct;
+                % Remove figure_handle from struct to avoid unknown parameter warning
+                user_provided_params_struct = rmfield(user_provided_params_struct, 'figure_handle');
+                log_message(base_defaults, 'Using figure handle provided within params_struct.', 2, 'Info');
+            else
+                % Log warning if figure_handle is present but invalid
+                if isfield(user_provided_params_struct, 'figure_handle') % Only log if it was actually there
+                    log_message(base_defaults, 'Invalid or non-figure handle provided in params_struct.figure_handle. Defaulting to gcf.', 1, 'Warning');
+                end
+                fig_handle_internal = gcf; % Default to gcf if handle in struct is invalid
+            end
+        else
+            % No figure_handle in struct, default to gcf
+            fig_handle_internal = gcf;
+        end
+    elseif ishghandle(arg1) && isgraphics(arg1, 'figure') && isvalid(arg1) % Check if it's a valid figure handle
+        fig_handle_internal = arg1;
+        % user_provided_params_struct remains empty, so base_defaults will be used for this figure.
+    else
+        log_message(base_defaults, 'Invalid argument. Expected a parameter struct or a valid figure handle.', 0, 'Error');
+        return;
+    end
+else % nargin > 1
+    log_message(base_defaults, 'Too many input arguments. Expected 0 or 1 argument (params_struct or figure_handle).', 0, 'Error');
     return;
 end
 
-% The old logic for merging user_provided_params_struct is no longer needed,
-% as inputParser handles the merging of defaults and user-provided values.
-% The 'params' struct is now the definitive set of parameters.
+% Validate fig_handle_internal and assign to 'fig'
+if isempty(fig_handle_internal)
+    % This case should ideally be caught by gcf errors if no figures exist,
+    % or by the validation of a provided handle. Adding a fallback check.
+    log_message(base_defaults, 'No figure found or specified. Attempting gcf one last time or erroring.', 1, 'Warning');
+    fig_handle_internal = gcf; % Try gcf again
+    if isempty(fig_handle_internal)
+        log_message(base_defaults, 'No valid figure available (gcf is empty). Cannot proceed.', 0, 'Error'); return;
+    end
+end
+if ~isvalid(fig_handle_internal) % Check validity one last time
+    log_message(base_defaults, 'The determined figure handle is invalid. Cannot proceed.', 0, 'Error'); return;
+end
+fig = fig_handle_internal; % Use 'fig' consistently hereafter
 
-% For compatibility with later code that checks for user-provided-only
-% parameters (like style_preset), we reconstruct a struct containing only
-% the parameters the user actually passed in.
-all_param_names = fieldnames(p.Results);
-defaulted_param_names = p.UsingDefaults;
-user_provided_param_names = setdiff(all_param_names, defaulted_param_names);
-user_provided_params_struct = struct();
-for k_user_param = 1:length(user_provided_param_names)
-    param_name = user_provided_param_names{k_user_param};
-    if isfield(p.Results, param_name)
-        user_provided_params_struct.(param_name) = p.Results.(param_name);
+% Determine active style preset
+active_preset_name = base_defaults.style_preset; % Default
+if isfield(user_provided_params_struct, 'style_preset') && ~isempty(user_provided_params_struct.style_preset)
+    if ischar(user_provided_params_struct.style_preset) || isstring(user_provided_params_struct.style_preset)
+        active_preset_name = lower(char(user_provided_params_struct.style_preset));
+    else
+        log_message(base_defaults, 'Invalid data type for style_preset. Using default preset.', 1, 'Warning');
     end
 end
 
-% The inputParser has already merged defaults and user-provided values.
-% Now, we handle the style preset, which acts as a conditional set of
-% different defaults. The logic is: if a parameter is part of a preset,
-% apply the preset's value, but ONLY if the user did not provide that parameter.
-
-active_preset_name = params.style_preset;
+% Apply style preset (modifies 'params' struct, which was initialized from base_defaults)
 known_presets = {'default', 'publication', 'presentation_dark', 'presentation_light', 'minimalist'};
 if ~any(strcmp(active_preset_name, known_presets))
-    log_message(params, sprintf('Unknown style preset: "%s". Applying default style parameters.', active_preset_name), 1, 'Warning');
-    active_preset_name = 'default';
+    log_message(base_defaults, sprintf('Unknown style preset: "%s". Applying default style parameters before user overrides.', active_preset_name), 1, 'Warning');
+    active_preset_name = 'default'; % Fallback to default if unknown
 end
 
-% Helper to apply a value from a preset only if the user did not specify it.
-    function apply_preset_value(param_name, value)
-        if ismember(param_name, p.UsingDefaults)
-            params.(param_name) = value;
-        end
-    end
-
-log_message(params, sprintf('Applying style preset: "%s".', active_preset_name), 2, 'Info');
+log_message(params, sprintf('Applying style preset: "%s".', active_preset_name), 2, 'Info'); % Use params for log_level
 switch active_preset_name
     case 'publication'
-        apply_preset_value('font_name', 'Arial');
-        apply_preset_value('base_font_size', 10);
-        apply_preset_value('global_font_scale_factor', 1.0);
-        apply_preset_value('plot_line_width', 1.0);
-        apply_preset_value('axis_to_plot_linewidth_ratio', 0.75);
-        apply_preset_value('marker_size', 5);
-        apply_preset_value('color_palette', 'lines');
-        apply_preset_value('grid_density', 'major_only');
-        apply_preset_value('axis_color', [0 0 0]);
-        apply_preset_value('figure_background_color', [1 1 1]);
-        apply_preset_value('text_color', [0 0 0]);
-        apply_preset_value('grid_color', [0.5 0.5 0.5]);
-        apply_preset_value('axes_layer', 'bottom');
-        apply_preset_value('legend_location', 'best');
+        params.font_name = 'Arial';
+        params.base_font_size = 10;
+        params.global_font_scale_factor = 1.0;
+        params.plot_line_width = 1.0;
+        params.axis_to_plot_linewidth_ratio = 0.75;
+        params.marker_size = 5;
+        params.color_palette = 'lines'; % Often good for B&W, consider 'gray' or custom grayscale too
+        params.grid_density = 'major_only';
+        params.axis_color = [0 0 0]; % Black
+        params.figure_background_color = [1 1 1]; % White
+        params.text_color = [0 0 0]; % Black
+        params.grid_color = [0.5 0.5 0.5]; % Gray
+        params.axes_layer = 'bottom';
+        params.legend_location = 'best';
 
     case 'presentation_light'
-        apply_preset_value('font_name', 'Calibri');
-        apply_preset_value('base_font_size', 12);
-        apply_preset_value('global_font_scale_factor', 1.1);
-        apply_preset_value('plot_line_width', 1.8);
-        apply_preset_value('marker_size', 6);
-        apply_preset_value('color_palette', 'turbo');
-        apply_preset_value('grid_density', 'normal');
-        apply_preset_value('figure_background_color', [0.96 0.96 0.98]);
-        apply_preset_value('axis_color', [0.15 0.15 0.15]);
-        apply_preset_value('text_color', [0.1 0.1 0.1]);
-        apply_preset_value('grid_color', [0.25 0.25 0.25]);
-        apply_preset_value('grid_alpha', 0.15);
-        apply_preset_value('minor_grid_alpha', 0.07);
+        params.font_name = 'Calibri';
+        params.base_font_size = 12;
+        params.global_font_scale_factor = 1.1;
+        params.plot_line_width = 1.8;
+        params.marker_size = 6;
+        params.color_palette = 'turbo'; % Changed from cbrewer_qual_Set1
+        params.grid_density = 'normal';
+        params.figure_background_color = [0.96 0.96 0.98];
+        params.axis_color = [0.15 0.15 0.15];
+        params.text_color = [0.1 0.1 0.1];
+        params.grid_color = [0.25 0.25 0.25];
+        params.grid_alpha = 0.15;
+        params.minor_grid_alpha = 0.07;
 
     case 'presentation_dark'
-        apply_preset_value('font_name', 'Calibri');
-        apply_preset_value('base_font_size', 14);
-        apply_preset_value('global_font_scale_factor', 1.15);
-        apply_preset_value('plot_line_width', 2.0);
-        apply_preset_value('marker_size', 7);
-        apply_preset_value('color_palette', 'viridis');
-        apply_preset_value('figure_background_color', [0.1 0.1 0.15]);
-        apply_preset_value('axis_color', [0.9 0.9 0.9]);
-        apply_preset_value('text_color', [0.9 0.9 0.9]);
-        apply_preset_value('grid_color', [0.7 0.7 0.7]);
-        apply_preset_value('grid_alpha', 0.2);
-        apply_preset_value('axes_layer', 'top');
-        apply_preset_value('grid_density', 'normal');
+        params.font_name = 'Calibri';
+        params.base_font_size = 14;
+        params.global_font_scale_factor = 1.15;
+        params.plot_line_width = 2.0;
+        params.marker_size = 7;
+        params.color_palette = 'viridis';
+        params.figure_background_color = [0.1 0.1 0.15];
+        params.axis_color = [0.9 0.9 0.9];
+        params.text_color = [0.9 0.9 0.9];
+        params.grid_color = [0.7 0.7 0.7];
+        params.grid_alpha = 0.2;
+        params.axes_layer = 'top';
+        params.grid_density = 'normal'; % Ensure grid is visible
 
     case 'minimalist'
         try % Helvetica Neue might not be available
-            apply_preset_value('font_name', 'Helvetica Neue');
+            params.font_name = 'Helvetica Neue';
         catch
-            apply_preset_value('font_name', 'Helvetica'); % Fallback
+            params.font_name = 'Helvetica'; % Fallback
         end
-        apply_preset_value('base_font_size', 10);
-        apply_preset_value('plot_line_width', 1.2);
-        apply_preset_value('marker_size', 5);
-        apply_preset_value('color_palette', [[0.2 0.2 0.2]; [0.5 0.5 0.5]; [0.7 0.7 0.7]]);
-        apply_preset_value('grid_density', 'none');
-        apply_preset_value('axis_box_style', 'left-bottom');
-        apply_preset_value('smart_legend_display', true);
-        apply_preset_value('legend_location', 'northeastoutside');
-        apply_preset_value('figure_background_color', [1 1 1]);
-        apply_preset_value('axis_color', [0.1 0.1 0.1]);
-        apply_preset_value('text_color', [0.1 0.1 0.1]);
-        apply_preset_value('title_scale', 1.0);
-        apply_preset_value('label_scale', 1.0);
+        params.base_font_size = 10;
+        params.plot_line_width = 1.2;
+        params.marker_size = 5;
+        params.color_palette = [[0.2 0.2 0.2]; [0.5 0.5 0.5]; [0.7 0.7 0.7]]; % Grayscale
+        params.grid_density = 'none';
+        params.axis_box_style = 'left-bottom';
+        params.smart_legend_display = true;
+        params.legend_location = 'northeastoutside';
+        params.figure_background_color = [1 1 1];
+        params.axis_color = [0.1 0.1 0.1];
+        params.text_color = [0.1 0.1 0.1];
+        params.title_scale = 1.0;
+        params.label_scale = 1.0;
 
     case 'default'
-        % No changes needed.
+        % No changes needed, params is already from base_defaults.
+end
+
+% Merge user parameters with defaults (now 'params' includes preset values)
+% This handles top-level fields. Sub-structs are handled more carefully later if needed.
+param_names = fieldnames(user_provided_params_struct);
+for i = 1:length(param_names)
+    field_name = param_names{i};
+    if isfield(params, field_name)
+        params.(field_name) = user_provided_params_struct.(field_name);
+    else
+        log_message(params, sprintf('Unknown parameter: "%s". This parameter will be ignored.', field_name), 1, 'Warning');
+    end
 end
 
 % --- START Critical Parameter Validation (Top-level) ---
@@ -523,8 +532,8 @@ log_message(params, 'Performing sub-struct validation (type checks, merging, fie
         if ~iscell(current_value)
             valid = false;
         else
-            for k_cell = 1:length(current_value)
-                if ~ischar(current_value{k_cell}) || (~isvector(current_value{k_cell}) && ~isempty(current_value{k_cell})) % Allow empty char '', but if not empty, must be row vector
+            for i = 1:length(current_value)
+                if ~ischar(current_value{i}) || (~isvector(current_value{i}) && ~isempty(current_value{i})) % Allow empty char '', but if not empty, must be row vector
                     valid = false;
                     break;
                 end
@@ -541,8 +550,8 @@ log_message(params, 'Performing sub-struct validation (type checks, merging, fie
 
 % Validate top-level structure types first
 sub_struct_names = {'export_settings', 'stats_overlay'};
-for k_ss = 1:length(sub_struct_names)
-    ss_name = sub_struct_names{k_ss};
+for i = 1:length(sub_struct_names)
+    ss_name = sub_struct_names{i};
     if isfield(params, ss_name) % It should be, from base_defaults
         if ~isstruct(params.(ss_name)) % If user overwrote with non-struct, or preset was bad
             val_str = beautify_fig_format_param_value_for_log(params.(ss_name));
@@ -1356,9 +1365,9 @@ num_line_styles = length(params.line_style_order);
 plottable_children_for_legend = [];
 
 temp_legend_candidates = [];
-for k_child = 1:length(all_children_filtered)
-    if is_legend_candidate_check(all_children_filtered(k_child))
-        temp_legend_candidates = [temp_legend_candidates; all_children_filtered(k_child)];
+for i = 1:length(all_children_filtered)
+    if is_legend_candidate_check(all_children_filtered(i))
+        temp_legend_candidates = [temp_legend_candidates; all_children_filtered(i)];
     end
 end
 num_total_legend_candidates = length(temp_legend_candidates);
@@ -1385,8 +1394,8 @@ else
     log_message(params, 'Using default children order for reversed legend sequence (reverse plot creation order).', 2, 'Debug');
 end
 
-for k_child_proc = 1:length(processed_children_order)
-    child = processed_children_order(k_child_proc);
+for i = 1:length(processed_children_order)
+    child = processed_children_order(i);
     try
         is_leg_cand_current = is_legend_candidate_check(child);
         current_color_to_apply = [];
@@ -2096,9 +2105,9 @@ try
     default_text_color_struct = params.text_color;
     faded_text_color_struct = default_text_color_struct*0.4 + 0.5; % Make it grayish
 
-    for k_entry = 1:num_to_process
-        entry = legend_entries(k_entry);
-        corresponding_plot = plot_objects(k_entry);
+    for i=1:num_to_process
+        entry = legend_entries(i);
+        corresponding_plot = plot_objects(i);
         if ~isvalid(entry) || ~isvalid(corresponding_plot); continue; end
 
         is_plot_visible = strcmpi(get(corresponding_plot,'Visible'),'on');
@@ -2178,9 +2187,9 @@ try
     if ~isvalid(handle_in); return; end % Early exit if handle is invalid
 
     props_to_set = struct();
-    for k_arg = 1:2:length(varargin)
-        prop_name = varargin{k_arg};
-        new_val = varargin{k_arg+1};
+    for i = 1:2:length(varargin)
+        prop_name = varargin{i};
+        new_val = varargin{i+1};
         if isprop(handle_in, prop_name)
             current_val = get(handle_in, prop_name);
             if ~isequal(current_val, new_val) % Only set if different
@@ -2249,8 +2258,8 @@ target_plot_obj = [];
 ax_children = get(ax, 'Children');
 
 if ~isempty(so_params.target_plot_handle_tag)
-    for k_ax_child = 1:length(ax_children)
-        child = ax_children(k_ax_child);
+    for i = 1:length(ax_children)
+        child = ax_children(i);
         % Check direct child or children of a group (e.g., hggroup for boxplot)
         if isprop(child,'Tag') && strcmp(get(child,'Tag'), so_params.target_plot_handle_tag) && ...
                 (isa(child, 'matlab.graphics.chart.primitive.Line') || isa(child, 'matlab.graphics.chart.primitive.Scatter'))
