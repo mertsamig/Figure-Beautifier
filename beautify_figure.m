@@ -348,21 +348,23 @@ log_message(params, 'Performing critical parameter validation...', 2, 'Info');
     end
 
 
-% Numeric scalar parameters to validate
-numeric_scalar_params_to_validate = {
-    'base_font_size', 'global_font_scale_factor', 'plot_line_width', ...
-    'marker_size', 'log_level'
-    };
-for k_nsp = 1:length(numeric_scalar_params_to_validate)
-    param_name = numeric_scalar_params_to_validate{k_nsp};
-    current_val = params.(param_name);
-    if ~isnumeric(current_val) || ~isscalar(current_val) || ~isreal(current_val) || isnan(current_val)
-        val_str = format_param_value_for_log(current_val);
-        log_message(params, sprintf('Invalid value for %s: %s. Must be a real numeric scalar. Resetting to default (%s).', ...
-            param_name, val_str, format_param_value_for_log(base_defaults.(param_name))), 1, 'Warning');
-        params.(param_name) = base_defaults.(param_name);
+% Helper function to validate numeric scalar parameters
+    function validate_numeric_scalar(param_name)
+        current_val = params.(param_name);
+        if ~isnumeric(current_val) || ~isscalar(current_val) || ~isreal(current_val) || isnan(current_val)
+            val_str = format_param_value_for_log(current_val);
+            log_message(params, sprintf('Invalid value for %s: %s. Must be a real numeric scalar. Resetting to default (%s).', ...
+                param_name, val_str, format_param_value_for_log(base_defaults.(param_name))), 1, 'Warning');
+            params.(param_name) = base_defaults.(param_name);
+        end
     end
-end
+
+% Numeric scalar parameters to validate
+validate_numeric_scalar('base_font_size');
+validate_numeric_scalar('global_font_scale_factor');
+validate_numeric_scalar('plot_line_width');
+validate_numeric_scalar('marker_size');
+validate_numeric_scalar('log_level');
 
 % font_name validation
 current_font_name_val = params.font_name;
@@ -374,75 +376,63 @@ if ~(ischar(current_font_name_val) && (isvector(current_font_name_val) || isempt
     params.font_name = base_defaults.font_name;
 end
 
+% Helper function to validate enumerated string parameters
+    function validate_enum_parameter(param_name, valid_options)
+        current_val = params.(param_name);
+        reset_to_default = false;
+
+        if ~ischar(current_val) || ~isvector(current_val) || isempty(current_val)
+            val_str = format_param_value_for_log(current_val);
+            log_message(params, sprintf('Invalid type for %s: %s. Must be a character string. Resetting to default (%s).', ...
+                param_name, val_str, format_param_value_for_log(base_defaults.(param_name))), 1, 'Warning');
+            reset_to_default = true;
+        else
+            match_idx = find(strcmpi(current_val, valid_options), 1);
+            if isempty(match_idx)
+                val_str = format_param_value_for_log(current_val);
+                log_message(params, sprintf('Invalid value for %s: %s. Allowed: %s. Resetting to default (%s).', ...
+                    param_name, val_str, strjoin(valid_options, ', '), format_param_value_for_log(base_defaults.(param_name))), 1, 'Warning');
+                reset_to_default = true;
+            else
+                params.(param_name) = valid_options{match_idx}; % Ensure canonical form
+            end
+        end
+
+        if reset_to_default
+            params.(param_name) = base_defaults.(param_name);
+        end
+    end
+
 % String enumerated parameters to validate
-% grid_density
-current_grid_density_val = params.grid_density;
-valid_grid_densities = {'normal', 'major_only', 'none'};
-if ~ischar(current_grid_density_val) || ~isvector(current_grid_density_val) || isempty(current_grid_density_val)
-    val_str = format_param_value_for_log(current_grid_density_val);
-    log_message(params, sprintf('Invalid type for grid_density: %s. Must be a character string. Resetting to default (%s).', ...
-        val_str, format_param_value_for_log(base_defaults.grid_density)), 1, 'Warning');
-    params.grid_density = base_defaults.grid_density;
-else
-    match_idx_grid = find(strcmpi(current_grid_density_val, valid_grid_densities), 1);
-    if isempty(match_idx_grid)
-        val_str = format_param_value_for_log(current_grid_density_val);
-        log_message(params, sprintf('Invalid value for grid_density: %s. Allowed: %s. Resetting to default (%s).', ...
-            val_str, strjoin(valid_grid_densities, ', '), format_param_value_for_log(base_defaults.grid_density)), 1, 'Warning');
-        params.grid_density = base_defaults.grid_density;
-    else
-        params.grid_density = valid_grid_densities{match_idx_grid}; % Ensure canonical form
-    end
-end
+validate_enum_parameter('grid_density', {'normal', 'major_only', 'none'});
+validate_enum_parameter('axis_box_style', {'on', 'off', 'left-bottom'});
+validate_enum_parameter('axes_layer', {'top', 'bottom'});
 
-% axis_box_style
-current_axis_box_style_val = params.axis_box_style;
-valid_axis_box_styles = {'on', 'off', 'left-bottom'};
-if ~ischar(current_axis_box_style_val) || ~isvector(current_axis_box_style_val) || isempty(current_axis_box_style_val)
-    val_str = format_param_value_for_log(current_axis_box_style_val);
-    log_message(params, sprintf('Invalid type for axis_box_style: %s. Must be a character string. Resetting to default (%s).', ...
-        val_str, format_param_value_for_log(base_defaults.axis_box_style)), 1, 'Warning');
-    params.axis_box_style = base_defaults.axis_box_style;
-else
-    match_idx_box = find(strcmpi(current_axis_box_style_val, valid_axis_box_styles), 1);
-    if isempty(match_idx_box)
-        val_str = format_param_value_for_log(current_axis_box_style_val);
-        log_message(params, sprintf('Invalid value for axis_box_style: %s. Allowed: %s. Resetting to default (%s).', ...
-            val_str, strjoin(valid_axis_box_styles, ', '), format_param_value_for_log(base_defaults.axis_box_style)), 1, 'Warning');
-        params.axis_box_style = base_defaults.axis_box_style;
-    else
-        params.axis_box_style = valid_axis_box_styles{match_idx_box}; % Ensure canonical form
-    end
-end
+% Helper function to validate a top-level cell array of strings
+    function validate_top_level_cell_array_of_strings(param_name)
+        current_val = params.(param_name);
+        is_valid = true;
+        if ~iscell(current_val)
+            is_valid = false;
+        else
+            for k_val = 1:length(current_val)
+                if ~ischar(current_val{k_val}) || (~isvector(current_val{k_val}) && ~isempty(current_val{k_val}))
+                    is_valid = false;
+                    break;
+                end
+            end
+        end
 
-% axes_layer validation
-current_axes_layer_val = params.axes_layer;
-valid_axes_layers = {'top', 'bottom'};
-if ~ischar(current_axes_layer_val) || ~isvector(current_axes_layer_val) || isempty(current_axes_layer_val)
-    val_str = format_param_value_for_log(current_axes_layer_val);
-    log_message(params, sprintf('Invalid type for axes_layer: %s. Must be a character string. Resetting to default (%s).', ...
-        val_str, format_param_value_for_log(base_defaults.axes_layer)), 1, 'Warning');
-    params.axes_layer = base_defaults.axes_layer;
-else
-    match_idx_layer = find(strcmpi(current_axes_layer_val, valid_axes_layers), 1);
-    if isempty(match_idx_layer)
-        val_str = format_param_value_for_log(current_axes_layer_val);
-        log_message(params, sprintf('Invalid value for axes_layer: %s. Allowed: %s. Resetting to default (%s).', ...
-            val_str, strjoin(valid_axes_layers, ', '), format_param_value_for_log(base_defaults.axes_layer)), 1, 'Warning');
-        params.axes_layer = base_defaults.axes_layer;
-    else
-        params.axes_layer = valid_axes_layers{match_idx_layer}; % Ensure canonical form
+        if ~is_valid
+            val_str = format_param_value_for_log(current_val);
+            log_message(params, sprintf('Invalid value for %s: %s. Must be a cell array of character row vectors. Resetting to default (%s).', ...
+                param_name, val_str, format_param_value_for_log(base_defaults.(param_name))), 1, 'Warning');
+            params.(param_name) = base_defaults.(param_name);
+        end
     end
-end
 
 % exclude_object_tags validation
-current_exclude_tags_val = params.exclude_object_tags;
-if ~iscell(current_exclude_tags_val) || (~isempty(current_exclude_tags_val) && ~iscellstr(current_exclude_tags_val)) %#ok<ISCLSTR>
-    val_str = format_param_value_for_log(current_exclude_tags_val);
-    log_message(params, sprintf('Invalid type for exclude_object_tags: %s. Must be a cell array of strings. Resetting to default (%s).', ...
-        val_str, format_param_value_for_log(base_defaults.exclude_object_tags)), 1, 'Warning');
-    params.exclude_object_tags = base_defaults.exclude_object_tags;
-end
+validate_top_level_cell_array_of_strings('exclude_object_tags');
 
 log_message(params, 'Critical parameter validation complete.', 2, 'Info');
 % --- END Critical Parameter Validation ---
@@ -526,8 +516,8 @@ log_message(params, 'Performing sub-struct validation (type checks, merging, fie
         if ~iscell(current_value)
             valid = false;
         else
-            for i = 1:length(current_value)
-                if ~ischar(current_value{i}) || (~isvector(current_value{i}) && ~isempty(current_value{i})) % Allow empty char '', but if not empty, must be row vector
+            for k_val = 1:length(current_value)
+                if ~ischar(current_value{k_val}) || (~isvector(current_value{k_val}) && ~isempty(current_value{k_val})) % Allow empty char '', but if not empty, must be row vector
                     valid = false;
                     break;
                 end
@@ -544,8 +534,8 @@ log_message(params, 'Performing sub-struct validation (type checks, merging, fie
 
 % Validate top-level structure types first
 sub_struct_names = {'export_settings', 'stats_overlay'};
-for i = 1:length(sub_struct_names)
-    ss_name = sub_struct_names{i};
+for k_ss = 1:length(sub_struct_names)
+    ss_name = sub_struct_names{k_ss};
     if isfield(params, ss_name) % It should be, from base_defaults
         if ~isstruct(params.(ss_name)) % If user overwrote with non-struct, or preset was bad
             val_str = format_param_value_for_log(params.(ss_name));
@@ -919,13 +909,12 @@ else % No parent_layout, might be a figure with multiple non-tiled subplots
         if ~params.apply_to_colorbars; axes_to_ignore_for_scaling{end+1} = 'Colorbar'; end
 
         all_axes_in_fig = get_axes_from_parent(fig_parent, params, axes_to_ignore_for_scaling);
-        % Check if these axes are direct children or in non-tiled subplots (not in a TiledLayout)
-        axes_not_in_tiled_layout = [];
+        % Use logical indexing to find axes not in a TiledLayout, which avoids growing arrays.
+        is_in_tiled_layout_mask = false(1, numel(all_axes_in_fig));
         for k_ax = 1:numel(all_axes_in_fig)
-            if isempty(ancestor(all_axes_in_fig(k_ax), 'matlab.graphics.layout.TiledChartLayout'))
-                axes_not_in_tiled_layout = [axes_not_in_tiled_layout; all_axes_in_fig(k_ax)]; %#ok<AGROW>
-            end
+            is_in_tiled_layout_mask(k_ax) = ~isempty(ancestor(all_axes_in_fig(k_ax), 'matlab.graphics.layout.TiledChartLayout'));
         end
+        axes_not_in_tiled_layout = all_axes_in_fig(~is_in_tiled_layout_mask);
         num_to_scale_by = max(1, numel(axes_not_in_tiled_layout));
     end
 end
@@ -957,9 +946,11 @@ if ischar(palette_source) || isstring(palette_source)
             if exist('viridis','file') == 2; active_palette = viridis(10);
             else; log_message(params,'"viridis" colormap function not found. Using "lines".',1,'Warning'); active_palette = lines(7); end
         case 'turbo'
-            active_palette = turbo_map_10;
+            if exist('turbo','file') == 2; active_palette = turbo(10);
+            else; active_palette = turbo_map_10; end
         case 'cividis'
-            active_palette = cividis_map_10;
+            if exist('cividis','file') == 2; active_palette = cividis(10);
+            else; active_palette = cividis_map_10; end
         case 'default_matlab'
             original_visibility = ''; fig_valid_and_has_prop = false;
             if isvalid(fig_handle) && isprop(fig_handle, 'HandleVisibility')
@@ -1022,7 +1013,19 @@ if params.beautify_sgtitle
 end
 
 tiled_layouts_in_container = findobj(container_handle, 'Type', 'tiledlayout'); % Find all tiled layouts in container
-processed_axes_in_tiled_layouts = [];
+
+% --- Pre-allocate array for handles of axes processed in tiled layouts ---
+num_axes_in_tiled_layouts = 0;
+if ~isempty(tiled_layouts_in_container)
+    for tl_idx = 1:length(tiled_layouts_in_container)
+        current_tiled_layout = tiled_layouts_in_container(tl_idx);
+        if ~isvalid(current_tiled_layout); continue; end
+        axes_in_this_layout = get_axes_from_parent(current_tiled_layout, params, axes_to_ignore_combined);
+        num_axes_in_tiled_layouts = num_axes_in_tiled_layouts + numel(axes_in_this_layout);
+    end
+end
+processed_axes_in_tiled_layouts = gobjects(1, num_axes_in_tiled_layouts);
+processed_idx = 0;
 
 if ~isempty(tiled_layouts_in_container)
     for tl_idx = 1:length(tiled_layouts_in_container)
@@ -1041,7 +1044,8 @@ if ~isempty(tiled_layouts_in_container)
             ax_to_beautify = axes_in_this_layout(ax_loop_idx);
             if isvalid(ax_to_beautify)
                 beautify_single_axes(ax_to_beautify, params, scale_factor, ax_loop_idx);
-                processed_axes_in_tiled_layouts = [processed_axes_in_tiled_layouts; ax_to_beautify]; %#ok<AGROW>
+                processed_idx = processed_idx + 1;
+                processed_axes_in_tiled_layouts(processed_idx) = ax_to_beautify;
             end
         end
     end
@@ -1049,18 +1053,17 @@ end
 
 % Process axes directly in container that are NOT in any TiledLayout
 all_axes_in_container_direct = get_axes_from_parent(container_handle, params, axes_to_ignore_combined);
-axes_not_in_any_tiled_layout = [];
+% Use a logical mask to identify axes not in any TiledLayout, avoiding array growth.
+is_not_in_any_tiled_layout_mask = true(size(all_axes_in_container_direct));
 for k_ax_direct = 1:numel(all_axes_in_container_direct)
     ax_candidate = all_axes_in_container_direct(k_ax_direct);
     % Check if this axis was already processed because it was in a TiledLayout
     is_already_processed = any(processed_axes_in_tiled_layouts == ax_candidate);
-    if ~is_already_processed
-        % Also ensure it's not part of ANY tiled layout, even one not directly under this container
-        if isempty(ancestor(ax_candidate, 'matlab.graphics.layout.TiledChartLayout'))
-            axes_not_in_any_tiled_layout = [axes_not_in_any_tiled_layout; ax_candidate]; %#ok<AGROW>
-        end
+    if is_already_processed || ~isempty(ancestor(ax_candidate, 'matlab.graphics.layout.TiledChartLayout'))
+        is_not_in_any_tiled_layout_mask(k_ax_direct) = false;
     end
 end
+axes_not_in_any_tiled_layout = all_axes_in_container_direct(is_not_in_any_tiled_layout_mask);
 
 if isempty(axes_not_in_any_tiled_layout)
     if isempty(tiled_layouts_in_container) % No tiled layouts AND no other axes
@@ -1127,8 +1130,8 @@ catch me_findobj
     return;
 end
 
-for k=1:length(potential_children)
-    child = potential_children(k);
+for k_child=1:length(potential_children)
+    child = potential_children(k_child);
     if child == parent_handle || ~isvalid(child); continue; end % Skip self or invalid
 
     is_valid_axis_type = (isa(child, 'matlab.graphics.axis.Axes') || ...
@@ -1454,12 +1457,9 @@ num_marker_styles = length(params.marker_styles);
 num_line_styles = length(params.line_style_order);
 plottable_children_for_legend = [];
 
-temp_legend_candidates = [];
-for i = 1:length(all_children_filtered)
-    if is_legend_candidate_check(all_children_filtered(i))
-        temp_legend_candidates = [temp_legend_candidates; all_children_filtered(i)];
-    end
-end
+% Use logical indexing to find legend candidates without growing an array.
+is_legend_candidate_mask = arrayfun(@is_legend_candidate_check, all_children_filtered);
+temp_legend_candidates = all_children_filtered(is_legend_candidate_mask);
 num_total_legend_candidates = length(temp_legend_candidates);
 
 activate_marker_cycle_now = false;
@@ -1484,8 +1484,12 @@ else
     log_message(params, 'Using default children order for reversed legend sequence (reverse plot creation order).', 2, 'Debug');
 end
 
-for i = 1:length(processed_children_order)
-    child = processed_children_order(i);
+% Pre-filter for legend candidates to avoid growing array in the loop.
+is_legend_candidate_mask_for_processed = arrayfun(@is_legend_candidate_check, processed_children_order);
+plottable_children_for_legend = processed_children_order(is_legend_candidate_mask_for_processed);
+
+for k_child = 1:length(processed_children_order)
+    child = processed_children_order(k_child);
     try
         % --- LOGIC FIX: Decouple style cycling from legend candidacy ---
         % First, determine if the object is a plottable type that should get a style.
@@ -1513,10 +1517,7 @@ for i = 1:length(processed_children_order)
             end
         end
 
-        % Second, independently check if it should be in the legend.
-        if is_legend_candidate_check(child)
-            plottable_children_for_legend = [plottable_children_for_legend; child];
-        end
+        % The plottable_children_for_legend array is now pre-calculated before the loop.
 
         props_to_set = {};
         % Package style properties for the helper functions
@@ -1673,31 +1674,20 @@ end
 % --- Helper Function: Beautify Legend ---
 function beautify_legend(ax, params, plottable_children_for_legend, font_size, axis_line_width_scaled)
 try
+    % Find existing legend for the axes
     existing_legend = [];
-    % Modern MATLAB (R2017a+) uses Legend property on Axes
     if isprop(ax, 'Legend') && isa(ax.Legend, 'matlab.graphics.illustration.Legend') && isvalid(ax.Legend)
         existing_legend = ax.Legend;
-    end
-
-    % Fallback for older MATLAB or cases where Legend property might not be populated
-    if isempty(existing_legend) && isfield(params, 'all_legends_in_fig') && ~isempty(params.all_legends_in_fig)
-        all_legends_in_fig = params.all_legends_in_fig; % Use the cached handles
+    elseif isfield(params, 'all_legends_in_fig') && ~isempty(params.all_legends_in_fig)
+        all_legends_in_fig = params.all_legends_in_fig;
         for k_leg = 1:numel(all_legends_in_fig)
             current_legend = all_legends_in_fig(k_leg);
             if ~isvalid(current_legend); continue; end
-
-            % Determine the axes associated with this legend
             associated_axes = [];
             try
-                if isprop(current_legend, 'Axes') % R2022a+
-                    associated_axes = current_legend.Axes;
-                elseif isprop(current_legend, 'Axle') && isprop(current_legend.Axle, 'Peer') % Older versions
-                    associated_axes = current_legend.Axle.Peer;
-                end
-            catch
-                % In very old versions, direct property access might fail.
-            end
-
+                if isprop(current_legend, 'Axes'); associated_axes = current_legend.Axes;
+                elseif isprop(current_legend, 'Axle') && isprop(current_legend.Axle, 'Peer'); associated_axes = current_legend.Axle.Peer; end
+            catch; end
             if isequal(associated_axes, ax)
                 existing_legend = current_legend;
                 break;
@@ -1705,74 +1695,47 @@ try
         end
     end
 
+    % Determine if the legend should be shown
     num_actual_legend_entries = numel(plottable_children_for_legend);
     should_show_legend = false;
-
-    if strcmpi(params.legend_location,'none')
-        if ~isempty(existing_legend) && isvalid(existing_legend); safe_set(params, existing_legend,'Visible','off');end
-    else
+    if ~strcmpi(params.legend_location, 'none')
         if params.smart_legend_display
-            if num_actual_legend_entries > 1
-                should_show_legend = true; % Will use existing or create if needed
-            elseif num_actual_legend_entries == 1 && params.legend_force_single_entry
-                should_show_legend = true; % Create new or use existing
-            else % 0 entries, or 1 entry not forced
-                if ~isempty(existing_legend) && isvalid(existing_legend); safe_set(params, existing_legend,'Visible','off'); end
+            if num_actual_legend_entries > 1 || (num_actual_legend_entries == 1 && params.legend_force_single_entry)
+                should_show_legend = true;
             end
-        else % Not smart display: create/show if items exist (respecting force_single_entry)
+        else % Not smart, show if any entries exist
             if num_actual_legend_entries > 0
-                if num_actual_legend_entries == 1 && ~params.legend_force_single_entry
-                    if ~isempty(existing_legend) && isvalid(existing_legend); safe_set(params, existing_legend,'Visible','off'); end
-                else
-                    should_show_legend = true;
-                end
-            else % 0 entries
-                if ~isempty(existing_legend) && isvalid(existing_legend); safe_set(params, existing_legend,'Visible','off'); end
+                should_show_legend = true;
             end
         end
     end
 
-    legend_handle_to_use = []; % Initialize legend_handle_to_use
-    if should_show_legend
-        % valid_plot_children_for_legend_creation is derived from plottable_children_for_legend,
-        % which already has the correct order from beautify_single_axes based on params.legend_reverse_order.
-        valid_plot_children_for_legend_creation = []; % Initialize
-        if ~isempty(plottable_children_for_legend) % Check if there are any candidates at all
-            valid_indices = arrayfun(@(h) isvalid(h) && is_legend_candidate_check(h), plottable_children_for_legend);
-            valid_plot_children_for_legend_creation = plottable_children_for_legend(valid_indices);
-        end
-
-        if isempty(valid_plot_children_for_legend_creation)
-            log_message(params, sprintf('  No valid plot children with display names found to create/recreate legend for Axes (Tag: %s). Legend will remain hidden/absent.', ax.Tag), 2, 'Info');
-            legend_handle_to_use = []; % Ensure it's empty, and effectively skips legend creation
-            if ~isempty(existing_legend) && isvalid(existing_legend) % Also hide any pre-existing legend
-                safe_set(params, existing_legend, 'Visible', 'off');
-            end
-        else
-            % If an old legend exists, delete it first to ensure the new order and set of items are applied.
-            if ~isempty(existing_legend) && isvalid(existing_legend)
-                try
-                    delete(existing_legend);
-                    log_message(params,sprintf('  Deleted existing legend to re-apply order/items for Axes (Tag: %s).',ax.Tag),2,'Debug');
-                catch me_delete_legend
-                    log_message(params,sprintf('  Could not delete existing legend for Axes (Tag: %s): %s. Order may not update correctly.',ax.Tag, me_delete_legend.message),1,'Warning');
-                end
-            end
-
-            % Create the legend with the (potentially re-ordered) valid plot children.
+    % Create, update, or hide the legend based on the decision
+    legend_handle_to_use = [];
+    if should_show_legend && ~isempty(plottable_children_for_legend)
+        % Delete existing legend to ensure proper refresh of items and order
+        if ~isempty(existing_legend) && isvalid(existing_legend)
             try
-                legend_handle_to_use = legend(ax, valid_plot_children_for_legend_creation);
-                log_message(params,sprintf('  Created/Recreated legend for Axes (Tag: %s) with specified order/items.',ax.Tag),2,'Info');
-            catch me_legend_create
-                log_message(params,sprintf('  Could not create/recreate legend for Axes (Tag: %s): %s',ax.Tag,me_legend_create.message),1,'Warning');
-                legend_handle_to_use = []; % Ensure it's empty if creation fails
+                delete(existing_legend);
+                log_message(params,sprintf('  Deleted existing legend to re-apply order/items for Axes (Tag: %s).',ax.Tag),2,'Debug');
+            catch me_delete_legend
+                log_message(params,sprintf('  Could not delete existing legend for Axes (Tag: %s): %s. Order may not update correctly.',ax.Tag, me_delete_legend.message),1,'Warning');
             end
         end
-    elseif ~isempty(existing_legend) && isvalid(existing_legend) % should_show_legend is false
+
+        % Create the new legend
+        try
+            legend_handle_to_use = legend(ax, plottable_children_for_legend);
+            log_message(params,sprintf('  Created/Recreated legend for Axes (Tag: %s) with specified order/items.',ax.Tag),2,'Info');
+        catch me_legend_create
+            log_message(params,sprintf('  Could not create legend for Axes (Tag: %s): %s',ax.Tag,me_legend_create.message),1,'Warning');
+        end
+    elseif ~isempty(existing_legend) && isvalid(existing_legend)
+        % If not showing legend, ensure any existing one is hidden
         safe_set(params, existing_legend, 'Visible', 'off');
-        legend_handle_to_use = [];
     end
 
+    % Style the legend if it was created
     if ~isempty(legend_handle_to_use) && isvalid(legend_handle_to_use)
         legend_props.FontSize = round(font_size*0.93);
         legend_props.LineWidth = axis_line_width_scaled*0.85;
@@ -2059,108 +2022,87 @@ end
 end
 
 % --- Helper Function: Advanced Interactive Legend Callback ---
-function toggle_plot_visibility_adv(legend_handle,event_data,params)
+function toggle_plot_visibility_adv(legend_handle, event_data, params)
 try
     clicked_plot_object = event_data.Peer;
     if ~isvalid(clicked_plot_object); return; end
 
-    fig_handle = ancestor(legend_handle,'figure');
-    modifier_keys = get(fig_handle,'CurrentModifier');
-    is_ctrl_cmd_pressed = any(strcmpi(modifier_keys,'control')) || any(strcmpi(modifier_keys,'command'));
+    fig_handle = ancestor(legend_handle, 'figure');
+    modifier_keys = get(fig_handle, 'CurrentModifier');
+    is_ctrl_cmd_pressed = any(strcmpi(modifier_keys, 'control')) || any(strcmpi(modifier_keys, 'command'));
 
     all_legend_plots = [];
-    if isprop(legend_handle,'PlotChildren')
+    if isprop(legend_handle, 'PlotChildren')
         all_legend_plots = legend_handle.PlotChildren(arrayfun(@isvalid, legend_handle.PlotChildren));
     end
     if isempty(all_legend_plots)
-        log_message(params,'Interactive legend: No valid PlotChildren found.',1,'Warning');
+        log_message(params, 'Interactive legend: No valid PlotChildren found.', 1, 'Warning');
         return;
     end
 
-    original_visibility_states = getappdata(legend_handle,'OriginalVisibilityStates');
-    isolation_active = getappdata(legend_handle,'IsolationModeActive');
-    if isempty(isolation_active); isolation_active = false; end % Initialize if not present
+    original_visibility_states = getappdata(legend_handle, 'OriginalVisibilityStates');
+    isolation_active = getappdata(legend_handle, 'IsolationModeActive');
+    if isempty(isolation_active); isolation_active = false; end
 
-    if is_ctrl_cmd_pressed % Isolate or unisolate logic
-        is_currently_isolated_object = false;
-        if isolation_active && isappdata(legend_handle, 'IsolatedObject')
-            is_currently_isolated_object = (getappdata(legend_handle,'IsolatedObject') == clicked_plot_object);
-        end
-
-        if is_currently_isolated_object % Clicked on the already isolated object with Ctrl/Cmd -> unisolate
-            if ~isempty(original_visibility_states)
-                for k_visibility = 1:length(all_legend_plots) % Renamed loop variable for clarity
-                    if k_visibility <= length(original_visibility_states) && ~isempty(original_visibility_states{k_visibility})
-                        safe_set(params, all_legend_plots(k_visibility),'Visible',original_visibility_states{k_visibility});
-                    else
-                        % Fallback for this specific plot if its original state is missing
-                        safe_set(params, all_legend_plots(k_visibility),'Visible','on');
-                    end
-                end
-            else
-                % Fallback if OriginalVisibilityStates was never set or is entirely empty
-                log_message(params, 'Interactive Legend: OriginalVisibilityStates empty during unisolate, making all plot children visible.', 2, 'Debug');
-                for k_visibility = 1:length(all_legend_plots) % Renamed loop variable
-                    safe_set(params, all_legend_plots(k_visibility),'Visible','on');
-                end
-            end
-            setappdata(legend_handle,'IsolationModeActive',false);
-            if isappdata(legend_handle,'IsolatedObject'); rmappdata(legend_handle,'IsolatedObject'); end
-            log_message(params,'Legend: Isolation mode deactivated.',2,'Info');
-        else % Isolate this new object (or re-isolate if different)
-            for k=1:length(all_legend_plots)
-                if all_legend_plots(k) == clicked_plot_object
-                    safe_set(params, all_legend_plots(k),'Visible','on');
+    % --- Nested Helper to Restore Visibility ---
+    function unisolate_all()
+        if ~isempty(original_visibility_states)
+            for k_vis = 1:length(all_legend_plots)
+                if k_vis <= length(original_visibility_states) && ~isempty(original_visibility_states{k_vis})
+                    safe_set(params, all_legend_plots(k_vis), 'Visible', original_visibility_states{k_vis});
                 else
-                    safe_set(params, all_legend_plots(k),'Visible','off');
+                    safe_set(params, all_legend_plots(k_vis), 'Visible', 'on'); % Fallback
                 end
             end
-            setappdata(legend_handle,'IsolationModeActive',true);
-            setappdata(legend_handle,'IsolatedObject',clicked_plot_object);
-            object_display_name = ''; if isprop(clicked_plot_object,'DisplayName'); object_display_name = get(clicked_plot_object,'DisplayName'); end
-            log_message(params,sprintf('Legend: Object "%s" isolated.',object_display_name),2,'Info');
+        else % Fallback if OriginalVisibilityStates is missing
+            for k_vis = 1:length(all_legend_plots)
+                safe_set(params, all_legend_plots(k_vis), 'Visible', 'on');
+            end
         end
-    else % Normal click (no Ctrl/Cmd) -> toggle visibility
-        if isolation_active % If something was isolated, first unisolate everything
-            if ~isempty(original_visibility_states)
-                for k_visibility = 1:length(all_legend_plots) % Renamed loop variable for clarity
-                    if k_visibility <= length(original_visibility_states) && ~isempty(original_visibility_states{k_visibility})
-                        safe_set(params, all_legend_plots(k_visibility),'Visible',original_visibility_states{k_visibility});
-                    else
-                        % Fallback for this specific plot if its original state is missing
-                        safe_set(params, all_legend_plots(k_visibility),'Visible','on');
-                    end
-                end
-            else
-                % Fallback if OriginalVisibilityStates was never set or is entirely empty
-                log_message(params, 'Interactive Legend: OriginalVisibilityStates empty during unisolate, making all plot children visible.', 2, 'Debug');
-                for k_visibility = 1:length(all_legend_plots) % Renamed loop variable
-                    safe_set(params, all_legend_plots(k_visibility),'Visible','on');
-                end
+        setappdata(legend_handle, 'IsolationModeActive', false);
+        if isappdata(legend_handle, 'IsolatedObject'); rmappdata(legend_handle, 'IsolatedObject'); end
+        log_message(params, 'Legend: Isolation mode deactivated.', 2, 'Info');
+    end
+
+    % --- Main Logic ---
+    if is_ctrl_cmd_pressed
+        is_currently_isolated_object = isolation_active && isappdata(legend_handle, 'IsolatedObject') && (getappdata(legend_handle, 'IsolatedObject') == clicked_plot_object);
+
+        if is_currently_isolated_object
+            unisolate_all();
+        else % Isolate this new object
+            for k = 1:length(all_legend_plots)
+                safe_set(params, all_legend_plots(k), 'Visible', 'off');
             end
-            setappdata(legend_handle,'IsolationModeActive',false);
-            if isappdata(legend_handle,'IsolatedObject'); rmappdata(legend_handle,'IsolatedObject'); end
-            log_message(params,'Legend: Isolation mode deactivated by normal click.',2,'Info');
+            safe_set(params, clicked_plot_object, 'Visible', 'on');
+            setappdata(legend_handle, 'IsolationModeActive', true);
+            setappdata(legend_handle, 'IsolatedObject', clicked_plot_object);
+            object_display_name = ''; if isprop(clicked_plot_object, 'DisplayName'); object_display_name = get(clicked_plot_object, 'DisplayName'); end
+            log_message(params, sprintf('Legend: Object "%s" isolated.', object_display_name), 2, 'Info');
+        end
+    else % Normal click
+        if isolation_active
+            unisolate_all();
         end
 
-        % Then, toggle the clicked plot object
-        current_visibility = get(clicked_plot_object,'Visible');
-        if strcmpi(current_visibility,'on')
-            safe_set(params, clicked_plot_object,'Visible','off');
+        % Toggle visibility of the clicked plot object
+        current_visibility = get(clicked_plot_object, 'Visible');
+        if strcmpi(current_visibility, 'on')
+            safe_set(params, clicked_plot_object, 'Visible', 'off');
         else
-            safe_set(params, clicked_plot_object,'Visible','on');
+            safe_set(params, clicked_plot_object, 'Visible', 'on');
         end
 
-        % Update original_visibility_states if not in isolation mode when click happened
-        % This ensures the "original" state reflects user toggles made outside isolation.
+        % Update the stored original visibility state to reflect the manual toggle
         if ~isempty(original_visibility_states)
             idx = find(all_legend_plots == clicked_plot_object, 1);
             if ~isempty(idx) && idx <= length(original_visibility_states)
-                original_visibility_states{idx} = get(clicked_plot_object,'Visible');
-                setappdata(legend_handle,'OriginalVisibilityStates',original_visibility_states);
+                original_visibility_states{idx} = get(clicked_plot_object, 'Visible');
+                setappdata(legend_handle, 'OriginalVisibilityStates', original_visibility_states);
             end
         end
     end
+
     update_legend_item_appearance(legend_handle, params);
 catch me_interactive_legend
     log_message(params, sprintf('Error in interactive legend callback: %s', me_interactive_legend.message), 1, 'Warning');
@@ -2184,9 +2126,9 @@ try
     default_text_color = params.text_color;
     faded_text_color = default_text_color*0.4 + 0.5; % Make it grayish
 
-    for i=1:num_to_process
-        entry = legend_entries(i);
-        corresponding_plot = plot_objects(i);
+for k_entry=1:num_to_process
+        entry = legend_entries(k_entry);
+        corresponding_plot = plot_objects(k_entry);
         if ~isvalid(entry) || ~isvalid(corresponding_plot); continue; end
 
         is_plot_visible = strcmpi(get(corresponding_plot,'Visible'),'on');
@@ -2269,9 +2211,9 @@ try
     all_current_props = get(handle_in);
     props_to_set = struct();
 
-    for i = 1:2:length(varargin)
-        prop_name = varargin{i};
-        new_value = varargin{i+1};
+    for k_arg = 1:2:length(varargin)
+        prop_name = varargin{k_arg};
+        new_value = varargin{k_arg+1};
 
         % Check if the property exists on the object using the retrieved struct
         if isfield(all_current_props, prop_name)
@@ -2345,8 +2287,8 @@ target_plot_object = [];
 ax_children = get(ax, 'Children');
 
 if ~isempty(stats_overlay_params.target_plot_handle_tag)
-    for i = 1:length(ax_children)
-        child = ax_children(i);
+    for k_child = 1:length(ax_children)
+        child = ax_children(k_child);
         % Check direct child or children of a group (e.g., hggroup for boxplot)
         if isprop(child,'Tag') && strcmp(get(child,'Tag'), stats_overlay_params.target_plot_handle_tag) && ...
                 (isa(child, 'matlab.graphics.chart.primitive.Line') || isa(child, 'matlab.graphics.chart.primitive.Scatter'))
@@ -2362,8 +2304,8 @@ if ~isempty(stats_overlay_params.target_plot_handle_tag)
         log_message(params, sprintf('Stats Overlay: No plot found with tag "%s" in current axes.', stats_overlay_params.target_plot_handle_tag), 2, 'Info'); return;
     end
 else % Tag is empty, find first suitable plot
-    for i = 1:length(ax_children)
-        child = ax_children(i);
+    for k_child = 1:length(ax_children)
+        child = ax_children(k_child);
         if (isa(child, 'matlab.graphics.chart.primitive.Line') || ...
                 isa(child, 'matlab.graphics.chart.primitive.Scatter')) && ...
                 isprop(child, 'YData') && ~isempty(child.YData) && ...
@@ -2377,8 +2319,8 @@ else % Tag is empty, find first suitable plot
         % Check if the selection was ambiguous (only if tag was empty)
         if isempty(stats_overlay_params.target_plot_handle_tag)
             num_suitable_plots = 0;
-            for k_child = 1:length(ax_children)
-                child_check = ax_children(k_child);
+            for k_child_check = 1:length(ax_children)
+                child_check = ax_children(k_child_check);
                  if (isa(child_check, 'matlab.graphics.chart.primitive.Line') || ...
                      isa(child_check, 'matlab.graphics.chart.primitive.Scatter')) && ...
                      isprop(child_check, 'YData') && ~isempty(child_check.YData) && ...
