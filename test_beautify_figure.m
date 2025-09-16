@@ -27,7 +27,8 @@ test_handles = {
     @test_case_color_palettes, ...
     @test_case_legend_options, ...
     @test_case_stats_overlay, ...
-    @test_case_edge_cases ...
+    @test_case_edge_cases, ...
+    @test_case_more_features ...
 };
 
 total_tests = length(test_handles);
@@ -242,6 +243,47 @@ function test_case_edge_cases(output_dir)
     title('Figure with Axes but No Data');
     save_before_after(fig_no_data, 'edge_case_no_data', output_dir, {});
     close(fig_no_data);
+end
+
+
+% =========================================================================
+% --- HELPER FUNCTION ---
+% =========================================================================
+
+function test_case_more_features(output_dir)
+    % Tests a variety of other features and parameters.
+
+    % Test 1: Errorbar plot with marker/line cycling
+    fig1 = figure('Visible', 'off');
+    x = 1:10;
+    y = 2*x + randn(size(x));
+    err = rand(size(x));
+    hold on;
+    errorbar(x, y, err, 's');
+    errorbar(x, y-3, err, 'd');
+    hold off;
+    title('Errorbar with Style Cycling');
+    params1 = {'cycle_marker_styles', true, 'cycle_line_styles', true};
+    save_before_after(fig1, 'features_errorbar_cycling', output_dir, params1);
+    close(fig1);
+
+    % Test 2: 'left-bottom' axis box style
+    fig2 = figure('Visible', 'off');
+    plot(rand(10,1));
+    title('Axis Box Style: Left-Bottom');
+    params2 = {'axis_box_style', 'left-bottom'};
+    save_before_after(fig2, 'features_box_style', output_dir, params2);
+    close(fig2);
+
+    % Test 3: apply_to_colorbars = false
+    fig3 = figure('Visible', 'off');
+    [X, Y, Z] = peaks;
+    contourf(X, Y, Z, 10);
+    colorbar;
+    title('apply_to_colorbars = false');
+    params3 = {'apply_to_colorbars', false, 'theme', 'dark'}; % Use dark theme to make changes obvious
+    save_before_after(fig3, 'features_no_colorbar', output_dir, params3);
+    close(fig3);
 end
 
 

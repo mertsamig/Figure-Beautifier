@@ -160,4 +160,41 @@ classdef BeautifyFigureTest < matlab.unittest.TestCase
         end
 
     end
+
+    methods(Test)
+        function testAxisBoxStyleLeftBottom(testCase)
+            % Test the 'left-bottom' axis box style.
+            plot(testCase.TestFigure, 1:10, rand(1, 10));
+            ax = get(testCase.TestFigure, 'CurrentAxes');
+
+            beautify_figure('figure_handle', testCase.TestFigure, 'axis_box_style', 'left-bottom');
+
+            testCase.verifyEqual(get(ax, 'Box'), 'off', ...
+                'Box property should be "off" for left-bottom style.');
+            testCase.verifyEqual(get(ax, 'XAxisLocation'), 'bottom', ...
+                'XAxisLocation should be "bottom" for left-bottom style.');
+            testCase.verifyEqual(get(ax, 'YAxisLocation'), 'left', ...
+                'YAxisLocation should be "left" for left-bottom style.');
+        end
+
+        function testApplyToColorbarsFalse(testCase)
+            % Test that the colorbar is not modified when apply_to_colorbars is false.
+            contourf(testCase.TestFigure, peaks(20));
+            ax = get(testCase.TestFigure, 'CurrentAxes');
+            cb = colorbar(ax);
+
+            % Get original colorbar properties
+            original_font_size = get(cb, 'FontSize');
+            original_line_width = get(cb, 'LineWidth');
+
+            % Apply beautification, which would normally change these
+            beautify_figure('figure_handle', testCase.TestFigure, 'apply_to_colorbars', false);
+
+            % Verify properties have NOT changed
+            testCase.verifyEqual(get(cb, 'FontSize'), original_font_size, ...
+                'Colorbar FontSize should not change when apply_to_colorbars is false.');
+            testCase.verifyEqual(get(cb, 'LineWidth'), original_line_width, 'AbsTol', 1e-9, ...
+                'Colorbar LineWidth should not change when apply_to_colorbars is false.');
+        end
+    end
 end
