@@ -44,7 +44,7 @@ function beautify_figure(varargin)
 %   - export_settings: Structure for controlling figure export (see details below).
 %   - stats_overlay: (struct) Settings for statistical data overlay (see details below).
 %     - Note: Statistics are calculated based on the data currently visible within the axes limits (e.g., after zooming).
-%   ... and many more. Explore the default_params structure within the code.
+%   ... and many more. Explore the default_parameters structure within the code.
 %
 % EXAMPLE:
 %   figure;
@@ -63,90 +63,90 @@ function beautify_figure(varargin)
 
 % --- Default Beautification Parameters ---
 % These are the master defaults. They can be overridden by user_params.
-default_params.font_name = 'Swiss 721 BT'; % A common sans-serif, often needs to be installed or substituted
-default_params.base_font_size = 10;
-default_params.global_font_scale_factor = 1.0;
-default_params.title_scale = 1.2;
-default_params.label_scale = 1.0;
+default_parameters.font_name = 'Swiss 721 BT'; % A common sans-serif, often needs to be installed or substituted
+default_parameters.base_font_size = 10;
+default_parameters.global_font_scale_factor = 1.0;
+default_parameters.title_scale = 1.2;
+default_parameters.label_scale = 1.0;
 
-default_params.plot_line_width = 1.5;
-default_params.axis_to_plot_linewidth_ratio = 0.5;
-default_params.marker_size = 6; % In points
-default_params.errorbar_cap_size_scale = 0.5;
+default_parameters.plot_line_width = 1.5;
+default_parameters.axis_to_plot_linewidth_ratio = 0.5;
+default_parameters.marker_size = 6; % In points
+default_parameters.errorbar_cap_size_scale = 0.5;
 
 % Theme-dependent defaults (will be adjusted if 'dark' theme is chosen)
-default_params.axis_color = [0.15 0.15 0.15];
-default_params.figure_background_color = get(0, 'DefaultFigureColor'); % Use MATLAB's default
-default_params.text_color = [0.15 0.15 0.15];
-default_params.grid_color = [0.15 0.15 0.15];
+default_parameters.axis_color = [0.15 0.15 0.15];
+default_parameters.figure_background_color = get(0, 'DefaultFigureColor'); % Use MATLAB's default
+default_parameters.text_color = [0.15 0.15 0.15];
+default_parameters.grid_color = [0.15 0.15 0.15];
 
-default_params.grid_density = 'normal';
-default_params.grid_alpha = 0.15;
-default_params.grid_line_style = '-';
-default_params.minor_grid_alpha = 0.07;
-default_params.minor_grid_line_style = ':';
-default_params.axis_box_style = 'on';
-default_params.axes_layer = 'top'; % NEW: 'top' or 'bottom'
+default_parameters.grid_density = 'normal';
+default_parameters.grid_alpha = 0.15;
+default_parameters.grid_line_style = '-';
+default_parameters.minor_grid_alpha = 0.07;
+default_parameters.minor_grid_line_style = ':';
+default_parameters.axis_box_style = 'on';
+default_parameters.axes_layer = 'top'; % NEW: 'top' or 'bottom'
 
-default_params.color_palette = 'default_matlab';
-default_params.custom_color_palette = [];
-default_params.cycle_marker_styles = 'auto';
-default_params.marker_cycle_threshold = 3; % Cycle if num candidates > this value
-default_params.marker_styles = {'o', 's', 'd', '^', 'v', '>', '<', 'p', 'h', '.', 'x', '+', '*'};
-default_params.line_style_order = {'-', '--', ':', '-.'}; % NEW
-default_params.cycle_line_styles = 'auto'; % NEW: true, false, 'auto'
-default_params.line_style_cycle_threshold = 2; % NEW: cycle if num candidates > this value when 'auto'
+default_parameters.color_palette = 'default_matlab';
+default_parameters.custom_color_palette = [];
+default_parameters.cycle_marker_styles = 'auto';
+default_parameters.marker_cycle_threshold = 3; % Cycle if num candidates > this value
+default_parameters.marker_styles = {'o', 's', 'd', '^', 'v', '>', '<', 'p', 'h', '.', 'x', '+', '*'};
+default_parameters.line_style_order = {'-', '--', ':', '-.'}; % NEW
+default_parameters.cycle_line_styles = 'auto'; % NEW: true, false, 'auto'
+default_parameters.line_style_cycle_threshold = 2; % NEW: cycle if num candidates > this value when 'auto'
 
-default_params.axis_limit_mode = 'padded';
-default_params.expand_axis_limits_factor = 0.03;
+default_parameters.axis_limit_mode = 'padded';
+default_parameters.expand_axis_limits_factor = 0.03;
 
-default_params.legend_location = 'best';
-default_params.smart_legend_display = true;
-default_params.legend_force_single_entry = false;
-default_params.legend_title_string = '';
-default_params.interactive_legend = true; % Requires R2019b+ for ItemHitFcn
-default_params.legend_num_columns = 0;
-default_params.legend_reverse_order = false;
+default_parameters.legend_location = 'best';
+default_parameters.smart_legend_display = true;
+default_parameters.legend_force_single_entry = false;
+default_parameters.legend_title_string = '';
+default_parameters.interactive_legend = true; % Requires R2019b+ for ItemHitFcn
+default_parameters.legend_num_columns = 0;
+default_parameters.legend_reverse_order = false;
 
-default_params.apply_to_colorbars = true;
-default_params.apply_to_polaraxes = true;
-default_params.apply_to_general_text = true;
-default_params.beautify_sgtitle = true;
+default_parameters.apply_to_colorbars = true;
+default_parameters.apply_to_polaraxes = true;
+default_parameters.apply_to_general_text = true;
+default_parameters.beautify_sgtitle = true;
 
-default_params.scaling_map = containers.Map(...
+default_parameters.scaling_map = containers.Map(...
     {1,  2,  3,  4,  6,  8,  9,  12, 16, 20, 25}, ...
     {1.6,1.5,1.4,1.3,1.15,1.05,1.0,0.9,0.8,0.75,0.7} ...
     );
-default_params.min_scale_factor = 0.65;
-default_params.max_scale_factor = 1.7;
-default_params.log_level = 2; % 0:silent, 1:normal (warnings, info), 2:detailed (verbose)
+default_parameters.min_scale_factor = 0.65;
+default_parameters.max_scale_factor = 1.7;
+default_parameters.log_level = 2; % 0:silent, 1:normal (warnings, info), 2:detailed (verbose)
 
 % Export settings
-default_params.export_settings.enabled = false;
-default_params.export_settings.filename = 'beautified_figure';
-default_params.export_settings.format = 'png'; % Suggested: 'png', 'jpeg', 'pdf', 'eps', 'tiff', 'svg'
-default_params.export_settings.resolution = 300; % DPI
-default_params.export_settings.open_exported_file = false;
-default_params.export_settings.renderer = 'painters'; % Suggested: 'painters', 'opengl', 'vector' (for print), 'auto' for exportgraphics
-default_params.export_settings.ui = false; % If true, tries to use exportgraphics, else print -noui
+default_parameters.export_settings.enabled = false;
+default_parameters.export_settings.filename = 'beautified_figure';
+default_parameters.export_settings.format = 'png'; % Suggested: 'png', 'jpeg', 'pdf', 'eps', 'tiff', 'svg'
+default_parameters.export_settings.resolution = 300; % DPI
+default_parameters.export_settings.open_exported_file = false;
+default_parameters.export_settings.renderer = 'painters'; % Suggested: 'painters', 'opengl', 'vector' (for print), 'auto' for exportgraphics
+default_parameters.export_settings.ui = false; % If true, tries to use exportgraphics, else print -noui
 
-default_params.style_preset = 'default';
+default_parameters.style_preset = 'default';
 
 % Basic Statistical Overlay
-default_params.stats_overlay.enabled = false;
-default_params.stats_overlay.statistics = {'mean', 'std'}; % Cell array: 'mean', 'std', 'min', 'max', 'N', 'median', 'sum'
-default_params.stats_overlay.position = 'northeast_inset'; % Options like panel_labeling, or 'best_text', 'manual_normalized_coords'
-default_params.stats_overlay.precision = 2; % Decimal places
-default_params.stats_overlay.text_color = []; % Inherits
-default_params.stats_overlay.font_name = []; % Inherits
-default_params.stats_overlay.font_scale_factor = 0.9; % Relative to axes label font size
-default_params.stats_overlay.background_color = []; % Default none. Can be 'figure' or a color spec.
-default_params.stats_overlay.edge_color = []; % Default none. Can be 'axes' or a color spec.
-default_params.stats_overlay.target_plot_handle_tag = ''; % Tag of specific plot to analyze, empty for first valid
-default_params.exclude_object_tags = {}; % Cell array of strings (tags) to exclude
+default_parameters.stats_overlay.enabled = false;
+default_parameters.stats_overlay.statistics = {'mean', 'std'}; % Cell array: 'mean', 'std', 'min', 'max', 'N', 'median', 'sum'
+default_parameters.stats_overlay.position = 'northeast_inset'; % Options like panel_labeling, or 'best_text', 'manual_normalized_coords'
+default_parameters.stats_overlay.precision = 2; % Decimal places
+default_parameters.stats_overlay.text_color = []; % Inherits
+default_parameters.stats_overlay.font_name = []; % Inherits
+default_parameters.stats_overlay.font_scale_factor = 0.9; % Relative to axes label font size
+default_parameters.stats_overlay.background_color = []; % Default none. Can be 'figure' or a color spec.
+default_parameters.stats_overlay.edge_color = []; % Default none. Can be 'axes' or a color spec.
+default_parameters.stats_overlay.target_plot_handle_tag = ''; % Tag of specific plot to analyze, empty for first valid
+default_parameters.exclude_object_tags = {}; % Cell array of strings (tags) to exclude
 
 % Store the original defaults before any modifications
-base_defaults = default_params;
+base_default_parameters = default_parameters;
 
 % --- Parameter Parsing and Initialization ---
 input_parser = inputParser;
@@ -154,12 +154,12 @@ input_parser = inputParser;
 % Add figure_handle as an optional name-value pair
 addParameter(input_parser, 'figure_handle', [], @(h) ishghandle(h) && isgraphics(h, 'figure') && isvalid(h));
 
-% Add all other parameters from the default_params struct
-default_param_names = fieldnames(default_params);
-for k_param = 1:length(default_param_names)
-    param_name = default_param_names{k_param};
-    default_value = default_params.(param_name);
-    addParameter(input_parser, param_name, default_value);
+% Add all other parameters from the default_parameters struct
+default_parameter_names = fieldnames(default_parameters);
+for parameter_index = 1:length(default_parameter_names)
+    parameter_name = default_parameter_names{parameter_index};
+    default_value = default_parameters.(parameter_name);
+    addParameter(input_parser, parameter_name, default_value);
 end
 
 % Parse the inputs
@@ -168,38 +168,38 @@ params = input_parser.Results;
 
 % Handle the figure handle logic
 if isempty(params.figure_handle)
-    fig = gcf;
+    figure_handle = gcf;
 else
-    fig = params.figure_handle;
+    figure_handle = params.figure_handle;
 end
 
 % Check for valid figure handle one last time
-if isempty(fig) || ~isvalid(fig)
-    log_message(default_params, 'No valid figure available. Cannot proceed.', 0, 'Error');
+if isempty(figure_handle) || ~isvalid(figure_handle)
+    log_message(default_parameters, 'No valid figure available. Cannot proceed.', 0, 'Error');
     return;
 end
 
 % PERFORMANCE: Pre-find all legends and colorbars in the figure once to avoid
 % repeated `findobj` calls within loops.
-params.all_legends_in_fig = findobj(fig, 'Type', 'Legend');
-params.all_colorbars_in_fig = findobj(fig, 'Type', 'Colorbar');
+params.all_legends_in_figure = findobj(figure_handle, 'Type', 'Legend');
+params.all_colorbars_in_figure = findobj(figure_handle, 'Type', 'Colorbar');
 
 
-% The old logic for merging user_provided_params_struct is no longer needed,
+% The old logic for merging user_provided_parameters_struct is no longer needed,
 % as inputParser handles the merging of defaults and user-provided values.
 % The 'params' struct is now the definitive set of parameters.
 
 % For compatibility with later code that checks for user-provided-only
 % parameters (like style_preset), we reconstruct a struct containing only
 % the parameters the user actually passed in.
-all_param_names = fieldnames(input_parser.Results);
-defaulted_param_names = input_parser.UsingDefaults;
-user_provided_param_names = setdiff(all_param_names, defaulted_param_names);
-user_provided_params_struct = struct();
-for k_user_param = 1:length(user_provided_param_names)
-    param_name = user_provided_param_names{k_user_param};
-    if isfield(input_parser.Results, param_name)
-        user_provided_params_struct.(param_name) = input_parser.Results.(param_name);
+all_parameter_names = fieldnames(input_parser.Results);
+defaulted_parameter_names = input_parser.UsingDefaults;
+user_provided_parameter_names = setdiff(all_parameter_names, defaulted_parameter_names);
+user_provided_parameters_struct = struct();
+for user_parameter_index = 1:length(user_provided_parameter_names)
+    parameter_name = user_provided_parameter_names{user_parameter_index};
+    if isfield(input_parser.Results, parameter_name)
+        user_provided_parameters_struct.(parameter_name) = input_parser.Results.(parameter_name);
     end
 end
 
@@ -224,11 +224,11 @@ end
     %   workspace with the new value from the style preset.
     %
     %   INPUTS:
-    %       param_name: (char/string) The name of the parameter.
+    %       parameter_name: (char/string) The name of the parameter.
     %       value:      (any) The value to apply from the preset.
-    function apply_preset_value(param_name, value)
-        if ismember(param_name, input_parser.UsingDefaults)
-            params.(param_name) = value;
+    function apply_preset_value(parameter_name, value)
+        if ismember(parameter_name, input_parser.UsingDefaults)
+            params.(parameter_name) = value;
         end
     end
 
@@ -308,54 +308,54 @@ end
 log_message(params, 'Performing critical parameter validation...', 2, 'Info');
 
 % Helper function to format value for logging
-    function val_str = format_param_value_for_log(val)
-        if isnumeric(val)
-            if isscalar(val)
-                val_str = num2str(val);
+    function value_as_string = format_param_value_for_log(value)
+        if isnumeric(value)
+            if isscalar(value)
+                value_as_string = num2str(value);
             else
-                val_str = mat2str(val); % For arrays
+                value_as_string = mat2str(value); % For arrays
             end
-        elseif ischar(val)
-            val_str = ['''' val ''''];
-        elseif isstring(val) && isscalar(val)
-            val_str = ['"' char(val) '"'];
-        elseif isstring(val) % array of strings
-            val_str = '[';
-            for k_str = 1:numel(val)
-                val_str = [val_str '"' char(val(k_str)) '"'];
-                if k_str < numel(val); val_str = [val_str ', ']; end
+        elseif ischar(value)
+            value_as_string = ['''' value ''''];
+        elseif isstring(value) && isscalar(value)
+            value_as_string = ['"' char(value) '"'];
+        elseif isstring(value) % array of strings
+            value_as_string = '[';
+            for string_index = 1:numel(value)
+                value_as_string = [value_as_string '"' char(value(string_index)) '"'];
+                if string_index < numel(value); value_as_string = [value_as_string ', ']; end
             end
-            val_str = [val_str ']'];
-        elseif islogical(val)
-            if val; val_str = 'true'; else; val_str = 'false'; end
-        elseif iscell(val)
-            val_str = '{';
-            for k_cell = 1:min(5,numel(val)) % Show first few elements
-                val_str = [val_str format_param_value_for_log(val{k_cell})];
-                if k_cell < min(5,numel(val)); val_str = [val_str ', ']; end
+            value_as_string = [value_as_string ']'];
+        elseif islogical(value)
+            if value; value_as_string = 'true'; else; value_as_string = 'false'; end
+        elseif iscell(value)
+            value_as_string = '{';
+            for cell_index = 1:min(5,numel(value)) % Show first few elements
+                value_as_string = [value_as_string format_param_value_for_log(value{cell_index})];
+                if cell_index < min(5,numel(value)); value_as_string = [value_as_string ', ']; end
             end
-            if numel(val) > 5; val_str = [val_str, '...']; end
-            val_str = [val_str '} (' num2str(numel(val)) ' elements)'];
-        elseif isstruct(val)
-            val_str = ['[struct with fields: ' strjoin(fieldnames(val),', ') ']'];
+            if numel(value) > 5; value_as_string = [value_as_string, '...']; end
+            value_as_string = [value_as_string '} (' num2str(numel(value)) ' elements)'];
+        elseif isstruct(value)
+            value_as_string = ['[struct with fields: ' strjoin(fieldnames(value),', ') ']'];
         else
             try
-                val_str = ['[' class(val) ']'];
+                value_as_string = ['[' class(value) ']'];
             catch
-                val_str = '[unknown type]';
+                value_as_string = '[unknown type]';
             end
         end
     end
 
 
 % Helper function to validate numeric scalar parameters
-    function validate_numeric_scalar(param_name)
-        current_val = params.(param_name);
-        if ~isnumeric(current_val) || ~isscalar(current_val) || ~isreal(current_val) || isnan(current_val)
-            val_str = format_param_value_for_log(current_val);
+    function validate_numeric_scalar(parameter_name)
+        current_value = params.(parameter_name);
+        if ~isnumeric(current_value) || ~isscalar(current_value) || ~isreal(current_value) || isnan(current_value)
+            value_as_string = format_param_value_for_log(current_value);
             log_message(params, sprintf('Invalid value for %s: %s. Must be a real numeric scalar. Resetting to default (%s).', ...
-                param_name, val_str, format_param_value_for_log(base_defaults.(param_name))), 1, 'Warning');
-            params.(param_name) = base_defaults.(param_name);
+                parameter_name, value_as_string, format_param_value_for_log(base_default_parameters.(parameter_name))), 1, 'Warning');
+            params.(parameter_name) = base_default_parameters.(parameter_name);
         end
     end
 
@@ -367,39 +367,39 @@ validate_numeric_scalar('marker_size');
 validate_numeric_scalar('log_level');
 
 % font_name validation
-current_font_name_val = params.font_name;
-if ~(ischar(current_font_name_val) && (isvector(current_font_name_val) || isempty(current_font_name_val))) && ...
-        ~(isstring(current_font_name_val) && isscalar(current_font_name_val))
-    val_str = format_param_value_for_log(current_font_name_val); % Uses existing helper
+current_font_name_value = params.font_name;
+if ~(ischar(current_font_name_value) && (isvector(current_font_name_value) || isempty(current_font_name_value))) && ...
+        ~(isstring(current_font_name_value) && isscalar(current_font_name_value))
+    value_as_string = format_param_value_for_log(current_font_name_value); % Uses existing helper
     log_message(params, sprintf('Invalid type for font_name: %s. Must be a character string or string scalar. Resetting to default (%s).', ...
-        val_str, format_param_value_for_log(base_defaults.font_name)), 1, 'Warning');
-    params.font_name = base_defaults.font_name;
+        value_as_string, format_param_value_for_log(base_default_parameters.font_name)), 1, 'Warning');
+    params.font_name = base_default_parameters.font_name;
 end
 
 % Helper function to validate enumerated string parameters
-    function validate_enum_parameter(param_name, valid_options)
-        current_val = params.(param_name);
+    function validate_enum_parameter(parameter_name, valid_options)
+        current_value = params.(parameter_name);
         reset_to_default = false;
 
-        if ~ischar(current_val) || ~isvector(current_val) || isempty(current_val)
-            val_str = format_param_value_for_log(current_val);
+        if ~ischar(current_value) || ~isvector(current_value) || isempty(current_value)
+            value_as_string = format_param_value_for_log(current_value);
             log_message(params, sprintf('Invalid type for %s: %s. Must be a character string. Resetting to default (%s).', ...
-                param_name, val_str, format_param_value_for_log(base_defaults.(param_name))), 1, 'Warning');
+                parameter_name, value_as_string, format_param_value_for_log(base_default_parameters.(parameter_name))), 1, 'Warning');
             reset_to_default = true;
         else
-            match_idx = find(strcmpi(current_val, valid_options), 1);
-            if isempty(match_idx)
-                val_str = format_param_value_for_log(current_val);
+            match_index = find(strcmpi(current_value, valid_options), 1);
+            if isempty(match_index)
+                value_as_string = format_param_value_for_log(current_value);
                 log_message(params, sprintf('Invalid value for %s: %s. Allowed: %s. Resetting to default (%s).', ...
-                    param_name, val_str, strjoin(valid_options, ', '), format_param_value_for_log(base_defaults.(param_name))), 1, 'Warning');
+                    parameter_name, value_as_string, strjoin(valid_options, ', '), format_param_value_for_log(base_default_parameters.(parameter_name))), 1, 'Warning');
                 reset_to_default = true;
             else
-                params.(param_name) = valid_options{match_idx}; % Ensure canonical form
+                params.(parameter_name) = valid_options{match_index}; % Ensure canonical form
             end
         end
 
         if reset_to_default
-            params.(param_name) = base_defaults.(param_name);
+            params.(parameter_name) = base_default_parameters.(parameter_name);
         end
     end
 
@@ -409,14 +409,14 @@ validate_enum_parameter('axis_box_style', {'on', 'off', 'left-bottom'});
 validate_enum_parameter('axes_layer', {'top', 'bottom'});
 
 % Helper function to validate a top-level cell array of strings
-    function validate_top_level_cell_array_of_strings(param_name)
-        current_val = params.(param_name);
+    function validate_top_level_cell_array_of_strings(parameter_name)
+        current_value = params.(parameter_name);
         is_valid = true;
-        if ~iscell(current_val)
+        if ~iscell(current_value)
             is_valid = false;
         else
-            for k_val = 1:length(current_val)
-                if ~ischar(current_val{k_val}) || (~isvector(current_val{k_val}) && ~isempty(current_val{k_val}))
+            for value_index = 1:length(current_value)
+                if ~ischar(current_value{value_index}) || (~isvector(current_value{value_index}) && ~isempty(current_value{value_index}))
                     is_valid = false;
                     break;
                 end
@@ -424,10 +424,10 @@ validate_enum_parameter('axes_layer', {'top', 'bottom'});
         end
 
         if ~is_valid
-            val_str = format_param_value_for_log(current_val);
+            value_as_string = format_param_value_for_log(current_value);
             log_message(params, sprintf('Invalid value for %s: %s. Must be a cell array of character row vectors. Resetting to default (%s).', ...
-                param_name, val_str, format_param_value_for_log(base_defaults.(param_name))), 1, 'Warning');
-            params.(param_name) = base_defaults.(param_name);
+                parameter_name, value_as_string, format_param_value_for_log(base_default_parameters.(parameter_name))), 1, 'Warning');
+            params.(parameter_name) = base_default_parameters.(parameter_name);
         end
     end
 
@@ -441,111 +441,111 @@ log_message(params, 'Critical parameter validation complete.', 2, 'Info');
 log_message(params, 'Performing sub-struct validation (type checks, merging, field checks)...', 2, 'Info');
 
 % Helper function to validate a numeric scalar field within a sub-struct
-    function params = validate_numeric_scalar_field(params, base_defaults, struct_name, field_name, allow_non_negative, allow_positive, require_integer)
-        default_value = base_defaults.(struct_name).(field_name);
+    function params = validate_numeric_scalar_field(params, base_default_parameters, structure_name, field_name, allow_non_negative, allow_positive, require_integer)
+        default_value = base_default_parameters.(structure_name).(field_name);
         % Check if field exists in current params, if not, it means user struct didn't have it, so use default
-        if ~isfield(params.(struct_name), field_name)
+        if ~isfield(params.(structure_name), field_name)
             log_message(params, sprintf('Field %s.%s not found in user/preset parameters. Using default value (%s).', ...
-                struct_name, field_name, format_param_value_for_log(default_value)), 2, 'Info');
-            params.(struct_name).(field_name) = default_value;
+                structure_name, field_name, format_param_value_for_log(default_value)), 2, 'Info');
+            params.(structure_name).(field_name) = default_value;
             current_value = default_value; % proceed with validation of default
         else
-            current_value = params.(struct_name).(field_name);
+            current_value = params.(structure_name).(field_name);
         end
 
-        valid = true;
+        is_valid = true;
         if ~isnumeric(current_value) || ~isscalar(current_value) || ~isreal(current_value) || isnan(current_value)
-            valid = false;
+            is_valid = false;
         elseif allow_non_negative && current_value < 0
-            valid = false;
+            is_valid = false;
         elseif allow_positive && current_value <= 0
-            valid = false;
+            is_valid = false;
         elseif require_integer && (floor(current_value) ~= current_value)
-            valid = false;
+            is_valid = false;
         end
 
-        if ~valid
-            val_str = format_param_value_for_log(current_value);
-            criteria_str = 'real numeric scalar';
-            if require_integer; criteria_str = [criteria_str ', integer']; end
-            if allow_non_negative; criteria_str = [criteria_str ', non-negative']; end
-            if allow_positive; criteria_str = [criteria_str ', positive']; end
+        if ~is_valid
+            value_as_string = format_param_value_for_log(current_value);
+            criteria_string = 'real numeric scalar';
+            if require_integer; criteria_string = [criteria_string ', integer']; end
+            if allow_non_negative; criteria_string = [criteria_string ', non-negative']; end
+            if allow_positive; criteria_string = [criteria_string ', positive']; end
             log_message(params, sprintf('Invalid value for %s.%s: %s. Must be a %s. Resetting to default (%s).', ...
-                struct_name, field_name, val_str, criteria_str, format_param_value_for_log(default_value)), 1, 'Warning');
-            params.(struct_name).(field_name) = default_value;
+                structure_name, field_name, value_as_string, criteria_string, format_param_value_for_log(default_value)), 1, 'Warning');
+            params.(structure_name).(field_name) = default_value;
         end
     end
 
 % Helper function to validate a logical/boolean field within a sub-struct
-    function params = validate_logical_field(params, base_defaults, struct_name, field_name)
-        default_value = base_defaults.(struct_name).(field_name);
-        if ~isfield(params.(struct_name), field_name)
+    function params = validate_logical_field(params, base_default_parameters, structure_name, field_name)
+        default_value = base_default_parameters.(structure_name).(field_name);
+        if ~isfield(params.(structure_name), field_name)
             log_message(params, sprintf('Field %s.%s not found in user/preset parameters. Using default value (%s).', ...
-                struct_name, field_name, format_param_value_for_log(default_value)), 2, 'Info');
-            params.(struct_name).(field_name) = default_value;
+                structure_name, field_name, format_param_value_for_log(default_value)), 2, 'Info');
+            params.(structure_name).(field_name) = default_value;
             current_value = default_value;
         else
-            current_value = params.(struct_name).(field_name);
+            current_value = params.(structure_name).(field_name);
         end
 
         if islogical(current_value) && isscalar(current_value)
             % Value is already a scalar logical, no change needed.
         elseif isnumeric(current_value) && isscalar(current_value) && (current_value == 0 || current_value == 1)
-            params.(struct_name).(field_name) = logical(current_value); % Cast to logical
+            params.(structure_name).(field_name) = logical(current_value); % Cast to logical
         else
-            val_str = format_param_value_for_log(current_value);
+            value_as_string = format_param_value_for_log(current_value);
             log_message(params, sprintf('Invalid value for %s.%s: %s. Must be logical (true/false) or numeric (0/1). Resetting to default (%s).', ...
-                struct_name, field_name, val_str, format_param_value_for_log(default_value)), 1, 'Warning');
-            params.(struct_name).(field_name) = default_value;
+                structure_name, field_name, value_as_string, format_param_value_for_log(default_value)), 1, 'Warning');
+            params.(structure_name).(field_name) = default_value;
         end
     end
 
 % Helper function to validate a cell array of char row vectors
-    function params = validate_cell_array_of_strings_field(params, base_defaults, struct_name, field_name)
-        default_value = base_defaults.(struct_name).(field_name);
-        if ~isfield(params.(struct_name), field_name)
+    function params = validate_cell_array_of_strings_field(params, base_default_parameters, structure_name, field_name)
+        default_value = base_default_parameters.(structure_name).(field_name);
+        if ~isfield(params.(structure_name), field_name)
             log_message(params, sprintf('Field %s.%s not found in user/preset parameters. Using default value (%s).', ...
-                struct_name, field_name, format_param_value_for_log(default_value)), 2, 'Info');
-            params.(struct_name).(field_name) = default_value;
+                structure_name, field_name, format_param_value_for_log(default_value)), 2, 'Info');
+            params.(structure_name).(field_name) = default_value;
             current_value = default_value;
         else
-            current_value = params.(struct_name).(field_name);
+            current_value = params.(structure_name).(field_name);
         end
 
-        valid = true;
+        is_valid = true;
         if ~iscell(current_value)
-            valid = false;
+            is_valid = false;
         else
-            for k_val = 1:length(current_value)
-                if ~ischar(current_value{k_val}) || (~isvector(current_value{k_val}) && ~isempty(current_value{k_val})) % Allow empty char '', but if not empty, must be row vector
-                    valid = false;
+            for value_index = 1:length(current_value)
+                if ~ischar(current_value{value_index}) || (~isvector(current_value{value_index}) && ~isempty(current_value{value_index})) % Allow empty char '', but if not empty, must be row vector
+                    is_valid = false;
                     break;
                 end
             end
         end
 
-        if ~valid
-            val_str = format_param_value_for_log(current_value);
+        if ~is_valid
+            value_as_string = format_param_value_for_log(current_value);
             log_message(params, sprintf('Invalid value for %s.%s: %s. Must be a cell array of character row vectors. Resetting to default (%s).', ...
-                struct_name, field_name, val_str, format_param_value_for_log(default_value)), 1, 'Warning');
-            params.(struct_name).(field_name) = default_value;
+                structure_name, field_name, value_as_string, format_param_value_for_log(default_value)), 1, 'Warning');
+            params.(structure_name).(field_name) = default_value;
         end
     end
 
 % Validate top-level structure types first
-sub_struct_names = {'export_settings', 'stats_overlay'};
-for k_ss = 1:length(sub_struct_names)
-    ss_name = sub_struct_names{k_ss};
-    if isfield(params, ss_name) % It should be, from base_defaults
-        if ~isstruct(params.(ss_name)) % If user overwrote with non-struct, or preset was bad
-            val_str = format_param_value_for_log(params.(ss_name));
+sub_structure_names = {'export_settings', 'stats_overlay'};
+for sub_structure_index = 1:length(sub_structure_names)
+    sub_structure_name = sub_structure_names{sub_structure_index};
+    if isfield(params, sub_structure_name) % It should be, from base_default_parameters
+        if ~isstruct(params.(sub_structure_name)) % If user overwrote with non-struct, or preset was bad
+            value_as_string = format_param_value_for_log(params.(sub_structure_name));
             log_message(params, sprintf('Parameter ''%s'' is not a struct (type: %s). Reverting to default %s settings.', ...
-                ss_name, val_str, ss_name), 1, 'Warning');
-            params.(ss_name) = base_defaults.(ss_name);
+                sub_structure_name, value_as_string, sub_structure_name), 1, 'Warning');
+            params.(sub_structure_name) = base_default_parameters.(sub_structure_name);
         end
-    else % Should not happen if base_defaults is complete
-        log_message(params, sprintf('Default parameter for ''%s'' is missing. This is an internal bug. Using empty struct.', ss_name), 0, 'Error');
-        params.(ss_name) = struct(); % Failsafe
+    else % Should not happen if base_default_parameters is complete
+        log_message(params, sprintf('Default parameter for ''%s'' is missing. This is an internal bug. Using empty struct.', sub_structure_name), 0, 'Error');
+        params.(sub_structure_name) = struct(); % Failsafe
     end
 end
 
@@ -554,14 +554,14 @@ end
 % without needing to define the whole user_params.stats_overlay struct.
 % This step is performed *after* params.stats_overlay is guaranteed to be a struct (from above).
 log_message(params, 'Merging user-provided fields for specific sub-structs (e.g., stats_overlay)...', 2, 'Info');
-if isfield(user_provided_params_struct, 'stats_overlay') && isstruct(user_provided_params_struct.stats_overlay)
+if isfield(user_provided_parameters_struct, 'stats_overlay') && isstruct(user_provided_parameters_struct.stats_overlay)
     % params.stats_overlay is already a struct (either from default/preset, or user's full replacement, or reset if user gave bad type)
-    % Now, merge fields from user_provided_params_struct.stats_overlay into params.stats_overlay
-    user_so_fields = fieldnames(user_provided_params_struct.stats_overlay);
-    for k_so = 1:length(user_so_fields)
-        field_to_merge = user_so_fields{k_so};
-        if isfield(base_defaults.stats_overlay, field_to_merge) % Only merge known fields
-            params.stats_overlay.(field_to_merge) = user_provided_params_struct.stats_overlay.(field_to_merge);
+    % Now, merge fields from user_provided_parameters_struct.stats_overlay into params.stats_overlay
+    user_stats_overlay_fields = fieldnames(user_provided_parameters_struct.stats_overlay);
+    for stats_overlay_field_index = 1:length(user_stats_overlay_fields)
+        field_to_merge = user_stats_overlay_fields{stats_overlay_field_index};
+        if isfield(base_default_parameters.stats_overlay, field_to_merge) % Only merge known fields
+            params.stats_overlay.(field_to_merge) = user_provided_parameters_struct.stats_overlay.(field_to_merge);
         else
             log_message(params, sprintf('Unknown field in user-provided stats_overlay: "%s". This field will be ignored.', field_to_merge), 1, 'Warning');
         end
@@ -576,116 +576,116 @@ log_message(params, 'Performing detailed sub-struct FIELD validation...', 2, 'In
 % export_settings validation
 if isstruct(params.export_settings) % Should be true due to earlier type check
     % Ensure all default fields exist in params.export_settings, validate them
-    default_es_fields = fieldnames(base_defaults.export_settings);
-    for k_esf = 1:length(default_es_fields)
-        fn = default_es_fields{k_esf};
+    default_export_settings_fields = fieldnames(base_default_parameters.export_settings);
+    for export_settings_field_index = 1:length(default_export_settings_fields)
+        field_name = default_export_settings_fields{export_settings_field_index};
         % validate_..._field helpers will add default if missing and validate
-        switch fn
-            case 'resolution'; params = validate_numeric_scalar_field(params, base_defaults, 'export_settings', fn, true, true, false);
-            case {'enabled', 'open_exported_file', 'ui'}; params = validate_logical_field(params, base_defaults, 'export_settings', fn);
+        switch field_name
+            case 'resolution'; params = validate_numeric_scalar_field(params, base_default_parameters, 'export_settings', field_name, true, true, false);
+            case {'enabled', 'open_exported_file', 'ui'}; params = validate_logical_field(params, base_default_parameters, 'export_settings', field_name);
             case {'filename', 'format', 'renderer'} % String fields, specific validation if needed
-                if ~isfield(params.export_settings, fn) || ~ischar(params.export_settings.(fn))
-                    log_message(params, sprintf('Field export_settings.%s is missing or not a string. Resetting to default (%s).', fn, format_param_value_for_log(base_defaults.export_settings.(fn))), 1, 'Warning');
-                    params.export_settings.(fn) = base_defaults.export_settings.(fn);
-                elseif strcmp(fn, 'renderer') % Specific validation for renderer
-                    current_renderer_val = params.export_settings.(fn);
+                if ~isfield(params.export_settings, field_name) || ~ischar(params.export_settings.(field_name))
+                    log_message(params, sprintf('Field export_settings.%s is missing or not a string. Resetting to default (%s).', field_name, format_param_value_for_log(base_default_parameters.export_settings.(field_name))), 1, 'Warning');
+                    params.export_settings.(field_name) = base_default_parameters.export_settings.(field_name);
+                elseif strcmp(field_name, 'renderer') % Specific validation for renderer
+                    current_renderer_value = params.export_settings.(field_name);
                     valid_renderers = {'painters', 'opengl', 'vector', 'auto', 'zbuffer'};
-                    match_idx_renderer = find(strcmpi(current_renderer_val, valid_renderers), 1);
-                    if isempty(match_idx_renderer)
-                        val_str = format_param_value_for_log(current_renderer_val);
+                    renderer_match_index = find(strcmpi(current_renderer_value, valid_renderers), 1);
+                    if isempty(renderer_match_index)
+                        value_as_string = format_param_value_for_log(current_renderer_value);
                         log_message(params, sprintf('Invalid value for export_settings.renderer: %s. Allowed: %s. Resetting to default (%s).', ...
-                            val_str, strjoin(valid_renderers, ', '), format_param_value_for_log(base_defaults.export_settings.(fn))), 1, 'Warning');
-                        params.export_settings.(fn) = base_defaults.export_settings.(fn);
+                            value_as_string, strjoin(valid_renderers, ', '), format_param_value_for_log(base_default_parameters.export_settings.(field_name))), 1, 'Warning');
+                        params.export_settings.(field_name) = base_default_parameters.export_settings.(field_name);
                     else
-                        params.export_settings.(fn) = valid_renderers{match_idx_renderer}; % Ensure canonical form
+                        params.export_settings.(field_name) = valid_renderers{renderer_match_index}; % Ensure canonical form
                     end
                 end
             otherwise % Unknown field in defaults, internal issue
-                log_message(params, sprintf('Unhandled default field in export_settings: %s', fn), 1, 'Warning');
+                log_message(params, sprintf('Unhandled default field in export_settings: %s', field_name), 1, 'Warning');
         end
     end
     % Warn about extra fields provided by user not in defaults
-    current_es_fields = fieldnames(params.export_settings);
-    extra_es_fields = setdiff(current_es_fields, default_es_fields);
-    for k_ex = 1:length(extra_es_fields)
-        log_message(params, sprintf('Unknown field in params.export_settings: "%s". Ignored.', extra_es_fields{k_ex}), 1, 'Warning');
+    current_export_settings_fields = fieldnames(params.export_settings);
+    extra_export_settings_fields = setdiff(current_export_settings_fields, default_export_settings_fields);
+    for extra_field_index = 1:length(extra_export_settings_fields)
+        log_message(params, sprintf('Unknown field in params.export_settings: "%s". Ignored.', extra_export_settings_fields{extra_field_index}), 1, 'Warning');
     end
 else
     log_message(params, '''params.export_settings'' is unexpectedly not a struct before detailed field validation. This may indicate an internal problem.', 0, 'Error');
-    if isfield(base_defaults, 'export_settings'); params.export_settings = base_defaults.export_settings; end % Attempt recovery
+    if isfield(base_default_parameters, 'export_settings'); params.export_settings = base_default_parameters.export_settings; end % Attempt recovery
 end
 
 % stats_overlay validation
 if isstruct(params.stats_overlay)
-    default_so_fields = fieldnames(base_defaults.stats_overlay);
-    for k_sof = 1:length(default_so_fields)
-        fn = default_so_fields{k_sof};
-        switch fn
-            case 'font_scale_factor'; params = validate_numeric_scalar_field(params, base_defaults, 'stats_overlay', fn, true, false, false);
-            case 'precision'; params = validate_numeric_scalar_field(params, base_defaults, 'stats_overlay', fn, true, false, true);
-            case 'enabled'; params = validate_logical_field(params, base_defaults, 'stats_overlay', fn);
-            case 'statistics'; params = validate_cell_array_of_strings_field(params, base_defaults, 'stats_overlay', fn);
+    default_stats_overlay_fields = fieldnames(base_default_parameters.stats_overlay);
+    for stats_overlay_field_index = 1:length(default_stats_overlay_fields)
+        field_name = default_stats_overlay_fields{stats_overlay_field_index};
+        switch field_name
+            case 'font_scale_factor'; params = validate_numeric_scalar_field(params, base_default_parameters, 'stats_overlay', field_name, true, false, false);
+            case 'precision'; params = validate_numeric_scalar_field(params, base_default_parameters, 'stats_overlay', field_name, true, false, true);
+            case 'enabled'; params = validate_logical_field(params, base_default_parameters, 'stats_overlay', field_name);
+            case 'statistics'; params = validate_cell_array_of_strings_field(params, base_default_parameters, 'stats_overlay', field_name);
             case {'target_plot_handle_tag'} % String fields (position handled separately)
-                if ~isfield(params.stats_overlay, fn) || ~ischar(params.stats_overlay.(fn))
-                    log_message(params, sprintf('Field stats_overlay.%s is missing or not a string. Resetting to default (%s).', fn, format_param_value_for_log(base_defaults.stats_overlay.(fn))), 1, 'Warning');
-                    params.stats_overlay.(fn) = base_defaults.stats_overlay.(fn);
+                if ~isfield(params.stats_overlay, field_name) || ~ischar(params.stats_overlay.(field_name))
+                    log_message(params, sprintf('Field stats_overlay.%s is missing or not a string. Resetting to default (%s).', field_name, format_param_value_for_log(base_default_parameters.stats_overlay.(field_name))), 1, 'Warning');
+                    params.stats_overlay.(field_name) = base_default_parameters.stats_overlay.(field_name);
                 end
             case 'position' % Specific validation for stats_overlay.position
-                if ~isfield(params.stats_overlay, fn) || ~ischar(params.stats_overlay.(fn))
-                    log_message(params, sprintf('Field stats_overlay.position is missing or not a string. Resetting to default (%s).', format_param_value_for_log(base_defaults.stats_overlay.position)), 1, 'Warning');
-                    params.stats_overlay.position = base_defaults.stats_overlay.position;
+                if ~isfield(params.stats_overlay, field_name) || ~ischar(params.stats_overlay.(field_name))
+                    log_message(params, sprintf('Field stats_overlay.position is missing or not a string. Resetting to default (%s).', format_param_value_for_log(base_default_parameters.stats_overlay.position)), 1, 'Warning');
+                    params.stats_overlay.position = base_default_parameters.stats_overlay.position;
                 else
-                    current_pos_val = params.stats_overlay.position;
+                    current_position_value = params.stats_overlay.position;
                     valid_stat_positions = {'northeast_inset', 'northwest_inset', 'southwest_inset', 'southeast_inset'}; % Add more if your apply_stats_overlay supports them
-                    match_idx_pos = find(strcmpi(current_pos_val, valid_stat_positions), 1);
-                    if isempty(match_idx_pos)
-                        val_str = format_param_value_for_log(current_pos_val);
+                    position_match_index = find(strcmpi(current_position_value, valid_stat_positions), 1);
+                    if isempty(position_match_index)
+                        value_as_string = format_param_value_for_log(current_position_value);
                         log_message(params, sprintf('Invalid value for stats_overlay.position: %s. Allowed: %s. Resetting to default (%s).', ...
-                            val_str, strjoin(valid_stat_positions, ', '), format_param_value_for_log(base_defaults.stats_overlay.position)), 1, 'Warning');
-                        params.stats_overlay.position = base_defaults.stats_overlay.position;
+                            value_as_string, strjoin(valid_stat_positions, ', '), format_param_value_for_log(base_default_parameters.stats_overlay.position)), 1, 'Warning');
+                        params.stats_overlay.position = base_default_parameters.stats_overlay.position;
                     else
-                        params.stats_overlay.position = valid_stat_positions{match_idx_pos}; % Ensure canonical form
+                        params.stats_overlay.position = valid_stat_positions{position_match_index}; % Ensure canonical form
                     end
                 end
             case 'font_name' % Specifically for stats_overlay.font_name
-                if ~isfield(params.stats_overlay, fn)
-                    params.stats_overlay.(fn) = base_defaults.stats_overlay.(fn); % Add if missing
+                if ~isfield(params.stats_overlay, field_name)
+                    params.stats_overlay.(field_name) = base_default_parameters.stats_overlay.(field_name); % Add if missing
                 else % Field is present, validate it
-                    val = params.stats_overlay.(fn);
-                    if ~isempty(val) && ~(ischar(val) && (isvector(val) || isempty(val))) && ...
-                            ~(isstring(val) && isscalar(val))
-                        log_message(params, sprintf('Invalid type for stats_overlay.font_name: %s. Must be char/string or empty. Resetting to default empty value.', format_param_value_for_log(val)), 1, 'Warning');
-                        params.stats_overlay.(fn) = base_defaults.stats_overlay.(fn); % Reset to default (which is [])
+                    value = params.stats_overlay.(field_name);
+                    if ~isempty(value) && ~(ischar(value) && (isvector(value) || isempty(value))) && ...
+                            ~(isstring(value) && isscalar(value))
+                        log_message(params, sprintf('Invalid type for stats_overlay.font_name: %s. Must be char/string or empty. Resetting to default empty value.', format_param_value_for_log(value)), 1, 'Warning');
+                        params.stats_overlay.(field_name) = base_default_parameters.stats_overlay.(field_name); % Reset to default (which is [])
                     end
                 end
             case {'text_color', 'background_color', 'edge_color'} % Color specs (can be empty, char, or numeric RGB)
-                if ~isfield(params.stats_overlay, fn)
-                    params.stats_overlay.(fn) = base_defaults.stats_overlay.(fn); % Add if missing
+                if ~isfield(params.stats_overlay, field_name)
+                    params.stats_overlay.(field_name) = base_default_parameters.stats_overlay.(field_name); % Add if missing
                 else % Field is present, validate it
-                    val = params.stats_overlay.(fn);
-                    is_valid_color_spec = false;
-                    if isempty(val); is_valid_color_spec = true; end % [] is valid, means inherit or 'none'
-                    if (ischar(val) && (isvector(val) || isempty(val))); is_valid_color_spec = true; end % 'red', 'none', 'figure', 'axes'
-                    if (isstring(val) && isscalar(val)); is_valid_color_spec = true; end % "red", "none", etc.
-                    if isnumeric(val) && (isempty(val) || (isvector(val) && length(val) == 3 && all(val >= 0 & val <= 1))); is_valid_color_spec = true; end % RGB triplet [0-1] or []
+                    value = params.stats_overlay.(field_name);
+                    is_valid_color_specification = false;
+                    if isempty(value); is_valid_color_specification = true; end % [] is valid, means inherit or 'none'
+                    if (ischar(value) && (isvector(value) || isempty(value))); is_valid_color_specification = true; end % 'red', 'none', 'figure', 'axes'
+                    if (isstring(value) && isscalar(value)); is_valid_color_specification = true; end % "red", "none", etc.
+                    if isnumeric(value) && (isempty(value) || (isvector(value) && length(value) == 3 && all(value >= 0 & value <= 1))); is_valid_color_specification = true; end % RGB triplet [0-1] or []
 
-                    if ~is_valid_color_spec
-                        log_message(params, sprintf('Invalid type/value for stats_overlay.%s: %s. Must be valid color spec (char, string, 1x3 RGB [0-1], or empty). Resetting to default empty value.', fn, format_param_value_for_log(val)), 1, 'Warning');
-                        params.stats_overlay.(fn) = base_defaults.stats_overlay.(fn); % Reset to default (which is [])
+                    if ~is_valid_color_specification
+                        log_message(params, sprintf('Invalid type/value for stats_overlay.%s: %s. Must be valid color spec (char, string, 1x3 RGB [0-1], or empty). Resetting to default empty value.', field_name, format_param_value_for_log(value)), 1, 'Warning');
+                        params.stats_overlay.(field_name) = base_default_parameters.stats_overlay.(field_name); % Reset to default (which is [])
                     end
                 end
             otherwise
-                log_message(params, sprintf('Unhandled default field in stats_overlay: %s', fn), 1, 'Warning');
+                log_message(params, sprintf('Unhandled default field in stats_overlay: %s', field_name), 1, 'Warning');
         end
     end
-    current_so_fields = fieldnames(params.stats_overlay);
-    extra_so_fields = setdiff(current_so_fields, default_so_fields);
-    for k_ex = 1:length(extra_so_fields)
-        log_message(params, sprintf('Unknown field in params.stats_overlay: "%s". Ignored.', extra_so_fields{k_ex}), 1, 'Warning');
+    current_stats_overlay_fields = fieldnames(params.stats_overlay);
+    extra_stats_overlay_fields = setdiff(current_stats_overlay_fields, default_stats_overlay_fields);
+    for extra_field_index = 1:length(extra_stats_overlay_fields)
+        log_message(params, sprintf('Unknown field in params.stats_overlay: "%s". Ignored.', extra_stats_overlay_fields{extra_field_index}), 1, 'Warning');
     end
 else
     log_message(params, '''params.stats_overlay'' is unexpectedly not a struct before detailed field validation.', 0, 'Error');
-    if isfield(base_defaults, 'stats_overlay'); params.stats_overlay = base_defaults.stats_overlay; end
+    if isfield(base_default_parameters, 'stats_overlay'); params.stats_overlay = base_default_parameters.stats_overlay; end
 end
 
 log_message(params, 'Detailed sub-struct FIELD validation complete.', 2, 'Info');
@@ -699,12 +699,12 @@ params.base_font_size = params.base_font_size * params.global_font_scale_factor;
 % This section now always applies as we are always processing a whole figure.
 if ~isempty(params.figure_background_color)
     try
-        current_fig_color = get(fig, 'Color');
-        if ~isequal(current_fig_color, params.figure_background_color)
+        current_figure_color = get(figure_handle, 'Color');
+        if ~isequal(current_figure_color, params.figure_background_color)
             set(fig, 'Color', params.figure_background_color);
         end
-    catch me_fig_color
-        log_message(params, sprintf('Failed to set figure background color: %s', me_fig_color.message), 1, 'Warning');
+    catch me_figure_color
+        log_message(params, sprintf('Failed to set figure background color: %s', me_figure_color.message), 1, 'Warning');
     end
 end
 
@@ -728,14 +728,14 @@ if isempty(tab_groups)
     log_message(params, 'Processing figure (no tabs found)...', 1, 'Info');
     process_container(fig, params);
 else
-    for tg_idx = 1:length(tab_groups)
-        current_tab_group = tab_groups(tg_idx);
+    for tab_group_index = 1:length(tab_groups)
+        current_tab_group = tab_groups(tab_group_index);
         if ~isvalid(current_tab_group); continue; end
         tabs = current_tab_group.Children;
-        for t_idx = 1:length(tabs)
-            current_tab = tabs(t_idx);
+        for tab_index = 1:length(tabs)
+            current_tab = tabs(tab_index);
             if ~isvalid(current_tab) || ~isprop(current_tab, 'Title'); continue; end
-            tab_title_for_display = ['Tab ' num2str(t_idx)];
+            tab_title_for_display = ['Tab ' num2str(tab_index)];
             if ~isempty(current_tab.Title); tab_title_for_display = current_tab.Title; end
             log_message(params, sprintf('Processing %s...', tab_title_for_display), 1, 'Info');
             process_container(current_tab, params);
@@ -747,24 +747,24 @@ end
 
 % --- Export Figure (if enabled) ---
 if params.export_settings.enabled
-    [fpath, name_part, ~] = fileparts(params.export_settings.filename);
+    [file_path, name_part, ~] = fileparts(params.export_settings.filename);
     if isempty(name_part); name_part = 'beautified_figure'; end
     current_format = lower(params.export_settings.format);
 
     % Normalize common extensions
     if any(strcmp(current_format, {'jpeg', 'jpg'}))
-        export_ext = 'jpg'; print_driver_format = 'jpeg';
+        export_extension = 'jpg'; print_driver_format = 'jpeg';
     elseif any(strcmp(current_format, {'tiff', 'tif'}))
-        export_ext = 'tif'; print_driver_format = 'tiff';
+        export_extension = 'tif'; print_driver_format = 'tiff';
     elseif strcmp(current_format, 'eps')
-        export_ext = 'eps'; print_driver_format = 'epsc'; % Ensure color EPS
+        export_extension = 'eps'; print_driver_format = 'epsc'; % Ensure color EPS
     else
-        export_ext = current_format; print_driver_format = current_format;
+        export_extension = current_format; print_driver_format = current_format;
     end
 
-    full_filename_with_ext = fullfile(fpath, [name_part, '.', export_ext]);
+    full_filename_with_extension = fullfile(file_path, [name_part, '.', export_extension]);
 
-    log_message(params, sprintf('Exporting figure to "%s"...', full_filename_with_ext), 1, 'Info');
+    log_message(params, sprintf('Exporting figure to "%s"...', full_filename_with_extension), 1, 'Info');
     try
         export_done_successfully = false;
         % exportgraphics is generally preferred if available (R2020a+) and UI is true OR renderer is auto for it
@@ -773,9 +773,9 @@ if params.export_settings.enabled
 
         if use_exportgraphics
             log_message(params, sprintf('Attempting exportgraphics (resolution %d DPI).', params.export_settings.resolution), 2, 'Info');
-            exportgraphics_args = {fig, full_filename_with_ext, 'Resolution', params.export_settings.resolution};
+            exportgraphics_args = {figure_handle, full_filename_with_extension, 'Resolution', params.export_settings.resolution};
             % ContentType for vector/raster preference with exportgraphics
-            if any(strcmpi(export_ext, {'pdf', 'eps', 'svg'}))
+            if any(strcmpi(export_extension, {'pdf', 'eps', 'svg'}))
                 exportgraphics_args = [exportgraphics_args, {'ContentType', 'vector'}];
             else
                 exportgraphics_args = [exportgraphics_args, {'ContentType', 'image'}];
@@ -800,7 +800,7 @@ if params.export_settings.enabled
 
             if ~isempty(format_flag)
                 resolution_flag = sprintf('-r%d', params.export_settings.resolution);
-                cmd_parts = {fig, full_filename_with_ext, format_flag, resolution_flag};
+                command_parts = {figure_handle, full_filename_with_extension, format_flag, resolution_flag};
 
                 renderer_to_use_for_print = params.export_settings.renderer;
                 if strcmpi(renderer_to_use_for_print, 'auto') % 'auto' for print isn't a specific flag
@@ -816,21 +816,21 @@ if params.export_settings.enabled
                 end
 
                 if ~isempty(renderer_to_use_for_print)
-                    valid_renderers_print = {'painters', 'opengl', 'vector', 'zbuffer'};
-                    if any(strcmpi(renderer_to_use_for_print, valid_renderers_print))
+                    valid_renderers_for_print = {'painters', 'opengl', 'vector', 'zbuffer'};
+                    if any(strcmpi(renderer_to_use_for_print, valid_renderers_for_print))
                         renderer_flag = sprintf('-%s', renderer_to_use_for_print);
-                        cmd_parts{end+1} = renderer_flag;
+                        command_parts{end+1} = renderer_flag;
                     else
                         log_message(params, sprintf('Invalid renderer "%s" for print. Using MATLAB default for this format.', renderer_to_use_for_print), 1, 'Warning');
                     end
                 end
 
                 if ~params.export_settings.ui % Add -noui if not using UI (relevant for print)
-                    cmd_parts{end+1} = '-noui';
+                    command_parts{end+1} = '-noui';
                 end
 
-                log_message(params, sprintf('Using print command with options: %s', strjoin(cmd_parts(3:end),' ')), 2, 'Info');
-                print(cmd_parts{:});
+                log_message(params, sprintf('Using print command with options: %s', strjoin(command_parts(3:end),' ')), 2, 'Info');
+                print(command_parts{:});
                 log_message(params, 'Export successful using print command.', 1, 'Info');
                 export_done_successfully = true;
             else
@@ -839,25 +839,25 @@ if params.export_settings.enabled
         end
 
         if export_done_successfully && params.export_settings.open_exported_file
-            log_message(params, sprintf('Attempting to open exported file: %s', full_filename_with_ext), 2, 'Info');
+            log_message(params, sprintf('Attempting to open exported file: %s', full_filename_with_extension), 2, 'Info');
             try
-                open(full_filename_with_ext); % MATLAB's open function
+                open(full_filename_with_extension); % MATLAB's open function
             catch me_open_matlab
                 log_message(params, sprintf('MATLAB open() failed: "%s". Trying system open.', me_open_matlab.message), 1, 'Warning');
                 try
                     % Ensure full path for system command
-                    if isempty(fpath); current_file_path_abs = fullfile(pwd, full_filename_with_ext);
-                    else; current_file_path_abs = full_filename_with_ext; end
+                    if isempty(file_path); current_file_path_absolute = fullfile(pwd, full_filename_with_extension);
+                    else; current_file_path_absolute = full_filename_with_extension; end
 
                     if ispc
-                        system(['start "" "', current_file_path_abs, '"']);
+                        system(['start "" "', current_file_path_absolute, '"']);
                     elseif ismac
-                        system(['open "', current_file_path_abs, '"']);
+                        system(['open "', current_file_path_absolute, '"']);
                     else % Linux or other Unix
-                        system(['xdg-open "', current_file_path_abs, '"']);
+                        system(['xdg-open "', current_file_path_absolute, '"']);
                     end
-                catch me_sys_open
-                    log_message(params, sprintf('System open command failed: %s', me_sys_open.message), 1, 'Warning');
+                catch me_system_open
+                    log_message(params, sprintf('System open command failed: %s', me_system_open.message), 1, 'Warning');
                 end
             end
         elseif ~export_done_successfully
@@ -878,8 +878,8 @@ end
 % function tf = is_valid_axes_handle_array(h_array) ... (entire function removed)
 
 % --- Helper Function: Get Scale Basis for an Axes ---
-function num_to_scale_by = get_scale_basis_for_axes(ax_ref, parent_layout, params)
-% ax_ref is one of the axes in the layout, or the single axes if no layout.
+function num_to_scale_by = get_scale_basis_for_axes(axes_reference, parent_layout, params)
+% axes_reference is one of the axes in the layout, or the single axes if no layout.
 num_to_scale_by = 1; % Default for standalone axes
 if ~isempty(parent_layout) && isvalid(parent_layout)
     try
@@ -903,25 +903,25 @@ if ~isempty(parent_layout) && isvalid(parent_layout)
         num_to_scale_by = 1; % Fallback
     end
 else % No parent_layout, might be a figure with multiple non-tiled subplots
-    fig_parent = ancestor(ax_ref, 'figure');
-    if ~isempty(fig_parent)
+    figure_parent = ancestor(axes_reference, 'figure');
+    if ~isempty(figure_parent)
         axes_to_ignore_for_scaling = {'legend', 'Colorbar', 'ColormapPreview', 'scribeOverlay'};
         if ~params.apply_to_colorbars; axes_to_ignore_for_scaling{end+1} = 'Colorbar'; end
 
-        all_axes_in_fig = get_axes_from_parent(fig_parent, params, axes_to_ignore_for_scaling);
+        all_axes_in_figure = get_axes_from_parent(figure_parent, params, axes_to_ignore_for_scaling);
         % Use logical indexing to find axes not in a TiledLayout, which avoids growing arrays.
-        is_in_tiled_layout_mask = false(1, numel(all_axes_in_fig));
-        for k_ax = 1:numel(all_axes_in_fig)
-            is_in_tiled_layout_mask(k_ax) = ~isempty(ancestor(all_axes_in_fig(k_ax), 'matlab.graphics.layout.TiledChartLayout'));
+        is_in_tiled_layout_mask = false(1, numel(all_axes_in_figure));
+        for axes_index = 1:numel(all_axes_in_figure)
+            is_in_tiled_layout_mask(axes_index) = ~isempty(ancestor(all_axes_in_figure(axes_index), 'matlab.graphics.layout.TiledChartLayout'));
         end
-        axes_not_in_tiled_layout = all_axes_in_fig(~is_in_tiled_layout_mask);
+        axes_not_in_tiled_layout = all_axes_in_figure(~is_in_tiled_layout_mask);
         num_to_scale_by = max(1, numel(axes_not_in_tiled_layout));
     end
 end
 end
 
 % --- Helper Function: Get Color Palette ---
-function active_palette = get_color_palette(params, fig_handle)
+function active_palette = get_color_palette(params, figure_handle)
 % Define Turbo and Cividis 10-color maps locally
 turbo_map_10 = [
     0.18995,0.07176,0.23217; 0.29325,0.31756,0.97420; 0.15136,0.56099,0.93081;
@@ -952,20 +952,20 @@ if ischar(palette_source) || isstring(palette_source)
             if exist('cividis','file') == 2; active_palette = cividis(10);
             else; active_palette = cividis_map_10; end
         case 'default_matlab'
-            original_visibility = ''; fig_valid_and_has_prop = false;
-            if isvalid(fig_handle) && isprop(fig_handle, 'HandleVisibility')
-                original_visibility = get(fig_handle,'HandleVisibility');
-                safe_set(params, fig_handle,'HandleVisibility','on'); % Use safe_set
-                fig_valid_and_has_prop = true;
+            original_visibility = ''; figure_is_valid_and_has_property = false;
+            if isvalid(figure_handle) && isprop(figure_handle, 'HandleVisibility')
+                original_visibility = get(figure_handle,'HandleVisibility');
+                safe_set(params, figure_handle,'HandleVisibility','on'); % Use safe_set
+                figure_is_valid_and_has_property = true;
             end
-            ax_temp = axes('Parent', fig_handle, 'Visible', 'off', 'HandleVisibility', 'off', 'Tag', 'BeautifyFig_TempAxesForColorOrder');
+            temporary_axes = axes('Parent', figure_handle, 'Visible', 'off', 'HandleVisibility', 'off', 'Tag', 'BeautifyFig_TempAxesForColorOrder');
             try
-                active_palette = get(ax_temp,'colororder');
+                active_palette = get(temporary_axes,'colororder');
             catch
                 active_palette = get(groot,'defaultAxesColorOrder');
             end
-            delete(ax_temp);
-            if fig_valid_and_has_prop; safe_set(params, fig_handle,'HandleVisibility',original_visibility); end % Use safe_set
+            delete(temporary_axes);
+            if figure_is_valid_and_has_property; safe_set(params, figure_handle,'HandleVisibility',original_visibility); end % Use safe_set
             if size(active_palette,1) < 2; active_palette = get(groot,'defaultAxesColorOrder'); end % Fallback if temp axes failed badly
         case 'custom'
             if ~isempty(params.custom_color_palette) && isnumeric(params.custom_color_palette) && ndims(params.custom_color_palette) == 2 && size(params.custom_color_palette,2) == 3 && size(params.custom_color_palette,1) > 0
@@ -997,17 +997,17 @@ if params.beautify_sgtitle
     % sgtitle applies to TiledChartLayout or Figure (if TiledChartLayout is direct child)
     if isa(container_handle, 'matlab.ui.Figure')
         % Find TiledChartLayouts that are direct children of the figure
-        tls_in_fig = findobj(container_handle, 'Type', 'tiledlayout', '-depth', 1);
-        for k_tl = 1:length(tls_in_fig)
-            if isvalid(tls_in_fig(k_tl)); beautify_sgtitle_if_exists(tls_in_fig(k_tl), params); end
+        tiled_layouts_in_figure = findobj(container_handle, 'Type', 'tiledlayout', '-depth', 1);
+        for tiled_layout_index = 1:length(tiled_layouts_in_figure)
+            if isvalid(tiled_layouts_in_figure(tiled_layout_index)); beautify_super_title_if_exists(tiled_layouts_in_figure(tiled_layout_index), params); end
         end
     elseif isa(container_handle, 'matlab.graphics.layout.TiledChartLayout')
-        beautify_sgtitle_if_exists(container_handle, params);
+        beautify_super_title_if_exists(container_handle, params);
     elseif isa(container_handle, 'matlab.ui.container.Tab')
         % Find TiledChartLayouts within this tab
-        tls_in_tab = findobj(container_handle, 'Type', 'tiledlayout'); % Search deeper in tab
-        for k_tl = 1:length(tls_in_tab)
-            if isvalid(tls_in_tab(k_tl)); beautify_sgtitle_if_exists(tls_in_tab(k_tl), params); end
+        tiled_layouts_in_tab = findobj(container_handle, 'Type', 'tiledlayout'); % Search deeper in tab
+        for tiled_layout_index = 1:length(tiled_layouts_in_tab)
+            if isvalid(tiled_layouts_in_tab(tiled_layout_index)); beautify_super_title_if_exists(tiled_layouts_in_tab(tiled_layout_index), params); end
         end
     end
 end
@@ -1017,19 +1017,19 @@ tiled_layouts_in_container = findobj(container_handle, 'Type', 'tiledlayout'); %
 % --- Pre-allocate array for handles of axes processed in tiled layouts ---
 num_axes_in_tiled_layouts = 0;
 if ~isempty(tiled_layouts_in_container)
-    for tl_idx = 1:length(tiled_layouts_in_container)
-        current_tiled_layout = tiled_layouts_in_container(tl_idx);
+    for tiled_layout_index = 1:length(tiled_layouts_in_container)
+        current_tiled_layout = tiled_layouts_in_container(tiled_layout_index);
         if ~isvalid(current_tiled_layout); continue; end
         axes_in_this_layout = get_axes_from_parent(current_tiled_layout, params, axes_to_ignore_combined);
         num_axes_in_tiled_layouts = num_axes_in_tiled_layouts + numel(axes_in_this_layout);
     end
 end
 processed_axes_in_tiled_layouts = gobjects(1, num_axes_in_tiled_layouts);
-processed_idx = 0;
+processed_index = 0;
 
 if ~isempty(tiled_layouts_in_container)
-    for tl_idx = 1:length(tiled_layouts_in_container)
-        current_tiled_layout = tiled_layouts_in_container(tl_idx);
+    for tiled_layout_index = 1:length(tiled_layouts_in_container)
+        current_tiled_layout = tiled_layouts_in_container(tiled_layout_index);
         if ~isvalid(current_tiled_layout); continue; end
 
         axes_in_this_layout = get_axes_from_parent(current_tiled_layout, params, axes_to_ignore_combined);
@@ -1040,12 +1040,12 @@ if ~isempty(tiled_layouts_in_container)
         grid_size_display = current_tiled_layout.GridSize;
         log_message(params, sprintf('  TiledLayout (Grid: %dx%d, Axes found: %d). Scale: %.2f', grid_size_display(1), grid_size_display(2), numel(axes_in_this_layout), scale_factor), 2, 'Info');
 
-        for ax_loop_idx = 1:numel(axes_in_this_layout)
-            ax_to_beautify = axes_in_this_layout(ax_loop_idx);
-            if isvalid(ax_to_beautify)
-                beautify_single_axes(ax_to_beautify, params, scale_factor, ax_loop_idx);
-                processed_idx = processed_idx + 1;
-                processed_axes_in_tiled_layouts(processed_idx) = ax_to_beautify;
+        for axes_loop_index = 1:numel(axes_in_this_layout)
+            axes_to_beautify = axes_in_this_layout(axes_loop_index);
+            if isvalid(axes_to_beautify)
+                beautify_single_axes(axes_to_beautify, params, scale_factor, axes_loop_index);
+                processed_index = processed_index + 1;
+                processed_axes_in_tiled_layouts(processed_index) = axes_to_beautify;
             end
         end
     end
@@ -1055,12 +1055,12 @@ end
 all_axes_in_container_direct = get_axes_from_parent(container_handle, params, axes_to_ignore_combined);
 % Use a logical mask to identify axes not in any TiledLayout, avoiding array growth.
 is_not_in_any_tiled_layout_mask = true(size(all_axes_in_container_direct));
-for k_ax_direct = 1:numel(all_axes_in_container_direct)
-    ax_candidate = all_axes_in_container_direct(k_ax_direct);
+for direct_axes_index = 1:numel(all_axes_in_container_direct)
+    axes_candidate = all_axes_in_container_direct(direct_axes_index);
     % Check if this axis was already processed because it was in a TiledLayout
-    is_already_processed = any(processed_axes_in_tiled_layouts == ax_candidate);
-    if is_already_processed || ~isempty(ancestor(ax_candidate, 'matlab.graphics.layout.TiledChartLayout'))
-        is_not_in_any_tiled_layout_mask(k_ax_direct) = false;
+    is_already_processed = any(processed_axes_in_tiled_layouts == axes_candidate);
+    if is_already_processed || ~isempty(ancestor(axes_candidate, 'matlab.graphics.layout.TiledChartLayout'))
+        is_not_in_any_tiled_layout_mask(direct_axes_index) = false;
     end
 end
 axes_not_in_any_tiled_layout = all_axes_in_container_direct(is_not_in_any_tiled_layout_mask);
@@ -1074,28 +1074,28 @@ end
 
 num_axes_no_tiled_layout = numel(axes_not_in_any_tiled_layout);
 % For non-tiled axes, scale_factor is based on their count within the current container
-% (fig or tab), assuming they are somewhat "subplot-like".
+% (figure_handle or tab), assuming they are somewhat "subplot-like".
 scale_factor_no_tiled_layout = get_scale_factor(num_axes_no_tiled_layout, params.scaling_map, params.min_scale_factor, params.max_scale_factor);
 log_message(params, sprintf('  Container has %d axes not in a TiledLayout. Scale: %.2f', num_axes_no_tiled_layout, scale_factor_no_tiled_layout), 2, 'Info');
 
-for ax_idx = 1:num_axes_no_tiled_layout
-    ax_to_beautify = axes_not_in_any_tiled_layout(ax_idx);
-    if isvalid(ax_to_beautify)
-        beautify_single_axes(ax_to_beautify, params, scale_factor_no_tiled_layout, ax_idx);
+for axes_index = 1:num_axes_no_tiled_layout
+    axes_to_beautify = axes_not_in_any_tiled_layout(axes_index);
+    if isvalid(axes_to_beautify)
+        beautify_single_axes(axes_to_beautify, params, scale_factor_no_tiled_layout, axes_index);
     end
 end
 end
 
 % --- Helper Function: Beautify Super Title (sgtitle) ---
-function beautify_sgtitle_if_exists(layout_or_fig_handle, params)
-% layout_or_fig_handle can be a TiledChartLayout or a Figure
+function beautify_super_title_if_exists(layout_or_figure_handle, params)
+% layout_or_figure_handle can be a TiledChartLayout or a Figure
 try
-    sgt = [];
-    if isa(layout_or_fig_handle, 'matlab.graphics.layout.TiledChartLayout')
-        if isprop(layout_or_fig_handle, 'Title') && isvalid(layout_or_fig_handle.Title) && ~isempty(layout_or_fig_handle.Title.String)
-            sgt = layout_or_fig_handle.Title;
+    super_title_handle = [];
+    if isa(layout_or_figure_handle, 'matlab.graphics.layout.TiledChartLayout')
+        if isprop(layout_or_figure_handle, 'Title') && isvalid(layout_or_figure_handle.Title) && ~isempty(layout_or_figure_handle.Title.String)
+            super_title_handle = layout_or_figure_handle.Title;
         end
-    elseif isa(layout_or_fig_handle, 'matlab.ui.Figure')
+    elseif isa(layout_or_figure_handle, 'matlab.ui.Figure')
         % For a figure, sgtitle might be associated with a TiledChartLayout child
         % This case is handled by iterating TiledChartLayouts in process_container
         % Or, if user called sgtitle(fig, ...), it creates a special axes.
@@ -1104,15 +1104,15 @@ try
         return; % Figure-level sgtitle handled by iterating its TiledLayouts
     end
 
-    if ~isempty(sgt)
+    if ~isempty(super_title_handle)
         % Use a slightly larger scale for sgtitle than for regular titles
         % Max scale factor is used as sgtitle is unique per layout/figure.
-        sg_font_size = round(params.base_font_size * params.title_scale * params.max_scale_factor * 1.15); % Slightly smaller multiplier
-        sg_font_size = max(sg_font_size, round(params.base_font_size * 1.6)); % Ensure a minimum prominent size
-        process_text_prop(sgt, sgt.String, sg_font_size, 'bold', params.text_color, params.font_name, params, true); % LaTeX auto usually off for sgtitle
+        super_title_font_size = round(params.base_font_size * params.title_scale * params.max_scale_factor * 1.15); % Slightly smaller multiplier
+        super_title_font_size = max(super_title_font_size, round(params.base_font_size * 1.6)); % Ensure a minimum prominent size
+        process_text_property(super_title_handle, super_title_handle.String, super_title_font_size, 'bold', params.text_color, params.font_name, params, true); % LaTeX auto usually off for sgtitle
     end
-catch me_sgtitle
-    log_message(params, sprintf('Could not beautify sgtitle: %s', me_sgtitle.message), 1, 'Warning');
+catch me_super_title
+    log_message(params, sprintf('Could not beautify sgtitle: %s', me_super_title.message), 1, 'Warning');
 end
 end
 
@@ -1125,13 +1125,13 @@ try
     % This is crucial for TiledChartLayout where axes are direct children.
     % For figure/tab, this will find top-level axes.
     potential_children = findobj(parent_handle, '-depth', 1);
-catch me_findobj
-    log_message(params, sprintf('findobj failed for parent %s (Tag: %s): %s', class(parent_handle), parent_handle.Tag, me_findobj.message),1,'Warning');
+catch me_find_object
+    log_message(params, sprintf('findobj failed for parent %s (Tag: %s): %s', class(parent_handle), parent_handle.Tag, me_find_object.message),1,'Warning');
     return;
 end
 
-for k_child=1:length(potential_children)
-    child = potential_children(k_child);
+for child_index=1:length(potential_children)
+    child = potential_children(child_index);
     if child == parent_handle || ~isvalid(child); continue; end % Skip self or invalid
 
     is_valid_axis_type = (isa(child, 'matlab.graphics.axis.Axes') || ...
@@ -1165,110 +1165,110 @@ end
 end
 
 % --- Helper Function: Get Scaling Factor ---
-function sf = get_scale_factor(num_subplots, scaling_map, min_scale_factor, max_scale_factor)
-keys = cell2mat(scaling_map.keys);
-values = cell2mat(scaling_map.values);
+function scale_factor = get_scale_factor(num_subplots, scaling_map, min_scale_factor, max_scale_factor)
+map_keys = cell2mat(scaling_map.keys);
+map_values = cell2mat(scaling_map.values);
 if num_subplots <= 0; num_subplots = 1; end % Ensure num_subplots is at least 1
 
-idx = find(keys == num_subplots, 1);
-if ~isempty(idx)
-    sf = values(idx);
+index = find(map_keys == num_subplots, 1);
+if ~isempty(index)
+    scale_factor = map_values(index);
 else
-    sorted_keys = sort(keys); % Ensure keys are sorted for interpolation/extrapolation logic
+    sorted_keys = sort(map_keys); % Ensure keys are sorted for interpolation/extrapolation logic
     min_key = sorted_keys(1);
     max_key = sorted_keys(end);
 
     if num_subplots < min_key
         % Extrapolate downwards: scale factor increases as num_subplots decreases
-        sf = values(keys == min_key) * nthroot(min_key / num_subplots, 2.5); % Ratio > 1
+        scale_factor = map_values(map_keys == min_key) * nthroot(min_key / num_subplots, 2.5); % Ratio > 1
     elseif num_subplots > max_key
         % Extrapolate upwards: scale factor decreases as num_subplots increases
-        sf = values(keys == max_key) * nthroot(max_key / num_subplots, 2.5); % Ratio < 1
+        scale_factor = map_values(map_keys == max_key) * nthroot(max_key / num_subplots, 2.5); % Ratio < 1
     else
         % Interpolate
-        sf = interp1(keys, values, num_subplots, 'linear'); % 'extrap' not needed due to prior checks
+        scale_factor = interp1(map_keys, map_values, num_subplots, 'linear'); % 'extrap' not needed due to prior checks
 
         % Clamp interpolation to avoid extreme values if map is sparse near num_subplots
         % Find nearest lower and upper bound values from the map
-        lower_bound_value = interp1(keys, values, max(keys(keys<num_subplots)), 'nearest');
-        upper_bound_value = interp1(keys, values, min(keys(keys>num_subplots)), 'nearest');
-        % Ensure sf is not drastically different from its neighbors in the map
-        sf = max(min(sf, max(lower_bound_value, upper_bound_value) * 1.1), min(lower_bound_value, upper_bound_value) * 0.9);
+        lower_bound_value = interp1(map_keys, map_values, max(map_keys(map_keys<num_subplots)), 'nearest');
+        upper_bound_value = interp1(map_keys, map_values, min(map_keys(map_keys>num_subplots)), 'nearest');
+        % Ensure scale_factor is not drastically different from its neighbors in the map
+        scale_factor = max(min(scale_factor, max(lower_bound_value, upper_bound_value) * 1.1), min(lower_bound_value, upper_bound_value) * 0.9);
     end
 end
-sf = max(min_scale_factor, min(max_scale_factor, sf)); % Clamp to global min/max scale factors
+scale_factor = max(min_scale_factor, min(max_scale_factor, scale_factor)); % Clamp to global min/max scale factors
 end
 
 % --- START OF CHILD STYLING HELPERS ---
 
-function style_line(child, params, scaled_sizes, style_props)
-    props_to_set = {'LineWidth', scaled_sizes.actual_plot_line_width, 'MarkerSize', scaled_sizes.marker_size_scaled};
-    if ~isempty(style_props.color); props_to_set = [props_to_set, {'Color', style_props.color}]; end
-    if ~isempty(style_props.line_style); props_to_set = [props_to_set, {'LineStyle', style_props.line_style}]; end
-    if ~strcmpi(style_props.marker, 'none')
-        props_to_set = [props_to_set, {'Marker', style_props.marker}];
-        if ~strcmpi(style_props.marker, '.') && ~isempty(style_props.color)
-            props_to_set = [props_to_set, {'MarkerFaceColor', style_props.color, 'MarkerEdgeColor', style_props.color*0.7}];
-        elseif strcmpi(style_props.marker, '.') && ~isempty(style_props.color)
-            props_to_set = [props_to_set, {'MarkerEdgeColor', style_props.color, 'MarkerFaceColor', 'none'}];
+function style_line(child, params, scaled_sizes, style_properties)
+    properties_to_set = {'LineWidth', scaled_sizes.actual_plot_line_width, 'MarkerSize', scaled_sizes.marker_size_scaled};
+    if ~isempty(style_properties.color); properties_to_set = [properties_to_set, {'Color', style_properties.color}]; end
+    if ~isempty(style_properties.line_style); properties_to_set = [properties_to_set, {'LineStyle', style_properties.line_style}]; end
+    if ~strcmpi(style_properties.marker, 'none')
+        properties_to_set = [properties_to_set, {'Marker', style_properties.marker}];
+        if ~strcmpi(style_properties.marker, '.') && ~isempty(style_properties.color)
+            properties_to_set = [properties_to_set, {'MarkerFaceColor', style_properties.color, 'MarkerEdgeColor', style_properties.color*0.7}];
+        elseif strcmpi(style_properties.marker, '.') && ~isempty(style_properties.color)
+            properties_to_set = [properties_to_set, {'MarkerEdgeColor', style_properties.color, 'MarkerFaceColor', 'none'}];
         end
-    elseif ~strcmpi(child.Marker,'none') && ~isempty(style_props.color)
+    elseif ~strcmpi(child.Marker,'none') && ~isempty(style_properties.color)
         if isprop(child,'MarkerFaceColor') && ~ischar(child.MarkerFaceColor) && ~any(strcmpi(child.MarkerFaceColor,{'auto','none'}))
-            props_to_set = [props_to_set, {'MarkerFaceColor',style_props.color}];
+            properties_to_set = [properties_to_set, {'MarkerFaceColor',style_properties.color}];
         end
         if isprop(child,'MarkerEdgeColor') && ~ischar(child.MarkerEdgeColor) && ~any(strcmpi(child.MarkerEdgeColor,{'auto','none'}))
-            props_to_set = [props_to_set, {'MarkerEdgeColor',style_props.color*0.7}];
+            properties_to_set = [properties_to_set, {'MarkerEdgeColor',style_properties.color*0.7}];
         end
     end
-    safe_set(params, child, props_to_set{:});
+    safe_set(params, child, properties_to_set{:});
 end
 
-function style_scatter(child, params, scaled_sizes, style_props)
-    props_to_set = {'SizeData', scaled_sizes.marker_size_scaled^2, 'LineWidth', scaled_sizes.actual_plot_line_width*0.5};
-    if ~isempty(style_props.color)
+function style_scatter(child, params, scaled_sizes, style_properties)
+    properties_to_set = {'SizeData', scaled_sizes.marker_size_scaled^2, 'LineWidth', scaled_sizes.actual_plot_line_width*0.5};
+    if ~isempty(style_properties.color)
         if isprop(child, 'MarkerFaceColor') && ~(ischar(child.MarkerFaceColor) && any(strcmpi(child.MarkerFaceColor,{'none','flat'})))
-            props_to_set = [props_to_set, {'MarkerFaceColor', style_props.color}];
+            properties_to_set = [properties_to_set, {'MarkerFaceColor', style_properties.color}];
         end
         if isprop(child, 'MarkerEdgeColor') && ~(ischar(child.MarkerEdgeColor) && strcmpi(child.MarkerEdgeColor,'none'))
-            props_to_set = [props_to_set, {'MarkerEdgeColor', style_props.color*0.75}];
+            properties_to_set = [properties_to_set, {'MarkerEdgeColor', style_properties.color*0.75}];
         end
     end
-    if ~strcmpi(style_props.marker, 'none'); props_to_set = [props_to_set, {'Marker', style_props.marker}]; end
-    safe_set(params, child, props_to_set{:});
+    if ~strcmpi(style_properties.marker, 'none'); properties_to_set = [properties_to_set, {'Marker', style_properties.marker}]; end
+    safe_set(params, child, properties_to_set{:});
 end
 
-function style_bar(child, params, scaled_sizes, style_props)
-    props_to_set = {'LineWidth', scaled_sizes.axis_line_width_scaled*0.9};
-    if ~isempty(style_props.color)
+function style_bar(child, params, scaled_sizes, style_properties)
+    properties_to_set = {'LineWidth', scaled_sizes.axis_line_width_scaled*0.9};
+    if ~isempty(style_properties.color)
         if isprop(child, 'FaceColor') && (~ischar(child.FaceColor) || ~strcmpi(child.FaceColor,'flat'))
-            props_to_set = [props_to_set, {'FaceColor', style_props.color}];
+            properties_to_set = [properties_to_set, {'FaceColor', style_properties.color}];
         end
-        edge_color = style_props.color * 0.7;
+        edge_color = style_properties.color * 0.7;
         if isequal(edge_color, [0 0 0]); edge_color = params.axis_color*0.5; end
-        props_to_set = [props_to_set, {'EdgeColor', edge_color}];
+        properties_to_set = [properties_to_set, {'EdgeColor', edge_color}];
     else
-        props_to_set = [props_to_set, {'EdgeColor', params.axis_color*0.7}];
+        properties_to_set = [properties_to_set, {'EdgeColor', params.axis_color*0.7}];
     end
-    safe_set(params, child, props_to_set{:});
+    safe_set(params, child, properties_to_set{:});
 end
 
-function style_histogram(child, params, scaled_sizes, style_props)
-    props_to_set = {'LineWidth', scaled_sizes.axis_line_width_scaled*0.8, 'FaceAlpha', 0.7};
-    if ~isempty(style_props.color)
-        props_to_set = [props_to_set, {'FaceColor', style_props.color, 'EdgeColor', style_props.color*0.5}];
+function style_histogram(child, params, scaled_sizes, style_properties)
+    properties_to_set = {'LineWidth', scaled_sizes.axis_line_width_scaled*0.8, 'FaceAlpha', 0.7};
+    if ~isempty(style_properties.color)
+        properties_to_set = [properties_to_set, {'FaceColor', style_properties.color, 'EdgeColor', style_properties.color*0.5}];
     else
-        props_to_set = [props_to_set, {'EdgeColor', params.axis_color*0.5}];
+        properties_to_set = [properties_to_set, {'EdgeColor', params.axis_color*0.5}];
     end
-    safe_set(params, child, props_to_set{:});
+    safe_set(params, child, properties_to_set{:});
 end
 
-function style_errorbar(child, params, scaled_sizes, style_props)
+function style_errorbar(child, params, scaled_sizes, style_properties)
     base_cap_size_for_error_bar = params.marker_size * 0.8;
     scaled_cap_size = base_cap_size_for_error_bar * params.errorbar_cap_size_scale * scaled_sizes.font_size / params.base_font_size;
-    props_to_set = {'LineWidth', scaled_sizes.actual_plot_line_width*0.8, 'MarkerSize', scaled_sizes.marker_size_scaled*0.8, 'CapSize', max(1, scaled_cap_size)};
-    if ~isempty(style_props.color); props_to_set = [props_to_set, {'Color',style_props.color}]; end
-    if ~strcmpi(style_props.marker, 'none'); props_to_set = [props_to_set, {'Marker', style_props.marker}]; end
-    safe_set(params, child, props_to_set{:});
+    properties_to_set = {'LineWidth', scaled_sizes.actual_plot_line_width*0.8, 'MarkerSize', scaled_sizes.marker_size_scaled*0.8, 'CapSize', max(1, scaled_cap_size)};
+    if ~isempty(style_properties.color); properties_to_set = [properties_to_set, {'Color',style_properties.color}]; end
+    if ~strcmpi(style_properties.marker, 'none'); properties_to_set = [properties_to_set, {'Marker', style_properties.marker}]; end
+    safe_set(params, child, properties_to_set{:});
 end
 
 function style_surface(child, params, scaled_sizes)
@@ -1383,12 +1383,12 @@ function plottable_children_for_legend = style_plot_children(ax, params, scaled_
     if ~isempty(params.exclude_object_tags)
         children_to_keep_indices = true(size(all_children_original));
         ax_tag_for_log = ''; if isprop(ax, 'Tag') && ~isempty(ax.Tag); ax_tag_for_log = ax.Tag; end
-        for child_idx = 1:length(all_children_original)
-            obj = all_children_original(child_idx);
+        for child_index = 1:length(all_children_original)
+            obj = all_children_original(child_index);
             if isprop(obj, 'Tag')
                 obj_tag = get(obj, 'Tag');
                 if ~isempty(obj_tag) && ismember(obj_tag, params.exclude_object_tags)
-                    children_to_keep_indices(child_idx) = false;
+                    children_to_keep_indices(child_index) = false;
                     if isempty(ax_tag_for_log); ax_identifier_for_log = sprintf('of type %s (no Tag)', class(ax));
                     else; ax_identifier_for_log = sprintf('(Tag: %s)', ax_tag_for_log); end
                     log_message(params, sprintf('  Excluding object with tag "%s" from beautification in axes %s.', obj_tag, ax_identifier_for_log), 2, 'Info');
@@ -1418,12 +1418,12 @@ function plottable_children_for_legend = style_plot_children(ax, params, scaled_
     is_legend_candidate_mask_for_processed = arrayfun(@is_legend_candidate_check, processed_children_order);
     plottable_children_for_legend = processed_children_order(is_legend_candidate_mask_for_processed);
 
-    color_idx = 0;
+    color_index = 0;
     num_marker_styles = length(params.marker_styles);
     num_line_styles = length(params.line_style_order);
 
-    for k_child = 1:length(processed_children_order)
-        child = processed_children_order(k_child);
+    for child_index = 1:length(processed_children_order)
+        child = processed_children_order(child_index);
         try
             is_plottable_for_styling = isa(child, 'matlab.graphics.chart.primitive.Line') || ...
                                       isa(child, 'matlab.graphics.chart.primitive.Scatter') || ...
@@ -1435,13 +1435,13 @@ function plottable_children_for_legend = style_plot_children(ax, params, scaled_
 
             style_props.color = []; style_props.marker = 'none'; style_props.line_style = '';
             if is_plottable_for_styling
-                color_idx = color_idx + 1;
-                style_props.color = params.active_color_palette(mod(color_idx-1, params.num_palette_colors)+1, :);
+                color_index = color_index + 1;
+                style_props.color = params.active_color_palette(mod(color_index-1, params.num_palette_colors)+1, :);
                 if activate_marker_cycle_now && num_marker_styles > 0
-                    style_props.marker = params.marker_styles{mod(color_idx-1, num_marker_styles)+1};
+                    style_props.marker = params.marker_styles{mod(color_index-1, num_marker_styles)+1};
                 end
                 if activate_line_style_cycle_now && num_line_styles > 0
-                    style_props.line_style = params.line_style_order{mod(color_idx-1, num_line_styles)+1};
+                    style_props.line_style = params.line_style_order{mod(color_index-1, num_line_styles)+1};
                 end
             end
 
@@ -1475,8 +1475,8 @@ function style_general_text_objects(ax, params, font_size)
         text_children = [];
     end
 
-    for k_text = 1:length(text_children)
-        text_obj = text_children(k_text);
+    for text_index = 1:length(text_children)
+        text_obj = text_children(text_index);
         if ~isvalid(text_obj); continue; end
 
         parent_of_text = [];
@@ -1571,50 +1571,50 @@ function restore_original_colorbar_props(colorbar_handle, original_props, params
 end
 
 % --- Core Function: Beautify a Single Axes Object ---
-function beautify_single_axes(ax, params, scale_factor, ~) % axes_idx not used currently
-    if ~isvalid(ax); return; end
+function beautify_single_axes(axes_handle, params, scale_factor, ~) % axes_index not used currently
+    if ~isvalid(axes_handle); return; end
 
     % Early exit for non-applicable colorbars
-    if isa(ax, 'matlab.graphics.illustration.ColorBar') && ~params.apply_to_colorbars
-        ax_tag_info = ''; if isprop(ax,'Tag'); ax_tag_info = ax.Tag; end
-        log_message(params, sprintf('Skipping all styling for ColorBar object (Tag: %s) itself as apply_to_colorbars is false.', ax_tag_info), 1, 'Info');
+    if isa(axes_handle, 'matlab.graphics.illustration.ColorBar') && ~params.apply_to_colorbars
+        axes_tag_info = ''; if isprop(axes_handle,'Tag'); axes_tag_info = axes_handle.Tag; end
+        log_message(params, sprintf('Skipping all styling for ColorBar object (Tag: %s) itself as apply_to_colorbars is false.', axes_tag_info), 1, 'Info');
         return;
     end
 
     % Store original colorbar properties if it's associated with this axes and shouldn't be touched
-    [original_colorbar_props, colorbar_handle_for_restore] = store_original_colorbar_props(ax, params);
+    [original_colorbar_properties, colorbar_handle_for_restore] = store_original_colorbar_properties(axes_handle, params);
 
-    current_hold_state = ishold(ax); if ~current_hold_state; safe_hold(params, ax, 'on'); end
+    current_hold_state = ishold(axes_handle); if ~current_hold_state; safe_hold(params, axes_handle, 'on'); end
 
     % Calculate all scaled sizes in one place
     scaled_sizes = calculate_scaled_sizes(params, scale_factor);
 
     % Apply base styling to the axes object itself
-    apply_base_axes_style(ax, params, scaled_sizes);
+    apply_base_axes_style(axes_handle, params, scaled_sizes);
 
     % Style all the plot objects (lines, bars, etc.) within the axes
-    plottable_children_for_legend = style_plot_children(ax, params, scaled_sizes);
+    plottable_children_for_legend = style_plot_children(axes_handle, params, scaled_sizes);
 
     % Style general text objects that are not titles or labels
     if params.apply_to_general_text
-        style_general_text_objects(ax, params, scaled_sizes.font_size);
+        style_general_text_objects(axes_handle, params, scaled_sizes.font_size);
     end
 
     % Apply final touches like legends, colorbars, and overlays
-    beautify_legend(ax, params, plottable_children_for_legend, scaled_sizes.font_size, scaled_sizes.axis_line_width_scaled);
-    if params.apply_to_colorbars; beautify_colorbar(ax, params, scaled_sizes.font_size, scaled_sizes.label_font_size, scaled_sizes.axis_line_width_scaled); end
-    if params.stats_overlay.enabled && isa(ax, 'matlab.graphics.axis.Axes')
+    beautify_legend(axes_handle, params, plottable_children_for_legend, scaled_sizes.font_size, scaled_sizes.axis_line_width_scaled);
+    if params.apply_to_colorbars; beautify_colorbar(axes_handle, params, scaled_sizes.font_size, scaled_sizes.label_font_size, scaled_sizes.axis_line_width_scaled); end
+    if params.stats_overlay.enabled && isa(axes_handle, 'matlab.graphics.axis.Axes')
         try
-            apply_stats_overlay(ax, params, scale_factor);
+            apply_stats_overlay(axes_handle, params, scale_factor);
         catch me_stats_overlay
-            log_message(params, sprintf('Error applying stats overlay to Axes (Tag: %s): %s (Line: %d)', ax.Tag, me_stats_overlay.message, me_stats_overlay.stack(1).line), 1, 'Warning');
+            log_message(params, sprintf('Error applying stats overlay to Axes (Tag: %s): %s (Line: %d)', axes_handle.Tag, me_stats_overlay.message, me_stats_overlay.stack(1).line), 1, 'Warning');
         end
     end
 
     % Restore original colorbar properties if they were stored
-    restore_original_colorbar_props(colorbar_handle_for_restore, original_colorbar_props, params);
+    restore_original_colorbar_properties(colorbar_handle_for_restore, original_colorbar_properties, params);
 
-    if ~current_hold_state; safe_hold(params, ax, 'off'); end
+    if ~current_hold_state; safe_hold(params, axes_handle, 'off'); end
 end
 
 
@@ -1664,8 +1664,8 @@ try
         existing_legend = ax.Legend;
     elseif isfield(params, 'all_legends_in_fig') && ~isempty(params.all_legends_in_fig)
         all_legends_in_fig = params.all_legends_in_fig;
-        for k_leg = 1:numel(all_legends_in_fig)
-            current_legend = all_legends_in_fig(k_leg);
+        for legend_index = 1:numel(all_legends_in_fig)
+            current_legend = all_legends_in_fig(legend_index);
             if ~isvalid(current_legend); continue; end
             associated_axes = [];
             try
@@ -2110,9 +2110,9 @@ try
     default_text_color = params.text_color;
     faded_text_color = default_text_color*0.4 + 0.5; % Make it grayish
 
-for k_entry=1:num_to_process
-        entry = legend_entries(k_entry);
-        corresponding_plot = plot_objects(k_entry);
+for entry_index=1:num_to_process
+        entry = legend_entries(entry_index);
+        corresponding_plot = plot_objects(entry_index);
         if ~isvalid(entry) || ~isvalid(corresponding_plot); continue; end
 
         is_plot_visible = strcmpi(get(corresponding_plot,'Visible'),'on');
@@ -2271,8 +2271,8 @@ target_plot_object = [];
 ax_children = get(ax, 'Children');
 
 if ~isempty(stats_overlay_params.target_plot_handle_tag)
-    for k_child = 1:length(ax_children)
-        child = ax_children(k_child);
+    for child_index = 1:length(ax_children)
+        child = ax_children(child_index);
         % Check direct child or children of a group (e.g., hggroup for boxplot)
         if isprop(child,'Tag') && strcmp(get(child,'Tag'), stats_overlay_params.target_plot_handle_tag) && ...
                 (isa(child, 'matlab.graphics.chart.primitive.Line') || isa(child, 'matlab.graphics.chart.primitive.Scatter'))
@@ -2288,8 +2288,8 @@ if ~isempty(stats_overlay_params.target_plot_handle_tag)
         log_message(params, sprintf('Stats Overlay: No plot found with tag "%s" in current axes.', stats_overlay_params.target_plot_handle_tag), 2, 'Info'); return;
     end
 else % Tag is empty, find first suitable plot
-    for k_child = 1:length(ax_children)
-        child = ax_children(k_child);
+    for child_index = 1:length(ax_children)
+        child = ax_children(child_index);
         if (isa(child, 'matlab.graphics.chart.primitive.Line') || ...
                 isa(child, 'matlab.graphics.chart.primitive.Scatter')) && ...
                 isprop(child, 'YData') && ~isempty(child.YData) && ...
@@ -2303,8 +2303,8 @@ else % Tag is empty, find first suitable plot
         % Check if the selection was ambiguous (only if tag was empty)
         if isempty(stats_overlay_params.target_plot_handle_tag)
             num_suitable_plots = 0;
-            for k_child_check = 1:length(ax_children)
-                child_check = ax_children(k_child_check);
+            for child_check_index = 1:length(ax_children)
+                child_check = ax_children(child_check_index);
                  if (isa(child_check, 'matlab.graphics.chart.primitive.Line') || ...
                      isa(child_check, 'matlab.graphics.chart.primitive.Scatter')) && ...
                      isprop(child_check, 'YData') && ~isempty(child_check.YData) && ...
@@ -2369,25 +2369,25 @@ if isempty(y_data)
 end
 
 stats_string_lines = cell(1,0); % Initialize as row cell
-for k_stat = 1:length(stats_overlay_params.statistics)
-    stat_name = lower(stats_overlay_params.statistics{k_stat});
-    val = NaN; stat_label = '';
+for stat_index = 1:length(stats_overlay_params.statistics)
+    stat_name = lower(stats_overlay_params.statistics{stat_index});
+    value = NaN; stat_label = '';
     switch stat_name
-        case 'mean'; val = mean(y_data); stat_label = 'Mean';
-        case 'std'; val = std(y_data); stat_label = 'Std Dev';
-        case 'min'; val = min(y_data); stat_label = 'Min';
-        case 'max'; val = max(y_data); stat_label = 'Max';
-        case 'n'; val = length(y_data); stat_label = 'N';
-        case 'median'; val = median(y_data); stat_label = 'Median';
-        case 'sum'; val = sum(y_data); stat_label = 'Sum';
+        case 'mean'; value = mean(y_data); stat_label = 'Mean';
+        case 'std'; value = std(y_data); stat_label = 'Std Dev';
+        case 'min'; value = min(y_data); stat_label = 'Min';
+        case 'max'; value = max(y_data); stat_label = 'Max';
+        case 'n'; value = length(y_data); stat_label = 'N';
+        case 'median'; value = median(y_data); stat_label = 'Median';
+        case 'sum'; value = sum(y_data); stat_label = 'Sum';
         otherwise
             log_message(params,['Stats Overlay: Unknown statistic "' stat_name '" requested.'],1,'Warning'); continue;
     end
-    if ~isnan(val)
+    if ~isnan(value)
         if any(strcmp(stat_name, {'n', 'count'})) % Integer stats
-            stats_string_lines{end+1} = sprintf('%s: %d', stat_label, round(val));
+            stats_string_lines{end+1} = sprintf('%s: %d', stat_label, round(value));
         else % Floating point stats
-            stats_string_lines{end+1} = sprintf('%s: %.*f', stat_label, stats_overlay_params.precision, val);
+            stats_string_lines{end+1} = sprintf('%s: %.*f', stat_label, stats_overlay_params.precision, value);
         end
     end
 end
