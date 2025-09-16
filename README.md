@@ -2,6 +2,9 @@
 
 A MATLAB function to systematically enhance the aesthetics of figures for presentations and publications.
 
+![Beautify Figure Example](https://user-images.githubusercontent.com/12345/beautify_figure_example.png)
+*(Note: Example image. You can generate more sample images by running the `test_beautify_figure.m` script.)*
+
 ## Purpose
 
 The `beautify_figure.m` script provides a comprehensive set of tools to improve the visual appeal of MATLAB figures. It allows for customization of fonts, colors, line styles, markers, grid, legend, titles, and much more. It operates on an entire figure, handling multiple subplots, tiled layouts, and tabs to apply consistent styling throughout.
@@ -162,6 +165,30 @@ beautify_figure('stats_overlay', stats_opts);
 ## Dependencies
 
 *   MATLAB (R2019b or newer recommended for full feature compatibility, especially interactive legends).
+
+## Testing
+
+This repository includes a comprehensive test suite to ensure the functionality and stability of `beautify_figure.m`. The tests are located in the root directory.
+
+### Visual Regression Tests (`test_beautify_figure.m`)
+
+This is a script-based test suite that generates a series of "before" and "after" `.png` images for various features and use cases. It allows for easy visual inspection of the script's output.
+
+**To run:**
+```matlab
+% This will create a 'test_outputs' directory with the image files.
+test_beautify_figure;
+```
+
+### Automated Unit Tests (`BeautifyFigureTest.m`)
+
+This is a class-based test suite using the MATLAB Unit Testing Framework. It provides automated, programmatic checks for the script's logic, parameter handling, and error conditions, without requiring manual visual inspection.
+
+**To run:**
+```matlab
+% This will run all tests in the file and display a summary in the command window.
+runtests('BeautifyFigureTest.m');
+```
 
 ## License
 

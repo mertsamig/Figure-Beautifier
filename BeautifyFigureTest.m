@@ -197,4 +197,106 @@ classdef BeautifyFigureTest < matlab.unittest.TestCase
                 'Colorbar LineWidth should not change when apply_to_colorbars is false.');
         end
     end
+
+    methods(Test)
+        function testLogLevels(testCase)
+            % Test the log_level parameter.
+            plot(testCase.TestFigure, 1:10);
+
+            % Test log_level 0 (silent)
+            output_silent = evalc("beautify_figure('figure_handle', testCase.TestFigure, 'log_level', 0)");
+            testCase.verifyEmpty(strtrim(output_silent), 'log_level 0 should produce no console output.');
+
+            % Test log_level 1 (normal) - should produce some output
+            output_normal = evalc("beautify_figure('figure_handle', testCase.TestFigure, 'log_level', 1)");
+            testCase.verifyNotEmpty(strtrim(output_normal), 'log_level 1 should produce some console output.');
+
+            % Test log_level 2 (detailed) - should produce more output
+            output_detailed = evalc("beautify_figure('figure_handle', testCase.TestFigure, 'log_level', 2)");
+            testCase.verifyGreaterThan(length(output_detailed), length(output_normal), ...
+                'log_level 2 should produce more output than log_level 1.');
+        end
+
+        function testInteractiveLegendCallback(testCase)
+            % Test that the interactive_legend parameter sets the callback.
+            plot(testCase.TestFigure, rand(10, 2));
+            legend('Line 1', 'Line 2');
+
+            % Test with interactive legend enabled
+            beautify_figure('figure_handle', testCase.TestFigure, 'interactive_legend', true);
+            leg_handle = findobj(testCase.TestFigure, 'Type', 'Legend');
+            testCase.verifyNotEmpty(get(leg_handle, 'ItemHitFcn'), ...
+                'ItemHitFcn should be set when interactive_legend is true.');
+
+            % Test with interactive legend disabled
+            cla(testCase.TestFigure);
+            plot(testCase.TestFigure, rand(10, 2));
+            legend('Line 1', 'Line 2');
+            beautify_figure('figure_handle', testCase.TestFigure, 'interactive_legend', false);
+            leg_handle_disabled = findobj(testCase.TestFigure, 'Type', 'Legend');
+            testCase.verifyEmpty(get(leg_handle_disabled, 'ItemHitFcn'), ...
+                'ItemHitFcn should be empty when interactive_legend is false.');
+        end
+
+        function testExcludeObjectTags(testCase)
+            % Test the exclude_object_tags parameter.
+            ax = get(testCase.TestFigure, 'CurrentAxes');
+            hold(ax, 'on');
+            p1 = plot(ax, 1:10, rand(1, 10), 'Tag', 'plot1');
+            p2 = plot(ax, 1:10, rand(1, 10) + 1, 'Tag', 'exclude_this_one');
+            hold(ax, 'off');
+
+            original_p2_linewidth = get(p2, 'LineWidth');
+
+            % Beautify, excluding the second plot
+            beautify_figure('figure_handle', testCase.TestFigure, 'exclude_object_tags', {'exclude_this_one'});
+
+            % Verify p1's LineWidth changed
+            testCase.verifyNotEqual(get(p1, 'LineWidth'), 0.5, 'AbsTol', 1e-9, ... % 0.5 is MATLAB default
+                'LineWidth of non-excluded plot should change.');
+
+            % Verify p2's LineWidth did NOT change
+            testCase.verifyEqual(get(p2, 'LineWidth'), original_p2_linewidth, 'AbsTol', 1e-9, ...
+                'LineWidth of excluded plot should not change.');
+        end
+    end
+
+    methods(Test)
+        function testInvalidParameterHandling(testCase)
+            % Test that the function correctly handles various invalid parameter inputs.
+
+            plot(testCase.TestFigure, 1:10);
+            ax = get(testCase.TestFigure, 'CurrentAxes');
+
+            % --- Test Case 1: Invalid enumerated string ---
+            invalid_grid_density = 'totally_wrong_value';
+            cmd_output_grid = evalc("beautify_figure('figure_handle', testCase.TestFigure, 'grid_density', invalid_grid_density)");
+
+            % Verify warning message
+            testCase.verifyMatches(cmd_output_grid, 'Invalid value for grid_density', ...
+                'Should warn about invalid grid_density value.');
+            testCase.verifyMatches(cmd_output_grid, 'Resetting to default', ...
+                'Warning for grid_density should mention resetting to default.');
+
+            % Verify fallback to default ('normal')
+            % The default 'normal' sets XGrid to 'on'
+            testCase.verifyEqual(get(ax, 'XGrid'), 'on', ...
+                'grid_density should fall back to default value.');
+
+
+            % --- Test Case 2: Invalid numeric scalar ---
+            invalid_font_size = 'not a number';
+            cmd_output_font = evalc("beautify_figure('figure_handle', testCase.TestFigure, 'base_font_size', invalid_font_size)");
+
+            % Verify warning message
+            testCase.verifyMatches(cmd_output_font, 'Invalid value for base_font_size', ...
+                'Should warn about invalid base_font_size value.');
+
+            % Verify fallback to default (10)
+            % We can't know the exact final font size due to scaling, but it should be a number close to the default.
+            final_font_size = get(ax, 'FontSize');
+            testCase.verifyTrue(isnumeric(final_font_size) && isscalar(final_font_size), ...
+                'FontSize should be a numeric scalar after fallback.');
+        end
+    end
 end
