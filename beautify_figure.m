@@ -189,19 +189,8 @@ params.all_colorbars_in_fig = findobj(fig, 'Type', 'Colorbar');
 % as inputParser handles the merging of defaults and user-provided values.
 % The 'params' struct is now the definitive set of parameters.
 
-% For compatibility with later code that checks for user-provided-only
-% parameters (like style_preset), we reconstruct a struct containing only
-% the parameters the user actually passed in.
-all_param_names = fieldnames(input_parser.Results);
-defaulted_param_names = input_parser.UsingDefaults;
-user_provided_param_names = setdiff(all_param_names, defaulted_param_names);
-user_provided_params_struct = struct();
-for k_user_param = 1:length(user_provided_param_names)
-    param_name = user_provided_param_names{k_user_param};
-    if isfield(input_parser.Results, param_name)
-        user_provided_params_struct.(param_name) = input_parser.Results.(param_name);
-    end
-end
+% The inputParser handles the merging of defaults and user-provided values,
+% so the reconstruction of a separate user-provided struct is not necessary.
 
 % The inputParser has already merged defaults and user-provided values.
 % Now, we handle the style preset, which acts as a conditional set of
@@ -552,8 +541,8 @@ end
 
 function params = validate_parameters(params, base_defaults, schema, log_fn)
     all_param_names = fieldnames(params);
-    for i = 1:length(all_param_names)
-        param_name = all_param_names{i};
+    for k_param = 1:length(all_param_names)
+        param_name = all_param_names{k_param};
         if ~isfield(schema, param_name)
             continue; % No validation rule for this param
         end
@@ -916,7 +905,7 @@ for k_child=1:length(potential_children)
         end
 
         is_ignored_by_tag_or_type = false; % Simplified check
-        if ~isempty(child_tag) && iscellstr(ignore_tags_and_types) %#ok<ISCLSTR>
+        if ~isempty(child_tag) && iscell(ignore_tags_and_types) && all(cellfun(@(c) ischar(c) && isvector(c), ignore_tags_and_types))
             is_ignored_by_tag_or_type = any(strcmp(child_tag, ignore_tags_and_types));
         end
         % Removed is_ignored_by_type check as params.exclude_object_types is gone
@@ -1566,12 +1555,7 @@ end
 
 % --- Local Helper Function: Convert struct to name-value pairs ---
 function nv_pairs = local_struct_to_nv_pairs(s)
-fields = fieldnames(s);
-nv_pairs = cell(1, 2 * numel(fields));
-for k_local_struct = 1:numel(fields) % Renamed loop variable
-    nv_pairs{2*k_local_struct-1} = fields{k_local_struct};
-    nv_pairs{2*k_local_struct} = s.(fields{k_local_struct});
-end
+    nv_pairs = [fieldnames(s)'; struct2cell(s)'];
 end
 
 % --- Helper Function: Beautify Colorbar ---
