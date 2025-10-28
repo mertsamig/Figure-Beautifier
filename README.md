@@ -4,12 +4,13 @@ A MATLAB function to systematically enhance the aesthetics of figures for presen
 
 ## Purpose
 
-The `beautify_figure.m` script provides a comprehensive set of tools to improve the visual appeal of MATLAB figures. It allows for customization of fonts, colors, line styles, markers, grid, legend, titles, and much more. It can handle figures with multiple subplots, tiled layouts, and tabs, applying consistent styling throughout.
+The `beautify_figure.m` script provides a comprehensive set of tools to improve the visual appeal of MATLAB figures. It allows for customization of fonts, colors, line styles, markers, grid, legend, titles, and much more. It operates on an entire figure, handling multiple subplots, tiled layouts, and tabs to apply consistent styling throughout.
 
 ## Basic Usage
 
-To apply default beautification settings to the current figure:
+The script uses name-value pair arguments for customization.
 
+**To apply default beautification settings to the current figure:**
 ```matlab
 % Generate a sample plot
 figure;
@@ -20,52 +21,39 @@ title('My Sample Plot');
 beautify_figure();
 ```
 
-To apply custom settings:
-
+**To apply custom settings:**
 ```matlab
-my_params.font_name = 'Helvetica';
-my_params.plot_line_width = 2;
-beautify_figure(my_params);
+% Generate another plot
+figure;
+scatter(rand(50,1), rand(50,1), 'filled');
+title('Customized Scatter Plot');
+
+% Beautify with specific parameters
+beautify_figure('plot_line_width', 2, 'font_name', 'Helvetica', 'style_preset', 'minimalist');
 ```
 
-To apply to specific axes:
-
+**To apply beautification to a specific figure:**
 ```matlab
-h_axes1 = subplot(1,2,1); plot(rand(5)); title('First Plot');
-h_axes2 = subplot(1,2,2); scatter(rand(10,1), rand(10,1)); title('Second Plot');
-beautify_figure([h_axes1, h_axes2]); % Apply default to specific axes
+% Create two figures
+h_fig1 = figure; plot(1:10); title('Figure 1');
+h_fig2 = figure; plot(sin(1:0.1:10)); title('Figure 2');
+
+% Apply settings only to the second figure
+beautify_figure('figure_handle', h_fig2, 'color_palette', 'viridis');
 ```
-
-## Using the Beautify Figure App (GUI)
-
-For users who prefer a graphical interface, this project also includes `BeautifyFigureApp.mlapp`. This app provides an interactive way to apply many of the beautification settings available in the `beautify_figure.m` script.
-
-**To launch the app:**
-1.  Open `BeautifyFigureApp.mlapp` in the MATLAB editor.
-2.  Click the "Run" button in the editor's toolbar.
-Alternatively, if the project is packaged as a MATLAB App (`.mlappinstall` file), you can install it via the MATLAB Apps tab and then run it from the Apps toolbar.
-
-The app allows you to:
-*   Load and apply settings to the currently active figure.
-*   Adjust parameters through various UI controls (dropdowns, checkboxes, spinners).
-*   Import and export parameter presets as `.mat` files.
-*   Access a built-in help dialog for app usage.
-
-While the app covers many common parameters, the full range of options and fine-grained control (especially for complex parameters like custom color palettes as matrices or detailed marker style cycling) is available through the `beautify_figure.m` script directly.
-Note: Advanced features like Stats Overlay are configurable via the `beautify_figure.m` script, but GUI controls in the `BeautifyFigureApp.mlapp` are planned for a future update.
 
 ## Parameters
 
-The `beautify_figure.m` script offers a wide range of customizable parameters. These are passed as fields in a structure. For a detailed list of all parameters and their default values, please refer to the extensive help text within the `beautify_figure.m` script itself (e.g., by typing `help beautify_figure` in MATLAB).
+The `beautify_figure.m` script offers a wide range of customizable parameters, passed as **name-value pairs**. For a detailed list of all parameters and their default values, please refer to the extensive help text within the `beautify_figure.m` script itself (e.g., by typing `help beautify_figure` in MATLAB).
 
 Key parameters include:
-*   `style_preset`: String, e.g., 'default', 'publication', 'presentation_light', 'minimalist'. Applies a predefined set of styles.
-*   `font_name`: Font family (e.g., 'Arial', 'Helvetica'). (Can be part of a preset).
+*   `style_preset`: String, e.g., `'default'`, `'publication'`, `'presentation_light'`, `'minimalist'`. Applies a predefined set of styles.
+*   `font_name`: Font family (e.g., `'Arial'`, `'Helvetica'`). (Can be part of a preset).
 *   `base_font_size`: Base font size for scaling elements.
 *   `plot_line_width`: Base line width for plotted data.
-*   `color_palette`: Predefined palettes ('default_matlab', 'lines', 'parula', 'viridis', 'turbo', 'cividis', etc.) or custom RGB matrix.
-*   `export_settings`: Structure for controlling automatic figure export (see details below).
-*   `stats_overlay`: Structure for basic statistical overlay (see details below).
+*   `color_palette`: Predefined palettes (`'default_matlab'`, `'lines'`, `'parula'`, `'viridis'`, etc.) or a custom Nx3 RGB matrix.
+*   `export_settings`: A `struct` for controlling automatic figure export (see details below).
+*   `stats_overlay`: A `struct` for configuring a basic statistical overlay (see details below).
 
 ## Font Considerations
 
@@ -75,21 +63,16 @@ While `beautify_figure.m` requests specific fonts (like 'Swiss 721 BT' as a defa
 
 ## Features
 
-*   Configurable style presets (e.g., 'publication', 'presentation_light', 'minimalist') for quick common setups.
+*   Configurable style presets (e.g., `'publication'`, `'presentation_light'`, `'minimalist'`) for quick common setups.
 *   Font and text property adjustments (size, weight, color, font family).
 *   Control over line styles, markers, and color palettes.
 *   Automatic scaling of elements based on subplot density.
 *   Support for tiled layouts and figure tabs.
+*   Styling for various plot types, including line, scatter, bar, histogram, and heatmap charts.
 *   Interactive legends (clickable items to toggle plot visibility, R2019b+).
 *   Axes styling (box, grid, tick direction, layer).
 *   Optional automatic export of figures to various formats (PNG, PDF, EPS, etc.).
-*   Automated Panel Labeling: Automatically add panel labels like 'A', 'B', 'C' or 'a)', 'b)' to subplots/tiles.
 *   Basic Statistical Overlay: Display basic statistics (mean, std, min, max, N, etc.) for plotted data directly on the figure.
-
-
-## Examples
-
-The basic usage examples above demonstrate how to apply default settings, custom parameters, or target specific axes. Below are more detailed examples of the preset and export functionalities.
 
 ## Detailed Features
 
@@ -108,16 +91,15 @@ Example:
 % Apply the 'publication' preset
 beautify_figure('style_preset', 'publication');
 
-% Use 'presentation_light' but customize the font
-my_settings.style_preset = 'presentation_light';
-my_settings.font_name = 'Helvetica'; % Overrides preset font
-my_settings.color_palette = 'viridis'; % Overrides preset palette
-beautify_figure(my_settings);
+% Use 'presentation_light' but customize the font and palette
+beautify_figure('style_preset', 'presentation_light', ...
+                'font_name', 'Helvetica', ...
+                'color_palette', 'viridis');
 ```
 
 ### Automatic Figure Export
 
-The `export_settings` parameter (a structure) allows for direct export of the beautified figure.
+The `export_settings` parameter accepts a `struct` to allow for direct export of the beautified figure.
 
 Key `export_settings` fields:
 *   `enabled` (boolean): Set to `true` to activate export. Default: `false`.
@@ -135,17 +117,18 @@ figure;
 plot(1:10, (1:10).^2);
 title('Square Values');
 
-export_options.export_settings.enabled = true;
-export_options.export_settings.filename = 'squares_plot';
-export_options.export_settings.format = 'pdf';
-export_options.export_settings.resolution = 300; % Good for vector PDF too
-beautify_figure(export_options); 
+export_options.enabled = true;
+export_options.filename = 'squares_plot';
+export_options.format = 'pdf';
+export_options.resolution = 300;
+
+beautify_figure('export_settings', export_options);
 % This will create 'squares_plot.pdf'
 ```
 
 ### Basic Statistical Overlay
 
-This feature allows for the display of basic statistical information (like mean, standard deviation, N, etc.) for a chosen plot directly on the figure. This is useful for quickly conveying key data characteristics. Settings are managed via the `stats_overlay` structure.
+This feature allows for the display of basic statistical information (like mean, standard deviation, N, etc.) for a chosen plot directly on the figure. Settings are managed via the `stats_overlay` `struct`.
 
 Key `stats_overlay` parameters:
 *   `enabled` (boolean): Set to `true` to enable the statistical overlay. Default: `false`.
@@ -156,8 +139,8 @@ Key `stats_overlay` parameters:
 *   `font_scale_factor` (numeric): Multiplier for the font size, relative to the axes labels' font size. Default: `0.9`.
 *   `text_color` (color spec): Color of the statistics text. If empty (`[]`), inherits from `params.text_color`.
 *   `font_name` (string): Font name for the statistics text. If empty (`[]`), inherits from `params.font_name`.
-*   `background_color` (color spec or string): Background color of the stats text box. Can be an RGB triplet, a standard MATLAB color string (e.g., `'yellow'`), or `'figure'` to match the figure background. If empty (`[]`), no background is drawn.
-*   `edge_color` (color spec or string): Edge color of the stats text box. Can be an RGB triplet, a color string, or `'axes'` to match the axes color. If empty (`[]`), no edge is drawn.
+*   `background_color` (color spec or string): Background of the stats text box. Can be a color spec, `'figure'`, or empty.
+*   `edge_color` (color spec or string): Edge color of the stats text box. Can be a color spec, `'axes'`, or empty.
 
 Example:
 ```matlab
@@ -165,33 +148,16 @@ figure;
 plot(1:20, randn(1,20) + 10, 'Tag', 'TemperatureData', 'LineWidth', 1.5);
 title('Experimental Data');
 
-my_settings.stats_overlay.enabled = true;
-my_settings.stats_overlay.statistics = {'mean', 'std', 'N', 'max'};
-my_settings.stats_overlay.target_plot_handle_tag = 'TemperatureData'; % Target this specific plot
-my_settings.stats_overlay.position = 'southeast_inset';
-my_settings.stats_overlay.background_color = [0.95 0.95 0.85]; % Light yellow background
-my_settings.stats_overlay.edge_color = [0.5 0.5 0.5];      % Gray border
-beautify_figure(my_settings);
-% Expected: A text box in the bottom-right of the plot showing mean, std, N, and max
-% for the 'TemperatureData' line, with a light yellow background and gray border.
+stats_opts.enabled = true;
+stats_opts.statistics = {'mean', 'std', 'N', 'max'};
+stats_opts.target_plot_handle_tag = 'TemperatureData';
+stats_opts.position = 'southeast_inset';
+stats_opts.background_color = [0.95 0.95 0.85]; % Light yellow background
+stats_opts.edge_color = [0.5 0.5 0.5];      % Gray border
+
+beautify_figure('stats_overlay', stats_opts);
+% Expected: A text box in the bottom-right of the plot showing stats for the 'TemperatureData' line.
 ```
-
-## Recent Enhancements and Current Status
-
-### `BeautifyFigureApp.mlapp` Improvements
-The accompanying GUI, `BeautifyFigureApp.mlapp`, has received several updates to enhance its robustness and user experience:
-*   **Preset Loading:** Loading presets from `.mat` files is now more resilient. If a preset file is missing some parameters, the App will apply the settings that are present and issue a warning to the user detailing which settings were skipped or defaulted.
-*   **Input Validation:** Validation has been added for the "Custom Color Palette" and "Statistics" text input fields. The App now provides `uialert` warnings if the input in these fields is malformed (e.g., an invalid matrix string for the color palette, or an unparseable cell array string for statistics).
-*   **Font Selection:** The font name dropdown list population is more robust and includes better fallbacks if system fonts cannot be fully enumerated, ensuring the App remains functional.
-
-### Test Script (`test_beautify_figure.m`) Enhancements
-The `test_beautify_figure.m` script has been significantly expanded to improve test coverage and verify the stability of `beautify_figure.m` under various conditions. New test cases include:
-*   Applying beautification to an **empty figure** (a figure with no axes or plotted data) to ensure no errors occur.
-*   Processing figures that contain **UI tabs** (`uitabgroup`), verifying that axes within each tab are correctly identified and beautified.
-*   Handling of **invalid parameters** passed to `beautify_figure.m`, ensuring that the function logs appropriate warnings/errors and does not crash, instead applying default or valid portions of parameters where possible.
-
-### Status of `beautify_figure.m` Refactoring
-The `beautify_figure.m` script is continuously maintained, with ongoing efforts to improve its functionality and robustness. Future updates may include further refactoring and feature enhancements.
 
 ## Dependencies
 
