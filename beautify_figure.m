@@ -17,34 +17,52 @@ function beautify_figure(varargin)
 %
 % PARAMETERS (Name-Value Pairs):
 %   - 'figure_handle': (handle) A valid figure handle to target. Defaults to gcf.
-%   - style_preset: ('default') Predefined style set. Options:
-%     - 'default': Standard beautify_figure settings.
-%     - 'publication': Optimized for print publications (e.g., Arial font, black/white/gray, smaller markers).
-%     - 'presentation_dark': For dark background presentations (e.g., Calibri, larger fonts, vivid colors).
-%     - 'presentation_light': For light background presentations (e.g., Calibri, larger fonts, bright colors).
-%     - 'minimalist': Clean, minimal style with few distractions.
-%   - theme: 'light' (default), 'dark'. Sets a base theme for colors. Overridden by preset if preset defines it.
-%   - font_name: Font family (e.g., 'Arial', 'Helvetica'). Overridden by preset if preset defines it.
-%   - base_font_size: Base font size for scaling.
-%   - global_font_scale_factor: Multiplier for all font sizes.
-%   - plot_line_width: Base line width for plotted data.
-%   - axis_to_plot_linewidth_ratio: Ratio of axis line width to plot line width.
-%   - marker_size: Base marker size.
-%   - color_palette: Name of a color palette ('default_matlab', 'lines', 'parula',
-%                    'viridis', 'turbo', 'cividis', etc.) or an Nx3 RGB matrix.
-%   - cycle_marker_styles: 'auto' (default), true, false. Controls marker cycling.
-%   - cycle_line_styles: 'auto' (default), true, false. Controls line style cycling.
-%   - grid_density: 'normal' (default), 'major_only', 'none'.
-%   - axis_box_style: 'on' (default), 'off', 'left-bottom'.
-%   - axes_layer: 'top' (default), 'bottom'. Sets axes Layer property.
-%   - legend_location: 'best' (default), 'northeastoutside', 'none', etc.
-%   - smart_legend_display: true (default). Avoids unnecessary legends.
-%   - interactive_legend: true (default). Enables clickable legend items.
-%   - log_level: 0 (silent), 1 (normal), 2 (detailed - default).
-%   - export_settings: Structure for controlling figure export (see details below).
-%   - stats_overlay: (struct) Settings for statistical data overlay (see details below).
-%     - Note: Statistics are calculated based on the data currently visible within the axes limits (e.g., after zooming).
-%   ... and many more. Explore the default_params structure within the code.
+%   - 'font_name': (string) Font family. Default: 'Swiss 721 BT'.
+%   - 'base_font_size': (numeric) Base font size for scaling. Default: 10.
+%   - 'global_font_scale_factor': (numeric) Multiplier for all font sizes. Default: 1.0.
+%   - 'title_scale': (numeric) Scaling factor for title font size. Default: 1.2.
+%   - 'label_scale': (numeric) Scaling factor for label font size. Default: 1.0.
+%   - 'plot_line_width': (numeric) Base line width for plotted data. Default: 1.5.
+%   - 'axis_to_plot_linewidth_ratio': (numeric) Ratio of axis line width to plot line width. Default: 0.5.
+%   - 'marker_size': (numeric) Base marker size. Default: 6.
+%   - 'errorbar_cap_size_scale': (numeric) Scaling for error bar cap size. Default: 0.5.
+%   - 'axis_color': (color spec) Color of the axes. Default: [0.15 0.15 0.15].
+%   - 'figure_background_color': (color spec) Color of the figure background. Default: MATLAB's default.
+%   - 'text_color': (color spec) Color of text elements. Default: [0.15 0.15 0.15].
+%   - 'grid_color': (color spec) Color of the grid lines. Default: [0.15 0.15 0.15].
+%   - 'grid_density': ('normal', 'major_only', 'none') Grid line density. Default: 'normal'.
+%   - 'grid_alpha': (numeric) Transparency of major grid lines. Default: 0.15.
+%   - 'grid_line_style': (string) Line style for major grid lines. Default: '-'.
+%   - 'minor_grid_alpha': (numeric) Transparency of minor grid lines. Default: 0.07.
+%   - 'minor_grid_line_style': (string) Line style for minor grid lines. Default: ':'.
+%   - 'axis_box_style': ('on', 'off', 'left-bottom') Style of the axis box. Default: 'on'.
+%   - 'axes_layer': ('top', 'bottom') Sets axes Layer property. Default: 'top'.
+%   - 'color_palette': (string or Nx3 matrix) Name of a color palette or a custom RGB matrix. Default: 'default_matlab'.
+%   - 'custom_color_palette': (Nx3 matrix) Custom color palette, used when 'color_palette' is 'custom'. Default: [].
+%   - 'cycle_marker_styles': ('auto', true, false) Controls marker cycling. Default: 'auto'.
+%   - 'marker_cycle_threshold': (integer) Number of plot elements to trigger marker cycling. Default: 3.
+%   - 'marker_styles': (cell array) Marker styles to cycle through.
+%   - 'line_style_order': (cell array) Line styles to cycle through.
+%   - 'cycle_line_styles': ('auto', true, false) Controls line style cycling. Default: 'auto'.
+%   - 'line_style_cycle_threshold': (integer) Number of plot elements to trigger line style cycling. Default: 2.
+%   - 'axis_limit_mode': ('padded', 'tight') Mode for setting axis limits. Default: 'padded'.
+%   - 'expand_axis_limits_factor': (numeric) Factor for padding axis limits. Default: 0.03.
+%   - 'legend_location': (string) Location of the legend. Default: 'best'.
+%   - 'smart_legend_display': (logical) Avoids unnecessary legends. Default: true.
+%   - 'legend_force_single_entry': (logical) Forces a legend for a single plot element. Default: false.
+%   - 'legend_title_string': (string) Title for the legend. Default: ''.
+%   - 'interactive_legend': (logical) Enables clickable legend items. Default: true.
+%   - 'legend_num_columns': (integer) Number of columns in the legend. Default: 0 (auto).
+%   - 'legend_reverse_order': (logical) Reverses the order of items in the legend. Default: false.
+%   - 'apply_to_colorbars': (logical) Apply beautification to colorbars. Default: true.
+%   - 'apply_to_polaraxes': (logical) Apply beautification to polar axes. Default: true.
+%   - 'apply_to_general_text': (logical) Apply beautification to general text objects. Default: true.
+%   - 'beautify_sgtitle': (logical) Apply beautification to sgtitle. Default: true.
+%   - 'log_level': (0, 1, 2) Logging level. Default: 2 (detailed).
+%   - 'export_settings': (struct) Structure for controlling figure export.
+%   - 'style_preset': ('default', 'publication', 'presentation_dark', 'presentation_light', 'minimalist') Predefined style set. Default: 'default'.
+%   - 'stats_overlay': (struct) Settings for statistical data overlay.
+%   - 'exclude_object_tags': (cell array of strings) Tags of objects to exclude from beautification. Default: {}.
 %
 % EXAMPLE:
 %   figure;
@@ -189,8 +207,19 @@ params.all_colorbars_in_fig = findobj(fig, 'Type', 'Colorbar');
 % as inputParser handles the merging of defaults and user-provided values.
 % The 'params' struct is now the definitive set of parameters.
 
-% The inputParser handles the merging of defaults and user-provided values,
-% so the reconstruction of a separate user-provided struct is not necessary.
+% For compatibility with later code that checks for user-provided-only
+% parameters (like style_preset), we reconstruct a struct containing only
+% the parameters the user actually passed in.
+all_param_names = fieldnames(input_parser.Results);
+defaulted_param_names = input_parser.UsingDefaults;
+user_provided_param_names = setdiff(all_param_names, defaulted_param_names);
+user_provided_params_struct = struct();
+for k_user_param = 1:length(user_provided_param_names)
+    param_name = user_provided_param_names{k_user_param};
+    if isfield(input_parser.Results, param_name)
+        user_provided_params_struct.(param_name) = input_parser.Results.(param_name);
+    end
+end
 
 % The inputParser has already merged defaults and user-provided values.
 % Now, we handle the style preset, which acts as a conditional set of
@@ -541,8 +570,8 @@ end
 
 function params = validate_parameters(params, base_defaults, schema, log_fn)
     all_param_names = fieldnames(params);
-    for k_param = 1:length(all_param_names)
-        param_name = all_param_names{k_param};
+    for i = 1:length(all_param_names)
+        param_name = all_param_names{i};
         if ~isfield(schema, param_name)
             continue; % No validation rule for this param
         end
@@ -905,7 +934,7 @@ for k_child=1:length(potential_children)
         end
 
         is_ignored_by_tag_or_type = false; % Simplified check
-        if ~isempty(child_tag) && iscell(ignore_tags_and_types) && all(cellfun(@(c) ischar(c) && isvector(c), ignore_tags_and_types))
+        if ~isempty(child_tag) && iscellstr(ignore_tags_and_types) %#ok<ISCLSTR>
             is_ignored_by_tag_or_type = any(strcmp(child_tag, ignore_tags_and_types));
         end
         % Removed is_ignored_by_type check as params.exclude_object_types is gone
@@ -1555,7 +1584,12 @@ end
 
 % --- Local Helper Function: Convert struct to name-value pairs ---
 function nv_pairs = local_struct_to_nv_pairs(s)
-    nv_pairs = [fieldnames(s)'; struct2cell(s)'];
+fields = fieldnames(s);
+nv_pairs = cell(1, 2 * numel(fields));
+for k_local_struct = 1:numel(fields) % Renamed loop variable
+    nv_pairs{2*k_local_struct-1} = fields{k_local_struct};
+    nv_pairs{2*k_local_struct} = s.(fields{k_local_struct});
+end
 end
 
 % --- Helper Function: Beautify Colorbar ---
