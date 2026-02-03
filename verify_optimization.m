@@ -22,7 +22,8 @@ for k_subplot = 1:25
         ylabel('Y-axis');
     end
     if mod(k_subplot, 5) == 0
-        legend('Line A', 'Line B', 'Line C', 'Data points', 'Bar data', 'Location', 'northeastoutside');
+        legend('Line A', 'Line B', 'Line C', 'Data points', ...
+            'Bar data', 'Location', 'northeastoutside');
     end
     if mod(k_subplot, 3) == 0
         colorbar;

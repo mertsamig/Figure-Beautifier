@@ -23,11 +23,13 @@ function beautify_figure(varargin)
 %   - 'title_scale': (numeric) Scaling factor for title font size. Default: 1.2.
 %   - 'label_scale': (numeric) Scaling factor for label font size. Default: 1.0.
 %   - 'plot_line_width': (numeric) Base line width for plotted data. Default: 1.5.
-%   - 'axis_to_plot_linewidth_ratio': (numeric) Ratio of axis line width to plot line width. Default: 0.5.
+%   - 'axis_to_plot_linewidth_ratio': (numeric) Ratio of axis line width to
+%     plot line width. Default: 0.5.
 %   - 'marker_size': (numeric) Base marker size. Default: 6.
 %   - 'errorbar_cap_size_scale': (numeric) Scaling for error bar cap size. Default: 0.5.
 %   - 'axis_color': (color spec) Color of the axes. Default: [0.15 0.15 0.15].
-%   - 'figure_background_color': (color spec) Color of the figure background. Default: MATLAB's default.
+%   - 'figure_background_color': (color spec) Color of the figure
+%     background. Default: MATLAB's default.
 %   - 'text_color': (color spec) Color of text elements. Default: [0.15 0.15 0.15].
 %   - 'grid_color': (color spec) Color of the grid lines. Default: [0.15 0.15 0.15].
 %   - 'grid_density': ('normal', 'major_only', 'none') Grid line density. Default: 'normal'.
@@ -37,7 +39,8 @@ function beautify_figure(varargin)
 %   - 'minor_grid_line_style': (string) Line style for minor grid lines. Default: ':'.
 %   - 'axis_box_style': ('on', 'off', 'left-bottom') Style of the axis box. Default: 'on'.
 %   - 'axes_layer': ('top', 'bottom') Sets axes Layer property. Default: 'top'.
-%   - 'color_palette': (string or Nx3 matrix) Name of a color palette or a custom RGB matrix. Default: 'default_matlab'.
+%   - 'color_palette': (string or Nx3 matrix) Name of a color palette or a
+%     custom RGB matrix. Default: 'default_matlab'.
 %   - 'custom_color_palette': (Nx3 matrix) Custom color palette, used when 'color_palette' is 'custom'. Default: [].
 %   - 'cycle_marker_styles': ('auto', true, false) Controls marker cycling. Default: 'auto'.
 %   - 'marker_cycle_threshold': (integer) Number of plot elements to trigger marker cycling. Default: 3.
@@ -60,7 +63,8 @@ function beautify_figure(varargin)
 %   - 'beautify_sgtitle': (logical) Apply beautification to sgtitle. Default: true.
 %   - 'log_level': (0, 1, 2) Logging level. Default: 2 (detailed).
 %   - 'export_settings': (struct) Structure for controlling figure export.
-%   - 'style_preset': ('default', 'publication', 'presentation_dark', 'presentation_light', 'minimalist') Predefined style set. Default: 'default'.
+%   - 'style_preset': ('default', 'publication', 'presentation_dark',
+%     'presentation_light', 'minimalist') Predefined style set. Default: 'default'.
 %   - 'stats_overlay': (struct) Settings for statistical data overlay.
 %   - 'exclude_object_tags': (cell array of strings) Tags of objects to exclude from beautification. Default: {}.
 %
@@ -170,7 +174,8 @@ base_defaults = default_params;
 input_parser = inputParser;
 
 % Add figure_handle as an optional name-value pair
-addParameter(input_parser, 'figure_handle', [], @(h) ishghandle(h) && isgraphics(h, 'figure') && isvalid(h));
+addParameter(input_parser, 'figure_handle', [], ...
+    @(h) ishghandle(h) && isgraphics(h, 'figure') && isvalid(h));
 
 % Add all other parameters from the default_params struct
 default_param_names = fieldnames(default_params);
@@ -229,7 +234,8 @@ end
 active_preset_name = params.style_preset;
 known_presets = {'default', 'publication', 'presentation_dark', 'presentation_light', 'minimalist'};
 if ~any(strcmp(active_preset_name, known_presets))
-    log_message(params, sprintf('Unknown style preset: "%s". Applying default style parameters.', active_preset_name), 1, 'Warning');
+    log_message(params, sprintf(['Unknown style preset: "%s". ' ...
+        'Applying default style parameters.'], active_preset_name), 1, 'Warning');
     active_preset_name = 'default';
 end
 
@@ -381,8 +387,6 @@ else
         end
     end
 end
-% Note: The 'else % Process whole figure' that previously wrapped this block
-% has been removed, as the function now always processes a whole figure.
 
 % --- Export Figure (if enabled) ---
 if params.export_settings.enabled
@@ -412,7 +416,8 @@ if params.export_settings.enabled
 
         if use_exportgraphics
             log_message(params, sprintf('Attempting exportgraphics (resolution %d DPI).', params.export_settings.resolution), 2, 'Info');
-            exportgraphics_args = {fig, full_filename_with_ext, 'Resolution', params.export_settings.resolution};
+            exportgraphics_args = {fig, full_filename_with_ext, ...
+                'Resolution', params.export_settings.resolution};
             % ContentType for vector/raster preference with exportgraphics
             if any(strcmpi(export_ext, {'pdf', 'eps', 'svg'}))
                 exportgraphics_args = [exportgraphics_args, {'ContentType', 'vector'}];
@@ -423,8 +428,11 @@ if params.export_settings.enabled
             log_message(params, 'Export successful using exportgraphics.', 1, 'Info');
             export_done_successfully = true;
         else
-            if ~params.export_settings.ui && exist('exportgraphics','file') == 2 && ~strcmpi(params.export_settings.renderer, 'auto')
-                log_message(params, 'UI set to false and specific renderer for print chosen. Using `print`.', 2, 'Info');
+            if ~params.export_settings.ui && exist('exportgraphics','file') == 2 && ...
+                    ~strcmpi(params.export_settings.renderer, 'auto')
+                log_message(params, ...
+                    'UI set to false and specific renderer for print chosen. Using `print`.', ...
+                    2, 'Info');
             elseif exist('exportgraphics','file') ~= 2
                 log_message(params, 'exportgraphics not available. Using `print`.', 2, 'Info');
             end
@@ -518,10 +526,14 @@ function schema = get_validation_schema()
 
     % Define validation rules for each parameter
     schema.font_name = struct('type', 'char');
-    schema.base_font_size = struct('type', 'numeric', 'scalar', true, 'real', true, 'nan', false, 'positive', true);
-    schema.global_font_scale_factor = struct('type', 'numeric', 'scalar', true, 'real', true, 'nan', false, 'positive', true);
-    schema.title_scale = struct('type', 'numeric', 'scalar', true, 'real', true, 'nan', false, 'positive', true);
-    schema.label_scale = struct('type', 'numeric', 'scalar', true, 'real', true, 'nan', false, 'positive', true);
+    schema.base_font_size = struct('type', 'numeric', 'scalar', true, ...
+        'real', true, 'nan', false, 'positive', true);
+    schema.global_font_scale_factor = struct('type', 'numeric', 'scalar', true, ...
+        'real', true, 'nan', false, 'positive', true);
+    schema.title_scale = struct('type', 'numeric', 'scalar', true, ...
+        'real', true, 'nan', false, 'positive', true);
+    schema.label_scale = struct('type', 'numeric', 'scalar', true, ...
+        'real', true, 'nan', false, 'positive', true);
     schema.plot_line_width = struct('type', 'numeric', 'scalar', true, 'real', true, 'nan', false, 'positive', true);
     schema.axis_to_plot_linewidth_ratio = struct('type', 'numeric', 'scalar', true, 'real', true, 'nan', false, 'positive', true);
     schema.marker_size = struct('type', 'numeric', 'scalar', true, 'real', true, 'nan', false, 'positive', true);
@@ -570,8 +582,8 @@ end
 
 function params = validate_parameters(params, base_defaults, schema, log_fn)
     all_param_names = fieldnames(params);
-    for i = 1:length(all_param_names)
-        param_name = all_param_names{i};
+    for k_idx = 1:length(all_param_names)
+        param_name = all_param_names{k_idx};
         if ~isfield(schema, param_name)
             continue; % No validation rule for this param
         end
@@ -1826,7 +1838,8 @@ try
 
     fig_handle = ancestor(legend_handle, 'figure');
     modifier_keys = get(fig_handle, 'CurrentModifier');
-    is_ctrl_cmd_pressed = any(strcmpi(modifier_keys, 'control')) || any(strcmpi(modifier_keys, 'command'));
+    is_ctrl_cmd_pressed = any(strcmpi(modifier_keys, 'control')) || ...
+        any(strcmpi(modifier_keys, 'command'));
 
     all_legend_plots = [];
     if isprop(legend_handle, 'PlotChildren')
@@ -1863,7 +1876,9 @@ try
 
     % --- Main Logic ---
     if is_ctrl_cmd_pressed
-        is_currently_isolated_object = isolation_active && isappdata(legend_handle, 'IsolatedObject') && (getappdata(legend_handle, 'IsolatedObject') == clicked_plot_object);
+        is_currently_isolated_object = isolation_active && ...
+            isappdata(legend_handle, 'IsolatedObject') && ...
+            (getappdata(legend_handle, 'IsolatedObject') == clicked_plot_object);
 
         if is_currently_isolated_object
             unisolate_all();
@@ -2130,9 +2145,13 @@ else % Tag is empty, find first suitable plot
                 if isprop(target_plot_object, 'Tag') && ~isempty(get(target_plot_object, 'Tag'))
                     target_tag_info = sprintf('Tag: "%s"', get(target_plot_object, 'Tag'));
                 else
-                    target_tag_info = sprintf('Type: %s (no Tag, index %d in children)', class(target_plot_object), find(ax_children == target_plot_object,1));
+                    target_tag_info = sprintf('Type: %s (no Tag, index %d in children)', ...
+                        class(target_plot_object), find(ax_children == target_plot_object, 1));
                 end
-                log_message(params, sprintf('Stats Overlay: target_plot_handle_tag was empty and %d suitable plots found. Auto-selected first suitable plot: %s.', num_suitable_plots, target_tag_info), 2, 'Info');
+                log_message(params, ...
+                    sprintf(['Stats Overlay: target_plot_handle_tag was empty and %d ' ...
+                    'suitable plots found. Auto-selected first suitable plot: %s.'], ...
+                    num_suitable_plots, target_tag_info), 2, 'Info');
             end
         end
     end

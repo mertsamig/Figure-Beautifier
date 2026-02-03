@@ -190,6 +190,24 @@ This is a class-based test suite using the MATLAB Unit Testing Framework. It pro
 runtests('BeautifyFigureTest.m');
 ```
 
+## Development
+
+### Coding Standards
+
+This project follows strict coding standards to ensure maintainability and consistency. If you wish to contribute, please adhere to the following rules:
+*   **Naming Convention:** All variable and function names must use `snake_case`.
+*   **Loop Variables:** Avoid using `i` as a loop variable; use `k`, `idx`, or more descriptive names.
+*   **Line Length:** Keep lines of code under 100 characters.
+*   **File Structure:** The main functionality is contained within `beautify_figure.m`. Helper functions should be nested within this main file.
+
+For more details, see the `AGENTS.md` file.
+
+### Continuous Integration
+
+We use GitHub Actions to automatically run our test suite on every push and pull request. The workflow is defined in `.github/workflows/matlab-tests.yml` and includes:
+*   Automated unit tests using the MATLAB Unit Testing Framework.
+*   Visual regression tests to verify aesthetic changes.
+
 ## License
 
 This project is licensed under the MIT License. See the `LICENSE.md` file for details.
