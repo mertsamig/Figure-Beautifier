@@ -1,0 +1,28 @@
+name: MATLAB Tests
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  test:
+    name: Run Tests
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up MATLAB
+        uses: matlab-actions/setup-matlab@v2
+
+      - name: Run automated unit tests
+        uses: matlab-actions/run-tests@v2
+        with:
+          select-by-folder: .
+
+      - name: Run visual regression tests
+        uses: matlab-actions/run-command@v2
+        with:
+          command: test_beautify_figure

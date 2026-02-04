@@ -281,7 +281,8 @@ function test_case_more_features(output_dir)
     contourf(X, Y, Z, 10);
     colorbar;
     title('apply_to_colorbars = false');
-    params3 = {'apply_to_colorbars', false, 'theme', 'dark'}; % Use dark theme to make changes obvious
+    % Use dark theme to make changes obvious
+    params3 = {'apply_to_colorbars', false, 'theme', 'dark'};
     save_before_after(fig3, 'features_no_colorbar', output_dir, params3);
     close(fig3);
 end
