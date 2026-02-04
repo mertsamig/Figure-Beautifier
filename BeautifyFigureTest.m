@@ -170,7 +170,8 @@ classdef BeautifyFigureTest < matlab.unittest.TestCase
             % We expect a warning/error message to be logged.
             % We use evalc to capture the command window output.
             invalid_handle = -1; % A handle that is guaranteed to be invalid
-            cmd_output = evalc("beautify_figure('figure_handle', invalid_handle)");
+            cmd_output = evalc(['beautify_figure(''figure_handle'', ' ...
+                'invalid_handle)']);
 
             % Check for the expected error message in the captured output
             testCase.verifyMatches(cmd_output, 'No valid figure available', ...
